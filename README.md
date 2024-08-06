@@ -11,3 +11,4 @@
 - bat
 - difftastic
 - jless
+- lazygit
