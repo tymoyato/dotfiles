@@ -12,3 +12,4 @@
 - difftastic
 - jless
 - lazygit
+- zellij
