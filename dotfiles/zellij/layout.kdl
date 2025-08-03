@@ -1,0 +1,24 @@
+layout {
+    tab name="UI" cwd="/home/ervin/Desktop" {
+        pane size=1 borderless=true { plugin location="tab-bar"; }
+        pane split_direction="vertical" {
+                pane borderless=true
+                pane borderless=true
+            }
+    }
+    tab name="API" focus=true cwd="/home/ervin/Desktop" {
+        pane size=1 borderless=true { plugin location="tab-bar"; }
+        pane command="nvim" borderless=true {}
+    }
+    tab name="Server" cwd="/home/ervin/Desktop" {
+        pane size=1 borderless=true { plugin location="tab-bar"; }
+        pane split_direction="vertical" {
+                pane command="bundle exec rails s" borderless=true
+                pane command="bundle exec rails c" borderless=true focus=true
+            }
+    }
+    tab name="Sidekiq" cwd="/home/ervin/Desktop" {
+        pane size=1 borderless=true { plugin location="tab-bar"; }
+        pane command="sidekiq" borderless=true
+    }
+}

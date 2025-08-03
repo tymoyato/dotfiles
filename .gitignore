@@ -1,0 +1,5 @@
+./devtools/git.yml
+
+# Package checker debug logs
+package-checker-debug.log
+linux/package-checker-debug.log
