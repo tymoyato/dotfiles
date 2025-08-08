@@ -1,20 +1,20 @@
 # Check if Xorg (or startx) is running
 if pgrep -x "Xorg" > /dev/null
-    echo "Xorg is already running (likely with Awesome)"
+    # echo "Xorg is already running (likely with Awesome)"
 else
     echo "Xorg is not running"
 end
 
 # Check if Awesome is running
 if pgrep -x "awesome" > /dev/null
-    echo "Awesome window manager is running"
+    # echo "Awesome window manager is running"
 else
     echo "Awesome is not running"
 end
 
 # Automatically start Xorg if it's not running
 if not pgrep -x "Xorg" > /dev/null
-    echo "Starting Xorg (Awesome window manager)..."
+    # echo "Starting Xorg (Awesome window manager)..."
     startx &
 end
 
