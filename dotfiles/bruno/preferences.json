@@ -1,0 +1,49 @@
+{
+	"preferences": {
+		"request": {
+			"sslVerification": true,
+			"customCaCertificate": {
+				"enabled": false,
+				"filePath": null
+			},
+			"keepDefaultCaCertificates": {
+				"enabled": true
+			},
+			"storeCookies": true,
+			"sendCookies": true,
+			"timeout": 0
+		},
+		"font": {
+			"codeFont": "default",
+			"codeFontSize": 14
+		},
+		"proxy": {
+			"mode": "off",
+			"protocol": "http",
+			"hostname": "",
+			"port": null,
+			"auth": {
+				"enabled": false,
+				"username": "",
+				"password": ""
+			},
+			"bypassProxy": ""
+		},
+		"features": {
+			"terminal": true,
+			"apiSpec": false,
+			"fileExplorer": true,
+			"git": true,
+			"brunoJson": false
+		},
+		"secretsProviders": [],
+		"autoupdate": {
+			"downloadUpdates": true
+		},
+		"license": {
+			"proxy": {
+				"auth": {}
+			}
+		}
+	}
+}

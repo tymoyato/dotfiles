@@ -1,0 +1,104 @@
+// vim: fdm=marker
+
+configuration {
+  modes: "drun,window";
+  font: "JetBrainsMono NF 14";
+  drun-display-format: "{name}";
+  show-icons: false;
+  threads: 0;
+  lazy-grab: false;
+  drun-use-desktop-cache: true;
+  sort: false;
+  disable-history: true;
+}
+
+* {
+  bg:          #1c1c1e;
+  fg:          #ffffff;
+  fg-dim:      #ffffff99;
+  selected-bg: #A7C080;
+  selected-fg: #ffffff;
+  border-col:  #ffffff18;
+  t:           transparent;
+}
+
+window {
+  width:            680px;
+  background-color: @bg;
+  border-radius:    0px;
+  border:           0px;
+  location:         center;
+  padding:          12px;
+}
+
+mainbox {
+  background-color: @t;
+  spacing:          8px;
+  children:         [ inputbar, listview ];
+}
+
+inputbar {
+  background-color: #ffffff0f;
+  border-radius:    10px;
+  padding:          12px 16px;
+  spacing:          10px;
+  children:         [ prompt, entry ];
+}
+
+prompt {
+  background-color: @t;
+  text-color:       @fg-dim;
+  vertical-align:   0.5;
+}
+
+entry {
+  background-color: @t;
+  text-color:       @fg;
+  placeholder:      "Search apps...";
+  placeholder-color: @fg-dim;
+  vertical-align:   0.5;
+}
+
+case-indicator {
+  background-color: @t;
+  text-color:       @fg-dim;
+}
+
+listview {
+  background-color: @t;
+  border:           0;
+  padding:          4px 0 0;
+  lines:            8;
+  scrollbar:        false;
+  spacing:          2px;
+}
+
+element {
+  padding:          8px 12px;
+  children:         [ element-text ];
+}
+
+element-icon {
+  size:             24px;
+  background-color: @t;
+  vertical-align:   0.5;
+}
+
+element-text {
+  background-color: @t;
+  text-color:       @fg;
+  vertical-align:   0.5;
+}
+
+element.normal.normal {
+  background-color: @t;
+}
+element.selected.normal {
+  background-color: @selected-bg;
+}
+element.alternate.normal {
+  background-color: @t;
+}
+element.selected.normal element-text {
+  text-color: @selected-fg;
+}
