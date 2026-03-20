@@ -30,6 +30,22 @@ setup_configs() {
 	echo "Configurations have been set up."
 }
 
-# Call the function
+setup_home_configs() {
+	local home_configs=(
+		"xinitrc:.xinitrc"
+	)
+
+	for entry in "${home_configs[@]}"; do
+		src="${entry%%:*}"
+		dest="${entry##*:}"
+		rm -f "$HOME/$dest"
+		ln -sf "$HOME/.dotfiles/dotfiles/$src" "$HOME/$dest"
+	done
+
+	echo "Home configurations have been set up."
+}
+
+# Call the functions
 setup_configs
+setup_home_configs
 exec fish
