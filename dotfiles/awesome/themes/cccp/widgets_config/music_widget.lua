@@ -26,14 +26,13 @@ next_button.visible = false
 music_text:set_markup(markup.font(theme.font, markup.fg.color("#FFD700", "♪")))
 
 local function update_music()
-	-- First check if any player is active
+	-- Query all players, get the first one that is Playing or Paused
 	awful.spawn.easy_async_with_shell(
-		[[playerctl status 2>/dev/null]],
-		function(status)
-			status = status:gsub("\n", ""):gsub("\r", ""):gsub("^%s*(.-)%s*$", "%1")
-			
-			-- If no player is active or status is empty, show "No music playing"
-			if not status or status == "" or status == "No players found" then
+		[[playerctl -a metadata --format '{{status}}|||{{artist}}|||{{title}}|||{{xesam:url}}|||{{mpris:artUrl}}' 2>/dev/null | grep -m1 '^Playing\|^Paused']],
+		function(stdout)
+			stdout = stdout:gsub("\n", ""):gsub("\r", ""):gsub("^%s*(.-)%s*$", "%1")
+
+			if stdout == "" then
 				album_art:set_image(nil)
 				prev_button.visible = false
 				next_button.visible = false
@@ -43,52 +42,51 @@ local function update_music()
 				music_text:set_markup(markup.font(theme.font, markup.fg.color("#FFD700", "♪")))
 				return
 			end
-			
-			-- If player is active, get metadata
-			awful.spawn.easy_async_with_shell(
-				[[playerctl metadata --format '{{artist}} - {{title}}' 2>/dev/null]],
-				function(stdout)
-					local song = stdout:gsub("\n", ""):gsub("\r", ""):gsub("^%s*(.-)%s*$", "%1")
 
-					-- Debug: print the values to see what we're getting
-					-- print("Status: '" .. status .. "'")
-					-- print("Song: '" .. song .. "'")
+			local artist, title, url, art_url = stdout:match("^[^|]+|||(.-)|||(.-)|||(.-)|||(.-)$")
+			artist = artist or ""
+			title = title or ""
+			url = url or ""
+			art_url = art_url or ""
 
-					-- Check if we have valid song data
-					if song and song ~= "" and song ~= " - " and song ~= "No players found" and string.len(song) > 3 then
-						prev_button.visible = true
-						next_button.visible = true
-						text_area.width = 150
-						music_text.forced_width = nil
-						music_text.align = "left"
-						-- Get album art
-						awful.spawn.easy_async_with_shell(
-							[[playerctl metadata --format '{{mpris:artUrl}}' 2>/dev/null]],
-							function(art_url)
-								art_url = art_url:gsub("\n", ""):gsub("\r", "")
-								if art_url and art_url ~= "" and art_url ~= "file://" then
-									-- Remove file:// prefix if present
-									local file_path = art_url:gsub("file://", "")
-									album_art:set_image(file_path)
-								else
-									-- Fallback to music emoji if no album art
-									album_art:set_image(nil)
-								end
-							end
-						)
-						music_text:set_markup(markup.font(theme.font, markup.fg.color("#FFD700", " " .. song .. " ")))
-					else
-						-- No valid metadata (player may be closing), show music icon
-						album_art:set_image(nil)
-						prev_button.visible = false
-						next_button.visible = false
-						text_area.width = 24
-						music_text.forced_width = 24
-						music_text.align = "center"
-						music_text:set_markup(markup.font(theme.font, markup.fg.color("#FFD700", "♪")))
-					end
+			-- Fallback to filename from URL if title is empty
+			if title == "" and url ~= "" then
+				title = url:match("([^/]+)$") or url
+				title = title:gsub("%%(%x%x)", function(h) return string.char(tonumber(h, 16)) end)
+				title = title:gsub("%.[^%.]+$", "")
+			end
+
+			local song
+			if artist ~= "" and title ~= "" then
+				song = artist .. " - " .. title
+			elseif title ~= "" then
+				song = title
+			else
+				song = ""
+			end
+
+			if song ~= "" and string.len(song) > 3 then
+				prev_button.visible = true
+				next_button.visible = true
+				text_area.width = 150
+				music_text.forced_width = nil
+				music_text.align = "left"
+				if art_url ~= "" and art_url ~= "file://" then
+					album_art:set_image(art_url:gsub("file://", ""))
+				else
+					album_art:set_image(nil)
 				end
-			)
+				local display = song:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
+				music_text:set_markup(markup.font(theme.font, markup.fg.color("#FFD700", " " .. display .. " ")))
+			else
+				album_art:set_image(nil)
+				prev_button.visible = false
+				next_button.visible = false
+				text_area.width = 24
+				music_text.forced_width = 24
+				music_text.align = "center"
+				music_text:set_markup(markup.font(theme.font, markup.fg.color("#FFD700", "♪")))
+			end
 		end
 	)
 end

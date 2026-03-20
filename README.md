@@ -41,7 +41,7 @@ dotfiles/
 ### 1. Clone
 
 ```bash
-git clone <repo-url> ~/dotfiles
+git clone git@github.com:tymoyato/dotfiles.git ~/.dotfiles
 ```
 
 ### 2. Symlink configs
@@ -49,7 +49,7 @@ git clone <repo-url> ~/dotfiles
 Links everything in `dotfiles/` into `~/.config/`:
 
 ```bash
-bash ~/dotfiles/symlink.sh
+bash ~/.dotfiles/symlink.sh
 ```
 
 > **Note:** The script expects the repo at `~/.dotfiles`. If you cloned elsewhere, edit `repo_dir` in `symlink.sh` accordingly.
@@ -59,7 +59,7 @@ bash ~/dotfiles/symlink.sh
 Run inside Fish shell:
 
 ```fish
-fish ~/dotfiles/setup.fish
+fish ~/.dotfiles/setup.fish
 ```
 
 This installs:
@@ -82,7 +82,7 @@ git:
 Then run:
 
 ```bash
-bash ~/dotfiles/.devtools/git.sh
+bash ~/.dotfiles/.devtools/git.sh
 ```
 
 ## Version Checks
