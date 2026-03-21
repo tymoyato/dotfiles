@@ -11,12 +11,20 @@ mason.ensure_installed = {
     "prettierd",
     "erb-formatter",
     "typescript-language-server",
+    "eslint-lsp",
+    "eslint_d",
     "deno",
     "solargraph",
+    "rubocop",
     "sql-formatter",
     -- c/cpp stuff
     "clangd",
     "clang-format",
+    -- go stuff
+    "gopls",
+    "goimports",
+    "gofumpt",
+    "golangci-lint",
   },
 }
 

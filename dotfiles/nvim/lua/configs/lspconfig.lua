@@ -1,21 +1,24 @@
--- EXAMPLE
+-- Using vim.lsp.config (Neovim 0.11+)
 local on_attach = require("nvchad.configs.lspconfig").on_attach
 local on_init = require("nvchad.configs.lspconfig").on_init
 local capabilities = require("nvchad.configs.lspconfig").capabilities
 
-local lspconfig = require "lspconfig"
-local servers = { "html", "cssls", "clangd", "sqls", "ts_ls", "solargraph", "tailwindcss" }
+local servers = { "html", "cssls", "clangd", "sqls", "ts_ls", "eslint", "solargraph", "tailwindcss", "gopls" }
 
 -- lsps with default config
 for _, lsp in ipairs(servers) do
-  lspconfig[lsp].setup {
+  vim.lsp.config[lsp] = {
     on_attach = on_attach,
     on_init = on_init,
     capabilities = capabilities,
   }
 end
+
 -- tailwindcss
-lspconfig.tailwindcss.setup {
+vim.lsp.config.tailwindcss = {
+  on_attach = on_attach,
+  on_init = on_init,
+  capabilities = capabilities,
   filetypes = {
     "erb",
     "eruby",
@@ -28,15 +31,33 @@ lspconfig.tailwindcss.setup {
     "typescript",
     "typescriptreact",
   },
-  userLanguages = {
-    eruby = "erb",
-    templ = "html",
+  settings = {
+    tailwindCSS = {
+      experimental = {
+        classRegex = {},
+      },
+    },
+  },
+  init_options = {
+    userLanguages = {
+      eruby = "erb",
+      templ = "html",
+    },
   },
 }
+
 -- typescript
-lspconfig.ts_ls.setup {}
+vim.lsp.config.ts_ls = {
+  on_attach = on_attach,
+  on_init = on_init,
+  capabilities = capabilities,
+}
+
 -- solargraph
-lspconfig.solargraph.setup {
+vim.lsp.config.solargraph = {
+  on_attach = on_attach,
+  on_init = on_init,
+  capabilities = capabilities,
   filetypes = { "ruby", "eruby", "gemfile", "rakefile" },
   settings = {
     solargraph = {
@@ -51,3 +72,6 @@ lspconfig.solargraph.setup {
     },
   },
 }
+
+-- Enable the servers
+vim.lsp.enable(servers)

@@ -10,6 +10,7 @@ treesitter.ensure_installed = {
     "css",
     "embedded_template",
     "ruby",
+    "go",
     "sql",
     "javascript",
     "typescript",

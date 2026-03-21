@@ -36,6 +36,10 @@ map("n", "<leader>k", function()
 end, { desc = "whichkey query lookup" })
 
 
+-- buffers
+map("n", "<leader>ba", "<cmd>bufdo bd!<CR>", { desc = "close all buffers" })
+map("n", "<leader>bo", "<cmd>%bd!|e#|bd#<CR>", { desc = "close all buffers except current" })
+
 -- new terminals
 vim.api.nvim_del_keymap("n", '<leader>h')
 map("n", "<leader>th", function()

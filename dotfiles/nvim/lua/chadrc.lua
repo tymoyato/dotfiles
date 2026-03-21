@@ -5,10 +5,28 @@
 local M = {}
 
 M.base46 = {
-	theme = "everforest",
+	theme = "cyberdream",
 	transparancy = true,
-	theme_toggle = { "monekai", "everforest" },
+	theme_toggle = { "monekai", "cyberdream" },
   integration = { "neogit", "lazygit", "diffview" },
+}
+
+M.ui = {
+	cmp = {
+		style = "default", -- default/flat_light/flat_dark/atom/atom_colored
+	},
+	statusline = {
+		theme = "default",
+		separator_style = "default",
+		order = nil,
+		modules = nil,
+	},
+	nvdash = {
+		load_on_startup = false,
+	},
+	prompt_cache = {
+		enabled = false, -- Disable the caching gem popup
+	},
 }
 
 return M
