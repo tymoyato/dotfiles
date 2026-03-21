@@ -7,7 +7,7 @@ configuration {
   show-icons: false;
   threads: 0;
   lazy-grab: false;
-  drun-use-desktop-cache: true;
+  drun-use-desktop-cache: false;
   sort: false;
   disable-history: true;
 }

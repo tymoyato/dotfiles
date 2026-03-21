@@ -297,7 +297,7 @@ GLOBALKEYS = gears.table.join(
 
 	awful.key({ MODKEY, "Control" }, "x", function()
 		awful.util.spawn(i3lock_settings)
-	end),
+	end, { description = "lock screen", group = "awesome" }),
 	awful.key({ MODKEY }, "s", hotkeys_popup.show_help, { description = "show help", group = "awesome" }),
 	awful.key({ MODKEY }, "Left", awful.tag.viewprev, { description = "view previous", group = "tag" }),
 	awful.key({ MODKEY }, "Right", awful.tag.viewnext, { description = "view next", group = "tag" }),
@@ -413,10 +413,10 @@ GLOBALKEYS = gears.table.join(
 	--           {description = "show the menubar", group = "launcher"}),
 	awful.key({ MODKEY }, "p", function()
 		awful.util.spawn(string.format("rofi -show drun -modes 'drun,window' -config ~/.config/rofi/config.rasi"))
-	end),
+	end, { description = "launch rofi (drun)", group = "launcher" }),
 	awful.key({ MODKEY }, "a", function()
 		awful.util.spawn(string.format("rofi -show window -modes 'drun,window' -config ~/.config/rofi/config.rasi"))
-	end),
+	end, { description = "launch rofi (window switcher)", group = "launcher" }),
 
 	-- Theme switching
 	awful.key({ MODKEY }, "t", function()
