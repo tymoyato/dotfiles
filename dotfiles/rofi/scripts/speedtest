@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Uses fast-cli (fast.com by Netflix)
+
+action=$(printf "run speedtest\ncancel" \
+    | rofi -dmenu -p "speedtest" -config ~/.config/rofi/config.rasi)
+
+[ -z "$action" ] || [ "$action" = "cancel" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+fast_bin=$(find /home/tymoyato/.local/share/nvm -name "fast" 2>/dev/null | head -1)
+
+if [ -z "$fast_bin" ]; then
+    rofi -e "speedtest: fast-cli not found. Run: npm install -g fast-cli"
+    exit 1
+fi
+
+notify-send "Speedtest" "Running... (~15s)" 2>/dev/null || true
+
+result=$("$fast_bin" --upload 2>&1)
+down=$(echo "$result" | sed -n '1p')
+up=$(echo "$result"   | sed -n '2p')
+
+rofi -e "$(printf 'Download:  %s\nUpload:    %s' "$down" "$up")" \
+    -config ~/.config/rofi/config.rasi

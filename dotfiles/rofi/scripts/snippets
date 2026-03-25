@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Snippets file: ~/.config/rofi/snippets.txt
+# Format: description | content
+# Requires: xclip
+
+SNIPPETS="$HOME/.config/rofi/snippets.txt"
+
+if [ ! -f "$SNIPPETS" ]; then
+    rofi -e "No snippets file found at $SNIPPETS"
+    exit 1
+fi
+
+chosen=$(grep -v "^#\|^$" "$SNIPPETS" | rofi -dmenu -p "snippet" -config ~/.config/rofi/config.rasi)
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+content=$(echo "$chosen" | cut -d"|" -f2- | sed 's/^ //')
+echo -n "$content" | xclip -selection clipboard

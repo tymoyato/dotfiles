@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Requires: playerctl
+
+if ! command -v playerctl &>/dev/null; then
+    rofi -e "media: install playerctl"
+    exit 1
+fi
+
+title=$(playerctl metadata --format "{{title}}" 2>/dev/null || echo "nothing playing")
+artist=$(playerctl metadata --format "{{artist}}" 2>/dev/null)
+status=$(playerctl status 2>/dev/null || echo "stopped")
+
+prompt="${artist:+$artist - }${title} [${status}]"
+
+chosen=$(printf "play/pause\nnext\nprevious\nstop" \
+    | rofi -dmenu -p "$prompt" -config ~/.config/rofi/config.rasi)
+
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+case "$chosen" in
+    "play/pause") playerctl play-pause ;;
+    "next")       playerctl next ;;
+    "previous")   playerctl previous ;;
+    "stop")       playerctl stop ;;
+esac

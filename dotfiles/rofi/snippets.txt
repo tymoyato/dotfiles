@@ -1,0 +1,7 @@
+# Snippets — format: description | content
+email      | your@email.com
+phone      | +1234567890
+address    | 123 Main St
+shebang sh | #!/usr/bin/env bash
+shebang py | #!/usr/bin/env python3
+gitignore  | .env\nnode_modules/\n__pycache__/\n*.pyc

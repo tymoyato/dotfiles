@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Requires: bluez-utils (sudo pacman -S bluez-utils)
+
+if ! command -v bluetoothctl &>/dev/null; then
+    rofi -e "bluetooth: install bluez-utils (sudo pacman -S bluez-utils)"
+    exit 1
+fi
+
+paired=$(bluetoothctl devices Paired | sed 's/Device [^ ]* //')
+connected=$(bluetoothctl devices Connected | sed 's/Device [^ ]* //')
+
+options=$(printf "scan on\n%s" "$paired")
+chosen=$(echo "$options" | rofi -dmenu -p "bluetooth" -config ~/.config/rofi/config.rasi)
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+case "$chosen" in
+    "scan on")
+        kitty --title "bluetoothctl" bluetoothctl scan on &
+        ;;
+    *)
+        mac=$(bluetoothctl devices Paired | grep "$chosen" | awk '{print $2}')
+        if echo "$connected" | grep -q "$chosen"; then
+            bluetoothctl disconnect "$mac"
+        else
+            bluetoothctl connect "$mac"
+        fi
+        ;;
+esac

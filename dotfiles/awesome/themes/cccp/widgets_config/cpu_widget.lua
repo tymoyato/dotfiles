@@ -7,6 +7,7 @@ local gears = require("gears")
 theme.widget_cpu = theme.dir .. "/icons/widgets/cpu.png"
 local cpu_icon = wibox.widget.imagebox(theme.widget_cpu)
 local cpu = lain.widget.cpu({
+	timeout = 5,
 	settings = function()
 		widget:set_markup(markup.font(theme.font, markup.fg.color(theme.fg_widget, " " .. cpu_now.usage .. "% ")))
 	end,

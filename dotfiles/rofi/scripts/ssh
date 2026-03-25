@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Opens SSH connection in kitty
+
+SSH_CONFIG="$HOME/.ssh/config"
+
+hosts=$(grep -E "^Host " "$SSH_CONFIG" 2>/dev/null \
+    | awk '{print $2}' \
+    | grep -v "\*" \
+    | sort)
+
+if [ -z "$hosts" ]; then
+    rofi -e "No hosts in ~/.ssh/config"
+    exit 1
+fi
+
+chosen=$(echo "$hosts" | rofi -dmenu -p "ssh" -config ~/.config/rofi/config.rasi)
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+kitty ssh "$chosen" &

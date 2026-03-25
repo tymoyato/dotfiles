@@ -21,6 +21,8 @@ check_and_start() {
 }
 
 
+pgrep -x greenclip > /dev/null || greenclip daemon &
+
 declare -A processes=(
   ["Brave-browser"]="Brave-browser"
   ["bruno"]="bruno"

@@ -11,10 +11,10 @@
 			},
 			"storeCookies": true,
 			"sendCookies": true,
-			"timeout": 0
+			"timeout": 30000
 		},
 		"font": {
-			"codeFont": "default",
+			"codeFont": "JetBrainsMono Nerd Font",
 			"codeFontSize": 14
 		},
 		"proxy": {

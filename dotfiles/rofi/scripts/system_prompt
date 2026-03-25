@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 
 res=$(echo \
-"lock
+"kill
+lock
 exit
 poweroff
 reboot
-suspend" \
+suspend
+hibernate" \
 | rofi -dmenu -p "system")
+
+if [ -z "$res" ]; then
+    exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+fi
 
 which systemctl &>/dev/null
 if [ "$?" -eq 0 ]; then
@@ -16,15 +22,22 @@ else
 fi
 
 case $res in
+"kill")
+    ps -u "$USER" -o pid,comm,%cpu,%mem --sort=-%cpu \
+    | rofi -dmenu -p "Kill" \
+    | awk '{print $1}' \
+    | xargs -r kill;;
 "lock")
     sleep 0.5; # wait for picom fade --- not sure how to do this via script
     ~/.scripts/i3lock_launch;;
 "exit")
-    xdotool search "" windowkill %@  --maxdepth; bspc quit;;
+    pkill -u "$USER" awesome;;
 "poweroff")
     $login_manager poweroff;;
 "reboot")
     $login_manager reboot;;
 "suspend")
     $login_manager suspend;;
+"hibernate")
+    $login_manager hibernate;;
 esac 

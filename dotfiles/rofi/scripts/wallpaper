@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Requires: feh (sudo pacman -S feh)
+# Set WALLPAPER_DIR to your wallpapers folder
+
+WALLPAPER_DIR="$HOME/Pictures/wallpapers"
+
+if ! command -v feh &>/dev/null; then
+    rofi -e "wallpaper: install feh (sudo pacman -S feh)"
+    exit 1
+fi
+
+if [ ! -d "$WALLPAPER_DIR" ]; then
+    rofi -e "wallpaper: directory not found: $WALLPAPER_DIR"
+    exit 1
+fi
+
+chosen=$(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) \
+    | xargs -I{} basename {} \
+    | sort \
+    | rofi -dmenu -p "wallpaper" -config ~/.config/rofi/config.rasi)
+
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+feh --bg-scale "$WALLPAPER_DIR/$chosen"

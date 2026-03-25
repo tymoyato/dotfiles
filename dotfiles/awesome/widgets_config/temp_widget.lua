@@ -8,6 +8,7 @@ theme.widget_temp = theme.dir .. "/icons/widgets/temp.png"
 local temp_icon = wibox.widget.imagebox(theme.widget_temp)
 local temp = lain.widget.temp({
 	tempfiles = { "/sys/class/hwmon/hwmon2/temp1_input" },
+	timeout = 10,
 	settings = function()
 		local temp_str = "N/A"
 		if CORETEMP_NOW ~= "N/A" then

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Requires: greenclip (yay -S greenclip)
+# Start daemon: add `greenclip daemon &` to autostart
+
+if ! command -v greenclip &>/dev/null; then
+    rofi -e "clipboard: install greenclip (yay -S greenclip)"
+    exit 1
+fi
+
+chosen=$(greenclip print | rofi -dmenu -p "clipboard" -config ~/.config/rofi/config.rasi)
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+echo -n "$chosen" | xargs -r -I{} greenclip print {} | xclip -selection clipboard

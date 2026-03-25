@@ -20,6 +20,7 @@ if not pgrep -x "Xorg" > /dev/null
 end
 
 set fish_greeting ""
+set -gx NO_AT_BRIDGE 1
 
 # fish_greeting
 set -gx TERM xterm-256color
@@ -28,6 +29,7 @@ set -x PATH $GVM_ROOT/bin $PATH
 set -x PATH $HOME/.local/bin $PATH
 
 # aliases
+alias updates='checkupdates; yay -Qu'
 alias g=git
 alias v=nvim
 alias z=zoxide

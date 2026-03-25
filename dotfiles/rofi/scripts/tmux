@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Requires: tmux (sudo pacman -S tmux)
+
+if ! command -v tmux &>/dev/null; then
+    rofi -e "tmux: install tmux (sudo pacman -S tmux)"
+    exit 1
+fi
+
+sessions=$(tmux ls 2>/dev/null | awk -F: '{print $1}')
+
+chosen=$({ [ -n "$sessions" ] && echo "$sessions"; echo "+ new session"; } \
+    | rofi -dmenu -p "tmux" -config ~/.config/rofi/config.rasi)
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+if [ "$chosen" = "+ new session" ]; then
+    name=$(rofi -dmenu -p "session name" -config ~/.config/rofi/config.rasi <<< "")
+    [ -z "$name" ] && exit 0
+    kitty tmux new-session -s "$name" &
+    exit 0
+fi
+
+action=$(rofi -dmenu -p "$chosen" -config ~/.config/rofi/config.rasi <<< "+ attach
++ new window
++ list windows
++ rename
++ kill")
+[ -z "$action" ] && exit 0
+
+case "$action" in
+    "+ attach")
+        kitty tmux attach-session -t "$chosen" &
+        ;;
+    "+ kill")
+        confirm=$(rofi -dmenu -p "kill $chosen?" -config ~/.config/rofi/config.rasi <<< "yes
+no")
+        [ "$confirm" = "yes" ] && tmux kill-session -t "$chosen" \
+            && notify-send "tmux" "Session '$chosen' killed"
+        ;;
+    "+ rename")
+        newname=$(rofi -dmenu -p "rename to" -config ~/.config/rofi/config.rasi <<< "")
+        [ -z "$newname" ] && exit 0
+        tmux rename-session -t "$chosen" "$newname" \
+            && notify-send "tmux" "Renamed '$chosen' to '$newname'"
+        ;;
+    "+ new window")
+        winname=$(rofi -dmenu -p "window name" -config ~/.config/rofi/config.rasi <<< "")
+        [ -z "$winname" ] && exit 0
+        tmux new-window -t "$chosen" -n "$winname"
+        kitty tmux attach-session -t "$chosen" &
+        ;;
+    "+ list windows")
+        windows=$(tmux list-windows -t "$chosen" | awk -F: '{print $1":"$2}')
+        [ -z "$windows" ] && rofi -e "tmux: no windows in $chosen" && exit 1
+        win=$(rofi -dmenu -p "$chosen windows" -config ~/.config/rofi/config.rasi <<< "$windows")
+        [ -z "$win" ] && exit 0
+        win_idx=$(echo "$win" | awk -F: '{print $1}')
+        kitty tmux attach-session -t "$chosen" \; select-window -t "$win_idx" &
+        ;;
+esac

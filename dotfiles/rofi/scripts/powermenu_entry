@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+SCRIPTS_DIR="$HOME/.config/rofi/scripts"
+
+if [ -n "$1" ]; then
+    case "$1" in
+        powermenu) script="system_prompt" ;;
+        *)         script="$1" ;;
+    esac
+    (sleep 0.05; export ROFI_PARENT_ITEM="$1"; exec "$SCRIPTS_DIR/$script") >/dev/null 2>&1 &
+    exit 0
+fi
+
+printf "powermenu\nclipboard\nemoji\nsnippets\nwifi\nbluetooth\nprojects\nssh\nmedia\nwallpaper\ncalc\nbookmarks\ndocker\ntmux\nsearch\ntabs\nspeedtest\ntranslate\nlogs\nport\n"

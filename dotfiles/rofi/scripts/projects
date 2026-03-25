@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Opens a git project in kitty + nvim
+# Edit PROJECT_DIRS to your paths
+
+PROJECT_DIRS=(
+    "$HOME"
+    "$HOME/projects"
+    "$HOME/dev"
+    "$HOME/work"
+)
+
+projects=$(find "${PROJECT_DIRS[@]}" -maxdepth 3 -name ".git" -type d 2>/dev/null \
+    | sed 's|/.git||' \
+    | sort)
+
+[ -z "$projects" ] && rofi -e "No git projects found" && exit 1
+
+chosen=$(echo "$projects" | rofi -dmenu -p "project" -config ~/.config/rofi/config.rasi)
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+kitty --directory "$chosen" nvim &

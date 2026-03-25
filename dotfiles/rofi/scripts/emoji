@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+
+chosen=$(cat <<'EOF' | rofi -dmenu -p "emoji" -config ~/.config/rofi/config.rasi
+😀 grinning face
+😁 beaming face
+😂 face with tears of joy
+🤣 rolling on the floor laughing
+😃 grinning face with big eyes
+😄 grinning face with smiling eyes
+😅 grinning face with sweat
+😆 grinning squinting face
+😉 winking face
+😊 smiling face with smiling eyes
+😋 face savoring food
+😎 smiling face with sunglasses
+😍 smiling face with heart-eyes
+🥰 smiling face with hearts
+😘 face blowing a kiss
+🙂 slightly smiling face
+🤗 hugging face
+🤩 star-struck
+🤔 thinking face
+😐 neutral face
+😑 expressionless face
+😶 face without mouth
+😏 smirking face
+😒 unamused face
+🙄 face with rolling eyes
+😬 grimacing face
+😔 pensive face
+😴 sleeping face
+😷 face with medical mask
+🤒 face with thermometer
+🤢 nauseated face
+🤮 face vomiting
+🤧 sneezing face
+🥵 hot face
+🥶 cold face
+🤯 exploding head
+🤠 cowboy hat face
+🥳 partying face
+😟 worried face
+😕 confused face
+😮 face with open mouth
+😲 astonished face
+😳 flushed face
+🥺 pleading face
+😢 crying face
+😭 loudly crying face
+😱 face screaming in fear
+😠 angry face
+😡 pouting face
+🤬 face with symbols on mouth
+😈 smiling face with horns
+💀 skull
+💩 pile of poo
+🤖 robot
+👋 waving hand
+✋ raised hand
+👌 OK hand
+✌️ victory hand
+🤞 crossed fingers
+👍 thumbs up
+👎 thumbs down
+👏 clapping hands
+🙌 raising hands
+🙏 folded hands
+💪 flexed biceps
+👀 eyes
+❤️ red heart
+🧡 orange heart
+💛 yellow heart
+💚 green heart
+💙 blue heart
+💜 purple heart
+🖤 black heart
+🤍 white heart
+💔 broken heart
+💕 two hearts
+💖 sparkling heart
+✨ sparkles
+🔥 fire
+💥 collision
+⚡ high voltage
+❄️ snowflake
+🌈 rainbow
+🌊 water wave
+💧 droplet
+🎉 party popper
+🎊 confetti ball
+🎁 wrapped gift
+🏆 trophy
+🥇 1st place medal
+🎵 musical note
+🎶 musical notes
+🎮 video game
+🎯 bullseye
+🎲 game die
+🃏 joker
+♟️ chess pawn
+🧩 puzzle piece
+🚀 rocket
+🛸 flying saucer
+🌍 globe europe-africa
+🌎 globe americas
+🌏 globe asia-australia
+🌙 crescent moon
+⭐ star
+🌟 glowing star
+☀️ sun
+⛅ sun behind cloud
+🌧️ cloud with rain
+⛈️ cloud with lightning and rain
+🌪️ tornado
+🍎 red apple
+🍊 tangerine
+🍋 lemon
+🍇 grapes
+🍓 strawberry
+🍒 cherries
+🍕 pizza
+🍔 hamburger
+🍟 french fries
+🌮 taco
+🍣 sushi
+🍜 steaming bowl
+🍦 soft ice cream
+🎂 birthday cake
+🍩 doughnut
+🍪 cookie
+🍫 chocolate bar
+🍺 beer mug
+☕ hot beverage
+🧃 beverage box
+🚗 automobile
+🚕 taxi
+🚌 bus
+🚑 ambulance
+🚒 fire engine
+🚓 police car
+✈️ airplane
+🚀 rocket
+🏠 house
+🏢 office building
+🏥 hospital
+🏦 bank
+🏫 school
+🔑 key
+🔒 locked
+🔓 unlocked
+🔨 hammer
+🔧 wrench
+⚙️ gear
+💡 light bulb
+🔋 battery
+💻 laptop
+📱 mobile phone
+⌨️ keyboard
+🖥️ desktop computer
+📷 camera
+📺 television
+📚 books
+📝 memo
+✏️ pencil
+📌 pushpin
+📎 paperclip
+✂️ scissors
+🗑️ wastebasket
+📧 e-mail
+📦 package
+💰 money bag
+💳 credit card
+🪙 coin
+📈 chart increasing
+📉 chart decreasing
+🔍 magnifying glass
+EOF
+)
+
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+echo -n "$chosen" | awk '{print $1}' | xclip -selection clipboard

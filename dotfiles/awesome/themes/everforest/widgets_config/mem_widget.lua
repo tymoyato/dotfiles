@@ -7,6 +7,7 @@ local gears = require("gears")
 theme.widget_mem = theme.dir .. "/icons/widgets/mem.png"
 local mem_icon = wibox.widget.imagebox(theme.widget_mem)
 local mem = lain.widget.mem({
+	timeout = 5,
 	settings = function()
 		widget:set_markup(
 			markup.font(

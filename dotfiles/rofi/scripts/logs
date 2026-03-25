@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Requires: systemd (journalctl)
+
+services=$(systemctl list-units --type=service --all --no-legend --no-pager \
+    | awk '{print $1}' | sed 's/\.service//')
+
+[ -z "$services" ] && rofi -e "logs: no services found" && exit 1
+
+chosen=$(echo "$services" \
+    | rofi -dmenu -p "logs" -config ~/.config/rofi/config.rasi)
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+kitty --title "logs: $chosen" bash -c "
+    journalctl -u '$chosen' -f --no-pager -n 50
+" &

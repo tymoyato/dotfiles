@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Requires: translate-shell (sudo pacman -S translate-shell)
+
+if ! command -v trans &>/dev/null; then
+    rofi -e "translate: install translate-shell (sudo pacman -S translate-shell)"
+    exit 1
+fi
+
+langs="en\nfr\nes\nde\nit\npt\nzh\nja\nar\nru"
+
+target=$(printf "$langs" \
+    | rofi -dmenu -p "translate to" -config ~/.config/rofi/config.rasi)
+[ -z "$target" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+text=$(rofi -dmenu -p "text" -config ~/.config/rofi/config.rasi < /dev/null)
+[ -z "$text" ] && exit 0
+
+result=$(trans -b ":${target}" "$text" 2>/dev/null)
+[ -z "$result" ] && rofi -e "translate: no result" && exit 1
+
+echo "$result" | xclip -selection clipboard 2>/dev/null || true
+
+rofi -e "$(printf '%s\n\n(copied to clipboard)' "$result")" \
+    -config ~/.config/rofi/config.rasi

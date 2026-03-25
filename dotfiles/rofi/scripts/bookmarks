@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Requires: jq (sudo pacman -S jq), Brave browser
+# Opens selected bookmark in Brave
+
+BOOKMARKS="$HOME/.config/BraveSoftware/Brave-Browser/Default/Bookmarks"
+
+if ! command -v jq &>/dev/null; then
+    rofi -e "bookmarks: install jq (sudo pacman -S jq)"
+    exit 1
+fi
+
+if [ ! -f "$BOOKMARKS" ]; then
+    rofi -e "bookmarks: Brave bookmarks file not found"
+    exit 1
+fi
+
+chosen=$(jq -r '.. | objects | select(.type == "url") | "\(.name)\t\(.url)"' "$BOOKMARKS" 2>/dev/null \
+    | rofi -dmenu -p "bookmark" -config ~/.config/rofi/config.rasi)
+
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+url=$(echo "$chosen" | awk -F'\t' '{print $2}')
+brave "$url" &

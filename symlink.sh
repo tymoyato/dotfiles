@@ -15,6 +15,9 @@ setup_configs() {
     "lazygit"
     "btop"
     "zellij"
+    "zed"
+    "yazi"
+    "tmux"
 	)
 
 	# Remove existing configurations
@@ -45,7 +48,23 @@ setup_home_configs() {
 	echo "Home configurations have been set up."
 }
 
+setup_dmenu_scripts() {
+	local scripts_dir="$HOME/.dotfiles/dotfiles/dmenu_scripts"
+	local bin_dir="$HOME/.local/bin"
+
+	mkdir -p "$bin_dir"
+
+	for script in "$scripts_dir"/*; do
+		name=$(basename "$script")
+		ln -sf "$script" "$bin_dir/$name"
+		chmod +x "$script"
+	done
+
+	echo "Dmenu scripts have been set up."
+}
+
 # Call the functions
 setup_configs
 setup_home_configs
+setup_dmenu_scripts
 exec fish

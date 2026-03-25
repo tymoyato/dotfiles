@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Requires: nmcli (networkmanager)
+
+connected=$(nmcli -t -f active,ssid dev wifi | grep "^yes" | cut -d: -f2)
+
+options=$(nmcli -f SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null \
+    | tail -n +2 \
+    | awk '{printf "%-35s %s%% %s\n", $1, $2, $3}' \
+    | sort -t'%' -k1 -rn)
+
+chosen=$(printf "disconnect\n%s" "$options" \
+    | rofi -dmenu -p "wifi [${connected:-none}]" -config ~/.config/rofi/config.rasi \
+    | awk '{print $1}')
+
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+case "$chosen" in
+    disconnect) nmcli device disconnect wlan0 ;;
+    *)          nmcli device wifi connect "$chosen" ;;
+esac

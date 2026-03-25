@@ -149,8 +149,8 @@ text_scroll:buttons(awful.util.table.join(awful.button({}, 1, toggle_play_pause)
 -- Initial update
 update_music()
 
--- Update every 2 seconds
-local timer = gears.timer({ timeout = 2 })
+-- Update every 4 seconds
+local timer = gears.timer({ timeout = 4 })
 timer:connect_signal("timeout", update_music)
 timer:start()
 

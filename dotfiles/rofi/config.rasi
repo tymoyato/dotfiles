@@ -1,7 +1,9 @@
 // vim: fdm=marker
 
 configuration {
-  modes: "drun,window";
+  modes: "combi,window";
+  combi-modes: "script:~/.config/rofi/scripts/powermenu_entry,drun";
+  combi-hide-mode-prefix: true;
   font: "JetBrainsMono NF 14";
   drun-display-format: "{name}";
   show-icons: false;
@@ -25,7 +27,7 @@ configuration {
 window {
   width:            680px;
   background-color: @bg;
-  border-radius:    0px;
+  border-radius:    12px;
   border:           0px;
   location:         center;
   padding:          12px;
@@ -95,10 +97,23 @@ element.normal.normal {
 }
 element.selected.normal {
   background-color: @selected-bg;
+  border-radius:    6px;
 }
 element.alternate.normal {
   background-color: @t;
 }
 element.selected.normal element-text {
   text-color: @selected-fg;
+}
+
+message {
+  background-color: @bg;
+  border:           0;
+  padding:          4px 0 0;
+}
+
+textbox {
+  background-color: @t;
+  text-color:       @fg;
+  padding:          8px 12px;
 }

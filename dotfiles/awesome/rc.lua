@@ -1,3 +1,78 @@
+-- =============================================================================
+-- KEYBINDINGS REFERENCE
+-- =============================================================================
+--
+-- [Awesome]
+--   MODKEY + s                        show help
+--   MODKEY + b                        toggle wibox
+--   MODKEY + t                        switch theme  (global — takes priority over client keys)
+--   MODKEY + Ctrl + x                 lock screen
+--   MODKEY + Ctrl + r                 reload awesome
+--   MODKEY + Shift + q                quit awesome
+--   MODKEY + r                        run prompt
+--   MODKEY + w                        show main menu
+--   MODKEY + x                        lua execute prompt
+--
+-- [Launcher]
+--   MODKEY + Return                   open terminal
+--   MODKEY + p                        rofi (app launcher)
+--   MODKEY + a                        rofi (window switcher)
+--   MODKEY + o                        flameshot (screenshot)
+--   MODKEY + d                        dmenu
+--
+-- [Tags]
+--   MODKEY + [1-9]                    view tag
+--   MODKEY + Ctrl + [1-9]             toggle tag display
+--   MODKEY + Left / Right             previous / next tag
+--   MODKEY + Escape                   go back (tag history)
+--   MODKEY + Shift + n                add new tag
+--   MODKEY + Shift + r                rename tag
+--   MODKEY + Shift + d                delete tag
+--   MODKEY + Shift + Left / Right     move tag left / right
+--
+-- [Client - focus & movement]
+--   MODKEY + j / k                    focus next / previous client
+--   MODKEY + Tab                      focus previous client (history)
+--   MODKEY + u                        jump to urgent client
+--   MODKEY + Shift + j / k            swap with next / previous client
+--   MODKEY + Ctrl + Return            move to master
+--   MODKEY + Shift + [1-9]            move client to tag
+--   MODKEY + Ctrl + Shift + [1-9]     toggle client on tag
+--   MODKEY + Ctrl + j / k             focus next / previous screen
+--   MODKEY + o                        move client to screen
+--
+-- [Client - state]
+--   MODKEY + f                        toggle fullscreen
+--   MODKEY + m                        toggle maximize
+--   MODKEY + Ctrl + m                 toggle maximize vertical
+--   MODKEY + Shift + m                toggle maximize horizontal
+--   MODKEY + n                        minimize
+--   MODKEY + Ctrl + n                 restore minimized
+--   MODKEY + Ctrl + space             toggle floating
+--   MODKEY + Shift + y                toggle keep on top
+--   MODKEY + y                        toggle sticky (show on all tags)
+--   MODKEY + Shift + c                close client
+--   Alt + Shift + m                   magnify client
+--
+-- [Layout]
+--   MODKEY + space                    next layout
+--   MODKEY + Shift + space            previous layout
+--   MODKEY + h / l                    decrease / increase master width
+--   MODKEY + Shift + h / l            decrease / increase master count
+--   MODKEY + Ctrl + h / l             decrease / increase column count
+--   Ctrl + Alt + Shift + Left / Right decrement / increment gaps
+--
+-- [Audio]
+--   MODKEY + Shift + =                volume up
+--   MODKEY + Shift + -                volume down
+--   MODKEY + Alt + space              play / pause
+--   MODKEY + Alt + Left / Right       previous / next track
+--
+-- [Mouse]
+--   MODKEY + Mouse1                   move client
+--   MODKEY + Mouse3                   resize client
+-- =============================================================================
+
 local awesome, client, mouse, screen, tag = awesome, client, mouse, screen, tag
 local ipairs, string, os, table, tostring, tonumber, type = ipairs, string, os, table, tostring, tonumber, type
 pcall(require, "luarocks.loader")
@@ -150,10 +225,9 @@ beautiful.init(theme_path)
 TERMINAL = "kitty"
 local editor = os.getenv("EDITOR") or "editor"
 local editor_cmd = TERMINAL .. " -e " .. editor
-awful.spawn.with_shell("picom --config ~/.config/picom/picom.conf")
+awful.spawn.with_shell("pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf")
+awful.spawn.with_shell("pgrep -x brave > /dev/null || brave --remote-debugging-port=9222")
 awful.spawn.with_shell("~/.config/awesome/utils/apps.sh")
--- Run package checker with output logging and delay
-awful.spawn.with_shell("sleep 2 && ~/.Kitay-Gorod/dotfiles/awesome/utils/package-checker.sh >> ~/.Kitay-Gorod/linux/package-checker-debug.log 2>&1")
 awful.spawn.with_shell("~/.config/awesome/display-setup.sh")
 -- awful.spawn.with_shell("sudo -u ervin DISPLAY=:0 /home/ervin/.utils/home_reset_display.sh")
 -- awful.spawn.with_shell("~/.utils/apps.sh")
@@ -239,32 +313,29 @@ awful.screen.connect_for_each_screen(function(s)
 end)
 
 -- Restore tag state after restart
+local _restoring_tag = false
 local tag_file = io.open("/tmp/awesome_current_tag", "r")
 if tag_file then
 	local saved_tag_index = tonumber(tag_file:read("*line"))
+	tag_file:close()
+	-- Clean up the temporary files
+	os.remove("/tmp/awesome_current_tag")
+	os.remove("/tmp/awesome_theme_switch")
+	os.remove("/tmp/awesome_normal_restart")
 	if saved_tag_index and saved_tag_index >= 1 and saved_tag_index <= 9 then
+		_restoring_tag = true
 		-- Use a timer with longer timeout to ensure everything is initialized
 		local restore_timer = gears.timer({ timeout = 1 })
 		restore_timer:connect_signal("timeout", function()
 			local screen = awful.screen.focused()
 			if screen and screen.tags[saved_tag_index] then
 				screen.tags[saved_tag_index]:view_only()
-				-- Show notification for debugging
-				naughty.notify({
-					title = "Tag Restored",
-					text = "Restored to tag " .. saved_tag_index,
-					timeout = 2,
-				})
 			end
+			_restoring_tag = false
 			restore_timer:stop()
 		end)
 		restore_timer:start()
 	end
-	tag_file:close()
-	-- Clean up the temporary files
-	os.remove("/tmp/awesome_current_tag")
-	os.remove("/tmp/awesome_theme_switch")
-	os.remove("/tmp/awesome_normal_restart")
 end
 
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
@@ -412,7 +483,7 @@ GLOBALKEYS = gears.table.join(
 	-- awful.key({ MODKEY }, "o", function() menubar.show() end,
 	--           {description = "show the menubar", group = "launcher"}),
 	awful.key({ MODKEY }, "p", function()
-		awful.util.spawn(string.format("rofi -show drun -modes 'drun,window' -config ~/.config/rofi/config.rasi"))
+		awful.util.spawn(string.format("rofi -show combi -modes 'combi,window' -config ~/.config/rofi/config.rasi"))
 	end, { description = "launch rofi (drun)", group = "launcher" }),
 	awful.key({ MODKEY }, "a", function()
 		awful.util.spawn(string.format("rofi -show window -modes 'drun,window' -config ~/.config/rofi/config.rasi"))
@@ -425,6 +496,9 @@ GLOBALKEYS = gears.table.join(
 
 	-- awful.key({ MODKEY }, "o", function () scratch.drop("kitty", "bottom", "left", 0.60, 0.60, true, mouse.screen) end),
 	-- Custom
+	awful.key({ MODKEY }, "d", function()
+		awful.spawn("dmenu_run")
+	end, { description = "launch dmenu", group = "launcher" }),
 	awful.key({ MODKEY }, "o", function()
 		awful.spawn("flameshot gui")
 	end, { description = "start flameshot", group = "launcher" }),
@@ -500,9 +574,12 @@ CLIENTKEYS = gears.table.join(
 	awful.key({ MODKEY }, "o", function(c)
 		c:move_to_screen()
 	end, { description = "move to screen", group = "client" }),
-	awful.key({ MODKEY }, "t", function(c)
+	awful.key({ MODKEY, "Shift" }, "y", function(c)
 		c.ontop = not c.ontop
 	end, { description = "toggle keep on top", group = "client" }),
+	awful.key({ MODKEY }, "y", function(c)
+		c.sticky = not c.sticky
+	end, { description = "toggle sticky", group = "client" }),
 	awful.key({ MODKEY }, "n", function(c)
 		-- The client currently has the input focus, so it cannot be
 		-- minimized, since minimized clients can't have the focus.
@@ -654,11 +731,8 @@ client.connect_signal("manage", function(c)
 		awful.placement.no_offscreen(c)
 	end
 
-	-- Debug: Check if we're restoring a tag and prevent client from changing focus
-	local tag_file = io.open("/tmp/awesome_current_tag", "r")
-	if tag_file then
-		tag_file:close()
-		-- Don't focus this client if we're restoring a tag
+	-- Don't focus this client if we're restoring a tag
+	if _restoring_tag then
 		c:emit_signal("request::activate", "manage", { raise = false })
 	end
 end)

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Requires: bc (sudo pacman -S bc)
+# Result is copied to clipboard via xclip
+
+if ! command -v bc &>/dev/null; then
+    rofi -e "calc: install bc (sudo pacman -S bc)"
+    exit 1
+fi
+
+expr=$(rofi -dmenu -p "calc" -config ~/.config/rofi/config.rasi < /dev/null)
+[ -z "$expr" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+result=$(echo "scale=6; $expr" | bc -l 2>/dev/null)
+if [ -z "$result" ]; then
+    rofi -e "Invalid expression: $expr"
+    exit 1
+fi
+
+echo -n "$result" | xclip -selection clipboard
+rofi -e "$expr = $result (copied)"

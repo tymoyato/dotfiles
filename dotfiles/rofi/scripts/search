@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+declare -A engines=(
+    ["google"]="https://google.com/search?q="
+    ["github"]="https://github.com/search?q="
+    ["youtube"]="https://youtube.com/search?search_query="
+    ["mdn"]="https://developer.mozilla.org/en-US/search?q="
+    ["stackoverflow"]="https://stackoverflow.com/search?q="
+    ["arch wiki"]="https://wiki.archlinux.org/index.php?search="
+    ["rubygems"]="https://rubygems.org/search?query="
+    ["go.dev"]="https://pkg.go.dev/search?q="
+    ["duckduckgo"]="https://duckduckgo.com/?q="
+)
+
+engine=$(printf '%s\n' "${!engines[@]}" | sort | rofi -dmenu -p "search" -config ~/.config/rofi/config.rasi)
+[ -z "$engine" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+query=$(rofi -dmenu -p "$engine" -config ~/.config/rofi/config.rasi <<< "")
+[ -z "$query" ] && exit 0
+
+url="${engines[$engine]}$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$query")"
+brave "$url" &

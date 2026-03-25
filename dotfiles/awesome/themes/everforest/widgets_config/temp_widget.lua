@@ -38,6 +38,7 @@ local temp_icon = wibox.widget.imagebox(theme.widget_temp)
 
 local temp = lain.widget.temp({
     tempfiles = { temp_file },
+    timeout = 10,
     settings = function()
         local temp_str = "N/A"
         if CORETEMP_NOW ~= "N/A" then

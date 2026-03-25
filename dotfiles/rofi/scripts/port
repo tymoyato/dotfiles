@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Requires: ss (iproute2)
+
+ports=$(ss -tulnp 2>/dev/null \
+    | tail -n +2 \
+    | awk '{
+        split($5, addr, ":");
+        port = addr[length(addr)];
+        proto = $1;
+        process = $NF;
+        gsub(/users:\(\(/, "", process);
+        gsub(/\)\)/, "", process);
+        split(process, p, ",");
+        name = p[1]; gsub(/"/, "", name);
+        pid = p[2]; gsub(/pid=/, "", pid);
+        if (port != "" && port != "*")
+            printf "%-6s %-7s %-20s %s\n", proto, port, name, pid
+    }' \
+    | sort -k2 -n)
+
+[ -z "$ports" ] && rofi -e "port: no open ports found" && exit 1
+
+chosen=$(echo "$ports" \
+    | rofi -dmenu -p "port" -config ~/.config/rofi/config.rasi)
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+pid=$(echo "$chosen" | awk '{print $4}')
+name=$(echo "$chosen" | awk '{print $3}')
+port=$(echo "$chosen" | awk '{print $2}')
+
+action=$(printf "kill $name (pid $pid)\ncancel" \
+    | rofi -dmenu -p "port $port" -config ~/.config/rofi/config.rasi)
+
+[ -z "$action" ] || [ "$action" = "cancel" ] && exit 0
+
+kill "$pid" 2>/dev/null && notify-send "port" "Killed $name (pid $pid)" \
+    || rofi -e "port: could not kill $name — try with sudo"
