@@ -129,6 +129,7 @@ local kbd_widget = require("widgets.kbd_widget.kbd_widget")
 local brightness_widget = require("themes.everforest.widgets_config.brightness_widget")
 local music_widget = require("themes.everforest.widgets_config.music_widget")
 local crypto_widget = require("themes.everforest.widgets_config.crypto_widget")
+local notif_widget  = require("themes.everforest.widgets_config.notif_widget")
 
 function theme.connect(s)
     -- Quake application
@@ -203,6 +204,8 @@ function theme.connect(s)
             battery_widget,
             wibox.widget.textbox(" "),
             crypto_widget,
+            wibox.widget.textbox(" "),
+            notif_widget,
             wibox.widget.textbox(" "),
             clock_widget,
             wibox.widget.textbox(" "),
