@@ -142,6 +142,12 @@ naughty.config.defaults.border_color = beautiful.border_tooltip
 naughty.config.defaults.border_width = 2
 naughty.config.defaults.hover_timeout = nil
 
+local _naughty_notify = naughty.notify
+naughty.notify = function(args)
+	awful.spawn.with_shell("paplay /usr/share/sounds/freedesktop/stereo/message.oga")
+	return _naughty_notify(args)
+end
+
 lain.layout.termfair.nmaster = 3
 lain.layout.termfair.ncol = 1
 lain.layout.termfair.center.nmaster = 3
