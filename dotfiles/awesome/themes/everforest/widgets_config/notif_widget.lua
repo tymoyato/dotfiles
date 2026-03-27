@@ -22,9 +22,8 @@ local popup = nil
 local notif_label = wibox.widget.textbox()
 local function refresh_label()
     local count = #history
-    local color = count > 0 and fg_green or fg_grey
     notif_label:set_markup(
-        string.format('<span font="Meslo LGS Regular 10" color="%s"> [%d] </span>', color, count)
+        string.format('<span font="Meslo LGS Regular 10" color="%s"> 🔔 %d </span>', fg_color, count)
     )
 end
 refresh_label()
@@ -48,7 +47,7 @@ local _orig_notify = naughty.notify
 naughty.notify = function(args)
     local title   = (args and args.title) or ""
     local message = (args and (args.text or args.message)) or ""
-    if title ~= "" or message ~= "" then
+    if (title ~= "" or message ~= "") and not title:find("🍅", 1, true) and not title:find("☕", 1, true) then
         table.insert(history, {
             title   = title,
             message = message,
@@ -136,8 +135,8 @@ local function show_popup()
             })
         end,
         shape        = gears.shape.rounded_rect,
-        border_width = 1,
-        border_color = fg_grey,
+        border_width = 2,
+        border_color = fg_green,
         ontop        = true,
         visible      = true,
         minimum_width = 200,
@@ -226,8 +225,8 @@ notif_widget:buttons(gears.table.join(
                 })
             end,
             shape        = gears.shape.rounded_rect,
-            border_width = 1,
-            border_color = fg_grey,
+            border_width = 2,
+            border_color = fg_green,
             bg           = bg_popup,
             ontop        = true,
             visible      = true,

@@ -6,11 +6,9 @@ local gears = require("gears")
 -- For graphical calendar
 local calendar_popup = require("awful.widget.calendar_popup").month
 
-theme.widget_clock = theme.dir .. "/icons/widgets/clock.png"
-local clock_icon = wibox.widget.imagebox(theme.widget_clock)
-local clock = awful.widget.textclock('<span font="Meslo LGS Regular 10" color="#D3C6AA"> %a %d %b  %H:%M </span>')
+local clock = awful.widget.textclock('<span font="Meslo LGS Regular 10" color="#D3C6AA"> 📅 %a %d %b  %H:%M </span>')
 local clock_widget = wibox.container.background(
-	wibox.container.margin(wibox.widget({ clock_icon, clock, layout = wibox.layout.align.horizontal }), 2, 2),
+	wibox.container.margin(clock, 2, 2),
 	"#425047",
 	gears.shape.rounded_rect
 )
@@ -31,6 +29,7 @@ local cal_popup = calendar_popup({
 		padding = 8,
 		bg_color = everforest_bg,
 		fg_color = everforest_fg,
+		shape = gears.shape.rounded_rect,
 	},
 	style_header = { fg_color = everforest_green, font = "Meslo LGS Regular 12", bg_color = everforest_bg },
 	style_weekday = { fg_color = everforest_green, font = "Meslo LGS Regular 10", bg_color = everforest_bg },

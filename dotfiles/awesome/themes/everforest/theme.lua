@@ -59,7 +59,7 @@ theme.notification_bg = theme.bg_normal
 theme.notification_fg = theme.fg_normal
 theme.notification_border_width = 0
 theme.notification_border_color = theme.bg_normal
-theme.notification_shape = gears.shape.infobubble
+theme.notification_shape = gears.shape.rounded_rect
 theme.notification_opacity = 1
 theme.notification_margin = 30
 
@@ -124,12 +124,17 @@ local battery_widget = require("themes.everforest.widgets_config.battery_widget"
 local mem_widget = require("themes.everforest.widgets_config.mem_widget")
 local cpu_widget = require("themes.everforest.widgets_config.cpu_widget")
 local temp_widget = require("themes.everforest.widgets_config.temp_widget")
+local disk_widget = require("themes.everforest.widgets_config.disk_widget")
 local volume_widget = require("themes.everforest.widgets_config.volume_widget")
 local kbd_widget = require("widgets.kbd_widget.kbd_widget")
 local brightness_widget = require("themes.everforest.widgets_config.brightness_widget")
 local music_widget = require("themes.everforest.widgets_config.music_widget")
 local crypto_widget = require("themes.everforest.widgets_config.crypto_widget")
 local notif_widget  = require("themes.everforest.widgets_config.notif_widget")
+local pkg_widget      = require("themes.everforest.widgets_config.pkg_widget")
+local pomodoro_widget = require("themes.everforest.widgets_config.pomodoro_widget")
+local todo_widget     = require("themes.everforest.widgets_config.todo_widget")
+local rss_widget      = require("themes.everforest.widgets_config.rss_widget")
 
 function theme.connect(s)
     -- Quake application
@@ -189,11 +194,11 @@ function theme.connect(s)
                 gears.shape.rounded_rect
             ),
             wibox.widget.textbox(" "),
-            kbd_widget,
-            wibox.widget.textbox(" "),
             brightness_widget,
             wibox.widget.textbox(" "),
             volume_widget,
+            wibox.widget.textbox(" "),
+            disk_widget,
             wibox.widget.textbox(" "),
             temp_widget,
             wibox.widget.textbox(" "),
@@ -205,9 +210,19 @@ function theme.connect(s)
             wibox.widget.textbox(" "),
             crypto_widget,
             wibox.widget.textbox(" "),
+            todo_widget,
+            wibox.widget.textbox(" "),
+            pomodoro_widget,
+            wibox.widget.textbox(" "),
+            pkg_widget,
+            wibox.widget.textbox(" "),
+            rss_widget,
+            wibox.widget.textbox(" "),
             notif_widget,
             wibox.widget.textbox(" "),
             clock_widget,
+            wibox.widget.textbox(" "),
+            kbd_widget,
             wibox.widget.textbox(" "),
             s.mylayoutbox,
         },

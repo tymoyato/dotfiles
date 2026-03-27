@@ -4,14 +4,12 @@ local awful = require("awful")
 local gears = require("gears")
 local markup = require("lain.util.markup")
 
-theme.widget_brightness = theme.dir .. "/icons/widgets/brightness.png"
-local brightness_icon = wibox.widget.imagebox(theme.widget_brightness)
 local brightness_text = wibox.widget.textbox()
 
 local function update_brightness()
 	awful.spawn.easy_async_with_shell("light -G", function(stdout)
 		local brightness = tonumber(stdout:match("(%d+)")) or 0
-		brightness_text:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " " .. brightness .. "% ")))
+		brightness_text:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " 🔆 " .. brightness .. "% ")))
 	end)
 end
 
@@ -37,10 +35,7 @@ brightness_text:buttons(awful.util.table.join(
 ))
 
 local brightness_final_widget = wibox.container.background(
-	wibox.container.margin(
-		wibox.widget({ brightness_icon, brightness_text, layout = wibox.layout.align.horizontal }),
-		2, 4
-	),
+	wibox.container.margin(brightness_text, 2, 4),
 	"#425047",
 	gears.shape.rounded_rect
 )

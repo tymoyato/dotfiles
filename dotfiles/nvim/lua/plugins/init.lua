@@ -65,6 +65,13 @@ return {
   --
   --@Markdown and Documentation
   --
+  --# render-markdown.nvim
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+    ft = { "markdown" },
+    opts = {},
+  },
   --# markdown-preview.nvim
   {
     "iamcco/markdown-preview.nvim",

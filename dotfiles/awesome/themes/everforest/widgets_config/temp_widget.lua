@@ -33,9 +33,6 @@ end
 local temp_file = find_temp_file() or "/dev/null"
 
 -- Create the widget
-theme.widget_temp = theme.dir .. "/icons/widgets/temp.png"
-local temp_icon = wibox.widget.imagebox(theme.widget_temp)
-
 local temp = lain.widget.temp({
     tempfiles = { temp_file },
     timeout = 10,
@@ -45,16 +42,13 @@ local temp = lain.widget.temp({
             temp_str = string.format("%.0f", CORETEMP_NOW)
         end
         WIDGET:set_markup(
-            markup.font(theme.font, markup.fg.color("#D3C6AA", " " .. temp_str .. "° "))
+            markup.font(theme.font, markup.fg.color("#D3C6AA", " 🔥 " .. temp_str .. "° "))
         )
     end,
 })
 
 local temp_widget = wibox.container.background(
-    wibox.container.margin(
-        wibox.widget({ temp_icon, temp.widget, layout = wibox.layout.align.horizontal }),
-        2, 2
-    ),
+    wibox.container.margin(temp.widget, 2, 2),
     "#425047",
     gears.shape.rounded_rect
 )

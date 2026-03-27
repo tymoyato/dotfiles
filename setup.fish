@@ -1,4 +1,4 @@
-#!/home/linuxbrew/.linuxbrew/bin/fish
+#!/usr/bin/env fish
 
 fisher list | fisher install
 fisher list | fisher update
@@ -8,6 +8,6 @@ gem install bundler
 nvm install latest
 nvm use latest
 gvm install go1.23.2
-npm install --global yarn
+npm install --global yarn fast-cli
 
 exec fish

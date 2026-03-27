@@ -17,8 +17,8 @@ local prev_button = wibox.widget.textbox()
 local next_button = wibox.widget.textbox()
 
 -- Set initial button text with everforest colors
-prev_button:set_markup(markup.font(theme.font, markup.fg.color("#A7C080", "⏮")))
-next_button:set_markup(markup.font(theme.font, markup.fg.color("#A7C080", "⏭")))
+prev_button:set_markup(markup.font(theme.font, markup.fg.color("#A7C080", "⏮\u{FE0E}")))
+next_button:set_markup(markup.font(theme.font, markup.fg.color("#A7C080", "⏭\u{FE0E}")))
 
 -- Set initial state: collapsed with music note
 prev_button.visible = false
