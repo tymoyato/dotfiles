@@ -135,6 +135,7 @@ local pkg_widget      = require("themes.everforest.widgets_config.pkg_widget")
 local pomodoro_widget = require("themes.everforest.widgets_config.pomodoro_widget")
 local todo_widget     = require("themes.everforest.widgets_config.todo_widget")
 local rss_widget      = require("themes.everforest.widgets_config.rss_widget")
+local procman_widget  = require("themes.everforest.widgets_config.procman_widget")
 
 function theme.connect(s)
     -- Quake application
@@ -217,6 +218,8 @@ function theme.connect(s)
             pkg_widget,
             wibox.widget.textbox(" "),
             rss_widget,
+            wibox.widget.textbox(" "),
+            procman_widget,
             wibox.widget.textbox(" "),
             notif_widget,
             wibox.widget.textbox(" "),

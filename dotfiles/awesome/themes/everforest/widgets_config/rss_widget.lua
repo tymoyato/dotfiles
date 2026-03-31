@@ -343,13 +343,92 @@ rss_widget:buttons(awful.util.table.join(
         if popup then close_popup() else show_popup() end
     end),
     awful.button({}, 3, function()
-        for _, a in ipairs(articles) do
-            a.read           = true
-            read_urls[a.url] = true
-        end
-        save_read()
-        refresh_label()
-        close_popup()
+        local confirm_popup
+
+        local yes_btn = wibox.container.background(
+            wibox.container.margin(
+                wibox.widget {
+                    markup = string.format('<span font="Meslo LGS Regular 10" color="%s">Yes</span>', fg_green),
+                    widget = wibox.widget.textbox,
+                },
+                8, 8, 3, 3
+            ),
+            "#374247",
+            gears.shape.rounded_rect
+        )
+
+        local no_btn = wibox.container.background(
+            wibox.container.margin(
+                wibox.widget {
+                    markup = string.format('<span font="Meslo LGS Regular 10" color="%s">No</span>', "#E67E80"),
+                    widget = wibox.widget.textbox,
+                },
+                8, 8, 3, 3
+            ),
+            "#374247",
+            gears.shape.rounded_rect
+        )
+
+        yes_btn:connect_signal("button::press", function()
+            confirm_popup.visible = false
+            for _, a in ipairs(articles) do
+                a.read           = true
+                read_urls[a.url] = true
+            end
+            save_read()
+            refresh_label()
+            close_popup()
+        end)
+        yes_btn:connect_signal("mouse::enter", function() yes_btn.bg = "#4a5e53" end)
+        yes_btn:connect_signal("mouse::leave", function() yes_btn.bg = "#374247" end)
+
+        no_btn:connect_signal("button::press", function()
+            confirm_popup.visible = false
+        end)
+        no_btn:connect_signal("mouse::enter", function() no_btn.bg = "#4a5e53" end)
+        no_btn:connect_signal("mouse::leave", function() no_btn.bg = "#374247" end)
+
+        confirm_popup = awful.popup {
+            widget = wibox.container.margin(
+                wibox.widget {
+                    wibox.container.margin(
+                        wibox.widget {
+                            markup = string.format(
+                                '<span font="Meslo LGS Regular 10" color="%s">Clear all read history?</span>',
+                                fg_color
+                            ),
+                            widget = wibox.widget.textbox,
+                        },
+                        0, 0, 0, 6
+                    ),
+                    wibox.container.place(
+                        wibox.widget {
+                            yes_btn,
+                            wibox.container.margin(no_btn, 8, 0, 0, 0),
+                            layout = wibox.layout.fixed.horizontal,
+                        }
+                    ),
+                    layout = wibox.layout.fixed.vertical,
+                },
+                10, 10, 8, 8
+            ),
+            placement    = function(w)
+                awful.placement.top_right(w, {
+                    honor_workarea = true,
+                    margins        = { top = 18, right = 0 },
+                })
+            end,
+            shape        = gears.shape.rounded_rect,
+            border_width = 2,
+            border_color = fg_green,
+            bg           = bg_popup,
+            ontop        = true,
+            visible      = true,
+        }
+
+        confirm_popup:connect_signal("mouse::leave", function()
+            confirm_popup.visible = false
+        end)
     end)
 ))
 
