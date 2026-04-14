@@ -5,9 +5,9 @@ local M = {}
 
 M.base_30 = {
     white = "#ffffff",
-    darker_black = "#12141a",
-    black = "#16181a", -- nvim bg
-    black2 = "#1e2124", -- statusline, float bg
+    darker_black = "#252c31",
+    black = "#2d353b", -- nvim bg
+    black2 = "#343f44", -- statusline, float bg
     one_bg = "#24262a",
     one_bg2 = "#2a2c30",
     one_bg3 = "#3c4048",
@@ -30,15 +30,15 @@ M.base_30 = {
     teal = "#5ef1ff",
     orange = "#ffbd5e",
     cyan = "#5ef1ff",
-    statusline_bg = "#1e2124",
-    lightbg = "#24262a",
+    statusline_bg = "#343f44",
+    lightbg = "#3d484d",
     pmenu_bg = "#5ea1ff",
     folder_bg = "#5ea1ff",
 }
 
 M.base_16 = {
-    base00 = "#16181a", -- Default Background
-    base01 = "#1e2124", -- Lighter Background (Used for status bars, line number and folding marks)
+    base00 = "#2d353b", -- Default Background
+    base01 = "#343f44", -- Lighter Background (Used for status bars, line number and folding marks)
     base02 = "#3c4048", -- Selection Background
     base03 = "#545862", -- Comments, Invisibles, Line Highlighting
     base04 = "#7b8496", -- Dark Foreground (Used for status bars)

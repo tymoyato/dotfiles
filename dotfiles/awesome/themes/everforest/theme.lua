@@ -136,6 +136,11 @@ local pomodoro_widget = require("themes.everforest.widgets_config.pomodoro_widge
 local todo_widget     = require("themes.everforest.widgets_config.todo_widget")
 local rss_widget      = require("themes.everforest.widgets_config.rss_widget")
 local procman_widget  = require("themes.everforest.widgets_config.procman_widget")
+local docker_containers_widget = require("themes.everforest.widgets_config.docker_containers_widget")
+local docker_resources_widget  = require("themes.everforest.widgets_config.docker_resources_widget")
+local docker_health_widget     = require("themes.everforest.widgets_config.docker_health_widget")
+local docker_compose_widget    = require("themes.everforest.widgets_config.docker_compose_widget")
+local docker_disk_widget       = require("themes.everforest.widgets_config.docker_disk_widget")
 
 function theme.connect(s)
     -- Quake application
@@ -228,6 +233,43 @@ function theme.connect(s)
             kbd_widget,
             wibox.widget.textbox(" "),
             s.mylayoutbox,
+        },
+    })
+
+    -- Docker wibar (bottom)
+    s.mydockerwibox = awful.wibar({ position = "bottom", screen = s, height = 16, bg = "#00000000", fg = theme.fg_focus })
+    s.mydockerwibox:setup({
+        layout = wibox.layout.align.horizontal,
+        { -- Left: label
+            layout = wibox.layout.fixed.horizontal,
+            wibox.container.background(
+                wibox.container.margin(
+                    wibox.widget {
+                        markup = '<span font="Meslo LGS Regular 10" color="' .. theme.fg_widget .. '"> 🐳 docker </span>',
+                        widget = wibox.widget.textbox,
+                    },
+                    2, 2
+                ),
+                "#2D353B",
+                gears.shape.rounded_rect
+            ),
+            wibox.widget.textbox(" "),
+        },
+        { -- Middle: empty
+            layout = wibox.layout.fixed.horizontal,
+        },
+        { -- Right: all docker widgets
+            layout = wibox.layout.fixed.horizontal,
+            docker_containers_widget,
+            wibox.widget.textbox(" "),
+            docker_resources_widget,
+            wibox.widget.textbox(" "),
+            docker_health_widget,
+            wibox.widget.textbox(" "),
+            docker_compose_widget,
+            wibox.widget.textbox(" "),
+            docker_disk_widget,
+            wibox.widget.textbox(" "),
         },
     })
 end

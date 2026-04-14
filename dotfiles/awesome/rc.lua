@@ -369,6 +369,9 @@ GLOBALKEYS = gears.table.join(
 			if s.mybottomwibox then
 				s.mybottomwibox.visible = not s.mybottomwibox.visible
 			end
+			if s.mydockerwibox then
+				s.mydockerwibox.visible = not s.mydockerwibox.visible
+			end
 		end)
 	end, { description = "toggle wibox", group = "awesome" }),
 

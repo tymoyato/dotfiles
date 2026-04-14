@@ -1,4 +1,26 @@
 return {
+  --# nvim-tree.lua
+  {
+    "nvim-tree/nvim-tree.lua",
+    opts = {
+      filters = {
+        dotfiles = false,
+        git_ignored = false,
+      },
+    },
+  },
+  --# telescope.nvim
+  {
+    "nvim-telescope/telescope.nvim",
+    opts = {
+      pickers = {
+        find_files = {
+          hidden = true,
+          find_command = { "fd", "--type", "f", "--hidden", "--exclude", ".git" },
+        },
+      },
+    },
+  },
   --
   --@Autocompletion and Code Intelligence
   --
@@ -88,9 +110,6 @@ return {
   --
   --# vim-rails
   { "tpope/vim-rails", ft = "ruby", lazy = false },
-
-  --# vim-ruby
-  { "vim-ruby/vim-ruby", ft = "ruby", lazy = false },
 
   --# rainbow-delimiters.nvim
   { "HiPhish/rainbow-delimiters.nvim", ft = "ruby", lazy = false },

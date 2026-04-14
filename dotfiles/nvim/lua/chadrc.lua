@@ -7,7 +7,7 @@ local M = {}
 M.base46 = {
 	theme = "cyberdream",
 	transparancy = true,
-	theme_toggle = { "monekai", "cyberdream" },
+	theme_toggle = { "cyberdream", "cyberdream" },
   integration = { "neogit", "lazygit", "diffview" },
 }
 

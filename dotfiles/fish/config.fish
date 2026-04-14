@@ -66,3 +66,44 @@ alias ldepth='eza --level=2'                        # Limit recursion depth to 2
 alias lignore='eza --git-ignore'                    # Ignore files mentioned in .gitignore
 alias lcontext='eza --long --context'               # Show security context
 
+# docker - containers
+alias dps='docker ps'                               # List running containers
+alias dpsa='docker ps -a'                           # List all containers
+alias dstart='docker start'                         # Start container(s)
+alias dstop='docker stop'                           # Stop container(s)
+alias drm='docker rm'                               # Remove container(s)
+alias dexec='docker exec -it'                       # Exec into container interactively
+alias dlogs='docker logs -f'                        # Follow container logs
+alias dstats='docker stats'                         # Live resource usage stats
+alias dinspect='docker inspect'                     # Inspect container/image/volume
+
+# docker - images
+alias di='docker images'                            # List images
+alias drmi='docker rmi'                             # Remove image(s)
+alias dpull='docker pull'                           # Pull an image
+alias dbuild='docker build'                         # Build an image
+alias drun='docker run --rm -it'                    # Run container (auto-remove, interactive)
+
+# docker - volumes & networks
+alias dvls='docker volume ls'                       # List volumes
+alias dvrm='docker volume rm'                       # Remove volume(s)
+alias dnls='docker network ls'                      # List networks
+alias dnrm='docker network rm'                      # Remove network(s)
+
+# docker - system cleanup
+alias dprune='docker system prune -f'              # Remove unused data (no prompt)
+alias dprunea='docker system prune -af --volumes'  # Remove ALL unused data including volumes
+alias dstopall='docker stop (docker ps -q)'        # Stop all running containers
+alias drmall='docker rm (docker ps -aq)'           # Remove all stopped containers
+
+# docker compose
+alias dc='docker compose'                           # Shorthand
+alias dcu='docker compose up'                       # Start services
+alias dcud='docker compose up -d'                   # Start services in background
+alias dcd='docker compose down'                     # Stop and remove services
+alias dcr='docker compose restart'                  # Restart services
+alias dcb='docker compose build'                    # Build services
+alias dcl='docker compose logs -f'                  # Follow compose logs
+alias dcp='docker compose ps'                       # List compose services
+alias dcpull='docker compose pull'                  # Pull compose images
+

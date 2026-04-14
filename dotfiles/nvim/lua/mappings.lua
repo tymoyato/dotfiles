@@ -37,6 +37,9 @@ end, { desc = "whichkey query lookup" })
 
 
 -- buffers
+map("n", "<leader>x", function()
+  pcall(require("nvchad.tabufline").close_buffer)
+end, { desc = "close buffer" })
 map("n", "<leader>ba", "<cmd>bufdo bd!<CR>", { desc = "close all buffers" })
 map("n", "<leader>bo", "<cmd>%bd!|e#|bd#<CR>", { desc = "close all buffers except current" })
 
