@@ -22,10 +22,10 @@ check_and_start() {
 
 
 pgrep -x greenclip > /dev/null || greenclip daemon &
+pgrep -fi "bruno" > /dev/null || /home/tymoyato/Downloads/bruno_3.2.2_x86_64_linux.AppImage &
 
 declare -A processes=(
   ["Brave-browser"]="Brave-browser"
-  ["bruno"]="bruno"
   ["kitty"]="kitty"
   ["slack"]="slack"
   ["obsidian"]="obsidian"

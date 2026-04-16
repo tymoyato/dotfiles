@@ -34,3 +34,29 @@ end
 function notification-logs
     dcinfrastructure logs -f notification-service $argv
 end
+
+# Admin shortcuts
+function admin-exec
+    dcinfrastructure exec admin $argv
+end
+
+function admin-test
+    admin-exec npm test $argv
+end
+
+function admin-test-run
+    admin-exec npm test -- --run $argv
+end
+
+function admin-test-file
+    admin-exec npm test -- --run $argv
+end
+
+function admin-test-coverage
+    admin-exec npm run test:coverage
+end
+
+function admin-test-all
+    admin-exec npm test -- --run
+    and admin-exec npm run test:coverage
+end
