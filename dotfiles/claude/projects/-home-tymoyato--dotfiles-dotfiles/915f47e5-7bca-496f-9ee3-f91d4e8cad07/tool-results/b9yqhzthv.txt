@@ -1,0 +1,2002 @@
+diff --git a/dotfiles/awesome/rc.lua b/dotfiles/awesome/rc.lua
+index dc8bf1c..ef014a9 100644
+--- a/dotfiles/awesome/rc.lua
++++ b/dotfiles/awesome/rc.lua
+@@ -1,3 +1,78 @@
++-- =============================================================================
++-- KEYBINDINGS REFERENCE
++-- =============================================================================
++--
++-- [Awesome]
++--   MODKEY + s                        show help
++--   MODKEY + b                        toggle wibox
++--   MODKEY + t                        switch theme  (global — takes priority over client keys)
++--   MODKEY + Ctrl + x                 lock screen
++--   MODKEY + Ctrl + r                 reload awesome
++--   MODKEY + Shift + q                quit awesome
++--   MODKEY + r                        run prompt
++--   MODKEY + w                        show main menu
++--   MODKEY + x                        lua execute prompt
++--
++-- [Launcher]
++--   MODKEY + Return                   open terminal
++--   MODKEY + p                        rofi (app launcher)
++--   MODKEY + a                        rofi (window switcher)
++--   MODKEY + o                        flameshot (screenshot)
++--   MODKEY + d                        dmenu
++--
++-- [Tags]
++--   MODKEY + [1-9]                    view tag
++--   MODKEY + Ctrl + [1-9]             toggle tag display
++--   MODKEY + Left / Right             previous / next tag
++--   MODKEY + Escape                   go back (tag history)
++--   MODKEY + Shift + n                add new tag
++--   MODKEY + Shift + r                rename tag
++--   MODKEY + Shift + d                delete tag
++--   MODKEY + Shift + Left / Right     move tag left / right
++--
++-- [Client - focus & movement]
++--   MODKEY + j / k                    focus next / previous client
++--   MODKEY + Tab                      focus previous client (history)
++--   MODKEY + u                        jump to urgent client
++--   MODKEY + Shift + j / k            swap with next / previous client
++--   MODKEY + Ctrl + Return            move to master
++--   MODKEY + Shift + [1-9]            move client to tag
++--   MODKEY + Ctrl + Shift + [1-9]     toggle client on tag
++--   MODKEY + Ctrl + j / k             focus next / previous screen
++--   MODKEY + o                        move client to screen
++--
++-- [Client - state]
++--   MODKEY + f                        toggle fullscreen
++--   MODKEY + m                        toggle maximize
++--   MODKEY + Ctrl + m                 toggle maximize vertical
++--   MODKEY + Shift + m                toggle maximize horizontal
++--   MODKEY + n                        minimize
++--   MODKEY + Ctrl + n                 restore minimized
++--   MODKEY + Ctrl + space             toggle floating
++--   MODKEY + Shift + y                toggle keep on top
++--   MODKEY + y                        toggle sticky (show on all tags)
++--   MODKEY + Shift + c                close client
++--   Alt + Shift + m                   magnify client
++--
++-- [Layout]
++--   MODKEY + space                    next layout
++--   MODKEY + Shift + space            previous layout
++--   MODKEY + h / l                    decrease / increase master width
++--   MODKEY + Shift + h / l            decrease / increase master count
++--   MODKEY + Ctrl + h / l             decrease / increase column count
++--   Ctrl + Alt + Shift + Left / Right decrement / increment gaps
++--
++-- [Audio]
++--   MODKEY + Shift + =                volume up
++--   MODKEY + Shift + -                volume down
++--   MODKEY + Alt + space              play / pause
++--   MODKEY + Alt + Left / Right       previous / next track
++--
++-- [Mouse]
++--   MODKEY + Mouse1                   move client
++--   MODKEY + Mouse3                   resize client
++-- =============================================================================
++
+ local awesome, client, mouse, screen, tag = awesome, client, mouse, screen, tag
+ local ipairs, string, os, table, tostring, tonumber, type = ipairs, string, os, table, tostring, tonumber, type
+ pcall(require, "luarocks.loader")
+@@ -150,10 +225,9 @@ beautiful.init(theme_path)
+ TERMINAL = "kitty"
+ local editor = os.getenv("EDITOR") or "editor"
+ local editor_cmd = TERMINAL .. " -e " .. editor
+-awful.spawn.with_shell("picom --config ~/.config/picom/picom.conf")
++awful.spawn.with_shell("pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf")
++awful.spawn.with_shell("pgrep -x brave > /dev/null || brave --remote-debugging-port=9222")
+ awful.spawn.with_shell("~/.config/awesome/utils/apps.sh")
+--- Run package checker with output logging and delay
+-awful.spawn.with_shell("sleep 2 && ~/.Kitay-Gorod/dotfiles/awesome/utils/package-checker.sh >> ~/.Kitay-Gorod/linux/package-checker-debug.log 2>&1")
+ awful.spawn.with_shell("~/.config/awesome/display-setup.sh")
+ -- awful.spawn.with_shell("sudo -u ervin DISPLAY=:0 /home/ervin/.utils/home_reset_display.sh")
+ -- awful.spawn.with_shell("~/.utils/apps.sh")
+@@ -239,32 +313,29 @@ awful.screen.connect_for_each_screen(function(s)
+ end)
+ 
+ -- Restore tag state after restart
++local _restoring_tag = false
+ local tag_file = io.open("/tmp/awesome_current_tag", "r")
+ if tag_file then
+ 	local saved_tag_index = tonumber(tag_file:read("*line"))
++	tag_file:close()
++	-- Clean up the temporary files
++	os.remove("/tmp/awesome_current_tag")
++	os.remove("/tmp/awesome_theme_switch")
++	os.remove("/tmp/awesome_normal_restart")
+ 	if saved_tag_index and saved_tag_index >= 1 and saved_tag_index <= 9 then
++		_restoring_tag = true
+ 		-- Use a timer with longer timeout to ensure everything is initialized
+ 		local restore_timer = gears.timer({ timeout = 1 })
+ 		restore_timer:connect_signal("timeout", function()
+ 			local screen = awful.screen.focused()
+ 			if screen and screen.tags[saved_tag_index] then
+ 				screen.tags[saved_tag_index]:view_only()
+-				-- Show notification for debugging
+-				naughty.notify({
+-					title = "Tag Restored",
+-					text = "Restored to tag " .. saved_tag_index,
+-					timeout = 2,
+-				})
+ 			end
++			_restoring_tag = false
+ 			restore_timer:stop()
+ 		end)
+ 		restore_timer:start()
+ 	end
+-	tag_file:close()
+-	-- Clean up the temporary files
+-	os.remove("/tmp/awesome_current_tag")
+-	os.remove("/tmp/awesome_theme_switch")
+-	os.remove("/tmp/awesome_normal_restart")
+ end
+ 
+ -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
+@@ -412,7 +483,7 @@ GLOBALKEYS = gears.table.join(
+ 	-- awful.key({ MODKEY }, "o", function() menubar.show() end,
+ 	--           {description = "show the menubar", group = "launcher"}),
+ 	awful.key({ MODKEY }, "p", function()
+-		awful.util.spawn(string.format("rofi -show drun -modes 'drun,window' -config ~/.config/rofi/config.rasi"))
++		awful.util.spawn(string.format("rofi -show combi -modes 'combi,window' -config ~/.config/rofi/config.rasi"))
+ 	end, { description = "launch rofi (drun)", group = "launcher" }),
+ 	awful.key({ MODKEY }, "a", function()
+ 		awful.util.spawn(string.format("rofi -show window -modes 'drun,window' -config ~/.config/rofi/config.rasi"))
+@@ -425,6 +496,9 @@ GLOBALKEYS = gears.table.join(
+ 
+ 	-- awful.key({ MODKEY }, "o", function () scratch.drop("kitty", "bottom", "left", 0.60, 0.60, true, mouse.screen) end),
+ 	-- Custom
++	awful.key({ MODKEY }, "d", function()
++		awful.spawn("dmenu_run")
++	end, { description = "launch dmenu", group = "launcher" }),
+ 	awful.key({ MODKEY }, "o", function()
+ 		awful.spawn("flameshot gui")
+ 	end, { description = "start flameshot", group = "launcher" }),
+@@ -500,9 +574,12 @@ CLIENTKEYS = gears.table.join(
+ 	awful.key({ MODKEY }, "o", function(c)
+ 		c:move_to_screen()
+ 	end, { description = "move to screen", group = "client" }),
+-	awful.key({ MODKEY }, "t", function(c)
++	awful.key({ MODKEY, "Shift" }, "y", function(c)
+ 		c.ontop = not c.ontop
+ 	end, { description = "toggle keep on top", group = "client" }),
++	awful.key({ MODKEY }, "y", function(c)
++		c.sticky = not c.sticky
++	end, { description = "toggle sticky", group = "client" }),
+ 	awful.key({ MODKEY }, "n", function(c)
+ 		-- The client currently has the input focus, so it cannot be
+ 		-- minimized, since minimized clients can't have the focus.
+@@ -654,11 +731,8 @@ client.connect_signal("manage", function(c)
+ 		awful.placement.no_offscreen(c)
+ 	end
+ 
+-	-- Debug: Check if we're restoring a tag and prevent client from changing focus
+-	local tag_file = io.open("/tmp/awesome_current_tag", "r")
+-	if tag_file then
+-		tag_file:close()
+-		-- Don't focus this client if we're restoring a tag
++	-- Don't focus this client if we're restoring a tag
++	if _restoring_tag then
+ 		c:emit_signal("request::activate", "manage", { raise = false })
+ 	end
+ end)
+diff --git a/dotfiles/awesome/themes/cccp/widgets_config/battery_widget.lua b/dotfiles/awesome/themes/cccp/widgets_config/battery_widget.lua
+index d36c388..d59c3d6 100644
+--- a/dotfiles/awesome/themes/cccp/widgets_config/battery_widget.lua
++++ b/dotfiles/awesome/themes/cccp/widgets_config/battery_widget.lua
+@@ -14,7 +14,7 @@ theme.widget_battery_no = theme.dir .. "/icons/widgets/battery_no.png"
+ local bat_icon = wibox.widget.imagebox(theme.widget_battery)
+ local bat = lain.widget.bat({
+ 	battery = "BAT0",
+-	timeout = 1,
++	timeout = 30,
+ 	notify = "on",
+ 	n_perc = { 5, 15 },
+ 	settings = function()
+diff --git a/dotfiles/awesome/themes/cccp/widgets_config/cpu_widget.lua b/dotfiles/awesome/themes/cccp/widgets_config/cpu_widget.lua
+index fbf5932..789e8a5 100644
+--- a/dotfiles/awesome/themes/cccp/widgets_config/cpu_widget.lua
++++ b/dotfiles/awesome/themes/cccp/widgets_config/cpu_widget.lua
+@@ -7,6 +7,7 @@ local gears = require("gears")
+ theme.widget_cpu = theme.dir .. "/icons/widgets/cpu.png"
+ local cpu_icon = wibox.widget.imagebox(theme.widget_cpu)
+ local cpu = lain.widget.cpu({
++	timeout = 5,
+ 	settings = function()
+ 		widget:set_markup(markup.font(theme.font, markup.fg.color(theme.fg_widget, " " .. cpu_now.usage .. "% ")))
+ 	end,
+diff --git a/dotfiles/awesome/themes/cccp/widgets_config/mem_widget.lua b/dotfiles/awesome/themes/cccp/widgets_config/mem_widget.lua
+index e8c09b6..1699941 100644
+--- a/dotfiles/awesome/themes/cccp/widgets_config/mem_widget.lua
++++ b/dotfiles/awesome/themes/cccp/widgets_config/mem_widget.lua
+@@ -7,6 +7,7 @@ local gears = require("gears")
+ theme.widget_mem = theme.dir .. "/icons/widgets/mem.png"
+ local mem_icon = wibox.widget.imagebox(theme.widget_mem)
+ local mem = lain.widget.mem({
++	timeout = 5,
+ 	settings = function()
+ 		widget:set_markup(
+ 			markup.font(
+diff --git a/dotfiles/awesome/themes/cccp/widgets_config/music_widget.lua b/dotfiles/awesome/themes/cccp/widgets_config/music_widget.lua
+index 67ff700..d417161 100644
+--- a/dotfiles/awesome/themes/cccp/widgets_config/music_widget.lua
++++ b/dotfiles/awesome/themes/cccp/widgets_config/music_widget.lua
+@@ -149,8 +149,8 @@ text_scroll:buttons(awful.util.table.join(awful.button({}, 1, toggle_play_pause)
+ -- Initial update
+ update_music()
+ 
+--- Update every 2 seconds
+-local timer = gears.timer({ timeout = 2 })
++-- Update every 4 seconds
++local timer = gears.timer({ timeout = 4 })
+ timer:connect_signal("timeout", update_music)
+ timer:start()
+ 
+diff --git a/dotfiles/awesome/themes/cccp/widgets_config/temp_widget.lua b/dotfiles/awesome/themes/cccp/widgets_config/temp_widget.lua
+index 6d76965..7808fed 100644
+--- a/dotfiles/awesome/themes/cccp/widgets_config/temp_widget.lua
++++ b/dotfiles/awesome/themes/cccp/widgets_config/temp_widget.lua
+@@ -38,6 +38,7 @@ local temp_icon = wibox.widget.imagebox(theme.widget_temp)
+ 
+ local temp = lain.widget.temp({
+     tempfiles = { temp_file },
++    timeout = 10,
+     settings = function()
+         local temp_str = "N/A"
+         if CORETEMP_NOW ~= "N/A" then
+diff --git a/dotfiles/awesome/themes/everforest/widgets_config/battery_widget.lua b/dotfiles/awesome/themes/everforest/widgets_config/battery_widget.lua
+index 61d4e03..939e30d 100644
+--- a/dotfiles/awesome/themes/everforest/widgets_config/battery_widget.lua
++++ b/dotfiles/awesome/themes/everforest/widgets_config/battery_widget.lua
+@@ -14,7 +14,7 @@ theme.widget_battery_no = theme.dir .. "/icons/widgets/battery_no.png"
+ local bat_icon = wibox.widget.imagebox(theme.widget_battery)
+ local bat = lain.widget.bat({
+ 	battery = "BAT0",
+-	timeout = 1,
++	timeout = 30,
+ 	notify = "on",
+ 	n_perc = { 5, 15 },
+ 	settings = function()
+diff --git a/dotfiles/awesome/themes/everforest/widgets_config/cpu_widget.lua b/dotfiles/awesome/themes/everforest/widgets_config/cpu_widget.lua
+index 00caad6..d9ba345 100644
+--- a/dotfiles/awesome/themes/everforest/widgets_config/cpu_widget.lua
++++ b/dotfiles/awesome/themes/everforest/widgets_config/cpu_widget.lua
+@@ -7,6 +7,7 @@ local gears = require("gears")
+ theme.widget_cpu = theme.dir .. "/icons/widgets/cpu.png"
+ local cpu_icon = wibox.widget.imagebox(theme.widget_cpu)
+ local cpu = lain.widget.cpu({
++	timeout = 5,
+ 	settings = function()
+ 		widget:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " " .. cpu_now.usage .. "% ")))
+ 	end,
+diff --git a/dotfiles/awesome/themes/everforest/widgets_config/mem_widget.lua b/dotfiles/awesome/themes/everforest/widgets_config/mem_widget.lua
+index 57098f9..1bf4ddb 100644
+--- a/dotfiles/awesome/themes/everforest/widgets_config/mem_widget.lua
++++ b/dotfiles/awesome/themes/everforest/widgets_config/mem_widget.lua
+@@ -7,6 +7,7 @@ local gears = require("gears")
+ theme.widget_mem = theme.dir .. "/icons/widgets/mem.png"
+ local mem_icon = wibox.widget.imagebox(theme.widget_mem)
+ local mem = lain.widget.mem({
++	timeout = 5,
+ 	settings = function()
+ 		widget:set_markup(
+ 			markup.font(
+diff --git a/dotfiles/awesome/themes/everforest/widgets_config/music_widget.lua b/dotfiles/awesome/themes/everforest/widgets_config/music_widget.lua
+index 11ef64a..43e8328 100644
+--- a/dotfiles/awesome/themes/everforest/widgets_config/music_widget.lua
++++ b/dotfiles/awesome/themes/everforest/widgets_config/music_widget.lua
+@@ -149,8 +149,8 @@ text_scroll:buttons(awful.util.table.join(awful.button({}, 1, toggle_play_pause)
+ -- Initial update
+ update_music()
+ 
+--- Update every 2 seconds
+-local timer = gears.timer({ timeout = 2 })
++-- Update every 4 seconds
++local timer = gears.timer({ timeout = 4 })
+ timer:connect_signal("timeout", update_music)
+ timer:start()
+ 
+diff --git a/dotfiles/awesome/themes/everforest/widgets_config/temp_widget.lua b/dotfiles/awesome/themes/everforest/widgets_config/temp_widget.lua
+index 5a4901f..00bac49 100644
+--- a/dotfiles/awesome/themes/everforest/widgets_config/temp_widget.lua
++++ b/dotfiles/awesome/themes/everforest/widgets_config/temp_widget.lua
+@@ -38,6 +38,7 @@ local temp_icon = wibox.widget.imagebox(theme.widget_temp)
+ 
+ local temp = lain.widget.temp({
+     tempfiles = { temp_file },
++    timeout = 10,
+     settings = function()
+         local temp_str = "N/A"
+         if CORETEMP_NOW ~= "N/A" then
+diff --git a/dotfiles/awesome/utils/apps.sh b/dotfiles/awesome/utils/apps.sh
+index 644845d..872e8a2 100755
+--- a/dotfiles/awesome/utils/apps.sh
++++ b/dotfiles/awesome/utils/apps.sh
+@@ -21,6 +21,8 @@ check_and_start() {
+ }
+ 
+ 
++pgrep -x greenclip > /dev/null || greenclip daemon &
++
+ declare -A processes=(
+   ["Brave-browser"]="Brave-browser"
+   ["bruno"]="bruno"
+diff --git a/dotfiles/awesome/widgets/net_speed_widget/net_speed.lua b/dotfiles/awesome/widgets/net_speed_widget/net_speed.lua
+index 87c2a3f..083dfaa 100644
+--- a/dotfiles/awesome/widgets/net_speed_widget/net_speed.lua
++++ b/dotfiles/awesome/widgets/net_speed_widget/net_speed.lua
+@@ -59,7 +59,7 @@ local function worker(user_args)
+ 	local args = user_args or {}
+ 
+ 	local interface = args.interface or "*"
+-	local timeout = args.timeout or 1
++	local timeout = args.timeout or 2
+ 	local width = args.width or 55
+ 
+ 	net_speed_widget = wibox.widget({
+diff --git a/dotfiles/awesome/widgets_config/cpu_widget.lua b/dotfiles/awesome/widgets_config/cpu_widget.lua
+index 57dafed..d68a98c 100644
+--- a/dotfiles/awesome/widgets_config/cpu_widget.lua
++++ b/dotfiles/awesome/widgets_config/cpu_widget.lua
+@@ -7,6 +7,7 @@ local gears = require("gears")
+ theme.widget_cpu = theme.dir .. "/icons/widgets/cpu.png"
+ local cpu_icon = wibox.widget.imagebox(theme.widget_cpu)
+ local cpu = lain.widget.cpu({
++	timeout = 5,
+ 	settings = function()
+ 		widget:set_markup(markup.font(theme.font, markup.fg.color(theme.fg_widget, " " .. cpu_now.usage .. "% ")))
+ 	end,
+diff --git a/dotfiles/awesome/widgets_config/mem_widget.lua b/dotfiles/awesome/widgets_config/mem_widget.lua
+index 8f5d421..c0a2a02 100644
+--- a/dotfiles/awesome/widgets_config/mem_widget.lua
++++ b/dotfiles/awesome/widgets_config/mem_widget.lua
+@@ -7,6 +7,7 @@ local gears = require("gears")
+ theme.widget_mem = theme.dir .. "/icons/widgets/mem.png"
+ local mem_icon = wibox.widget.imagebox(theme.widget_mem)
+ local mem = lain.widget.mem({
++	timeout = 5,
+ 	settings = function()
+ 		widget:set_markup(
+ 			markup.font(
+diff --git a/dotfiles/awesome/widgets_config/music_widget.lua b/dotfiles/awesome/widgets_config/music_widget.lua
+index fa3054d..d14f913 100644
+--- a/dotfiles/awesome/widgets_config/music_widget.lua
++++ b/dotfiles/awesome/widgets_config/music_widget.lua
+@@ -145,8 +145,8 @@ text_scroll:buttons(awful.util.table.join(awful.button({}, 1, toggle_play_pause)
+ -- Initial update
+ update_music()
+ 
+--- Update every 2 seconds
+-local timer = gears.timer({ timeout = 2 })
++-- Update every 4 seconds
++local timer = gears.timer({ timeout = 4 })
+ timer:connect_signal("timeout", update_music)
+ timer:start()
+ 
+diff --git a/dotfiles/awesome/widgets_config/temp_widget.lua b/dotfiles/awesome/widgets_config/temp_widget.lua
+index cc849e5..2249ade 100644
+--- a/dotfiles/awesome/widgets_config/temp_widget.lua
++++ b/dotfiles/awesome/widgets_config/temp_widget.lua
+@@ -8,6 +8,7 @@ theme.widget_temp = theme.dir .. "/icons/widgets/temp.png"
+ local temp_icon = wibox.widget.imagebox(theme.widget_temp)
+ local temp = lain.widget.temp({
+ 	tempfiles = { "/sys/class/hwmon/hwmon2/temp1_input" },
++	timeout = 10,
+ 	settings = function()
+ 		local temp_str = "N/A"
+ 		if CORETEMP_NOW ~= "N/A" then
+diff --git a/dotfiles/bruno/preferences.json b/dotfiles/bruno/preferences.json
+index 610c02d..ece566f 100644
+--- a/dotfiles/bruno/preferences.json
++++ b/dotfiles/bruno/preferences.json
+@@ -11,10 +11,10 @@
+ 			},
+ 			"storeCookies": true,
+ 			"sendCookies": true,
+-			"timeout": 0
++			"timeout": 30000
+ 		},
+ 		"font": {
+-			"codeFont": "default",
++			"codeFont": "JetBrainsMono Nerd Font",
+ 			"codeFontSize": 14
+ 		},
+ 		"proxy": {
+diff --git a/dotfiles/btop/btop.conf b/dotfiles/btop/btop.conf
+index ec19b55..377863e 100644
+--- a/dotfiles/btop/btop.conf
++++ b/dotfiles/btop/btop.conf
+@@ -1,18 +1,18 @@
+-#? Config file for btop v. 1.4.4
++#? Config file for btop v.1.4.6
+ 
+ #* Name of a btop++/bpytop/bashtop formatted ".theme" file, "Default" and "TTY" for builtin themes.
+ #* Themes should be placed in "../share/btop/themes" relative to binary or "$HOME/.config/btop/themes"
+ color_theme = "/usr/share/btop/themes/everforest-dark-hard.theme"
+ 
+ #* If the theme set background should be shown, set to False if you want terminal background transparency.
+-theme_background = True
++theme_background = true
+ 
+ #* Sets if 24-bit truecolor should be used, will convert 24-bit colors to 256 color (6x6x6 color cube) if false.
+-truecolor = True
++truecolor = true
+ 
+ #* Set to true to force tty mode regardless if a real tty has been detected or not.
+ #* Will force 16-color mode and TTY theme, set all graph symbols to "tty" and swap out other non tty friendly symbols.
+-force_tty = False
++force_tty = false
+ 
+ #* Define presets for the layout of the boxes. Preset 0 is always all boxes shown with default settings. Max 9 presets.
+ #* Format: "box_name:P:G,box_name:P:G" P=(0 or 1) for alternate positions, G=graph symbol to use for box.
+@@ -22,10 +22,13 @@ presets = "cpu:1:default,proc:0:default cpu:0:default,mem:0:default,net:0:defaul
+ 
+ #* Set to True to enable "h,j,k,l,g,G" keys for directional control in lists.
+ #* Conflicting keys for h:"help" and k:"kill" is accessible while holding shift.
+-vim_keys = True
++vim_keys = true
+ 
+ #* Rounded corners on boxes, is ignored if TTY mode is ON.
+-rounded_corners = True
++rounded_corners = true
++
++#* Use terminal synchronized output sequences to reduce flickering on supported terminals.
++terminal_sync = true
+ 
+ #* Default symbols to use for graph creation, "braille", "block" or "tty".
+ #* "braille" offers the highest resolution but might not be included in all fonts.
+@@ -60,69 +63,75 @@ update_ms = 2000
+ proc_sorting = "cpu lazy"
+ 
+ #* Reverse sorting order, True or False.
+-proc_reversed = False
++proc_reversed = false
+ 
+ #* Show processes as a tree.
+-proc_tree = False
++proc_tree = true
+ 
+ #* Use the cpu graph colors in the process list.
+-proc_colors = True
++proc_colors = true
+ 
+ #* Use a darkening gradient in the process list.
+-proc_gradient = True
++proc_gradient = true
+ 
+ #* If process cpu usage should be of the core it's running on or usage of the total available cpu power.
+-proc_per_core = False
++proc_per_core = false
+ 
+ #* Show process memory as bytes instead of percent.
+-proc_mem_bytes = True
++proc_mem_bytes = true
+ 
+ #* Show cpu graph for each process.
+-proc_cpu_graphs = True
++proc_cpu_graphs = true
+ 
+ #* Use /proc/[pid]/smaps for memory information in the process info box (very slow but more accurate)
+-proc_info_smaps = False
++proc_info_smaps = false
+ 
+ #* Show proc box on left side of screen instead of right.
+-proc_left = False
++proc_left = false
+ 
+ #* (Linux) Filter processes tied to the Linux kernel(similar behavior to htop).
+-proc_filter_kernel = False
++proc_filter_kernel = true
+ 
+ #* In tree-view, always accumulate child process resources in the parent process.
+-proc_aggregate = False
++proc_aggregate = false
++
++#* Should cpu and memory usage display be preserved for dead processes when paused.
++keep_dead_proc_usage = false
+ 
+ #* Sets the CPU stat shown in upper half of the CPU graph, "total" is always available.
+ #* Select from a list of detected attributes from the options menu.
+-cpu_graph_upper = "Auto"
++cpu_graph_upper = "user"
+ 
+ #* Sets the CPU stat shown in lower half of the CPU graph, "total" is always available.
+ #* Select from a list of detected attributes from the options menu.
+-cpu_graph_lower = "Auto"
++cpu_graph_lower = "system"
+ 
+ #* If gpu info should be shown in the cpu box. Available values = "Auto", "On" and "Off".
+ show_gpu_info = "Auto"
+ 
+ #* Toggles if the lower CPU graph should be inverted.
+-cpu_invert_lower = True
++cpu_invert_lower = true
+ 
+ #* Set to True to completely disable the lower CPU graph.
+-cpu_single_graph = False
++cpu_single_graph = false
+ 
+ #* Show cpu box at bottom of screen instead of top.
+-cpu_bottom = False
++cpu_bottom = false
+ 
+ #* Shows the system uptime in the CPU box.
+-show_uptime = True
++show_uptime = true
++
++#* Shows the CPU package current power consumption in watts. Requires running `make setcap` or `make setuid` or running with sudo.
++show_cpu_watts = true
+ 
+ #* Show cpu temperature.
+-check_temp = True
++check_temp = true
+ 
+ #* Which sensor to use for cpu temperature, use options menu to select from list of available sensors.
+ cpu_sensor = "Auto"
+ 
+ #* Show temperatures for cpu cores also if check_temp is True and sensors has been found.
+-show_coretemp = True
++show_coretemp = true
+ 
+ #* Set a custom mapping between core and coretemp, can be needed on certain cpus to get correct temperature for correct core.
+ #* Use lm-sensors or similar to see which cores are reporting temperatures on your machine.
+@@ -134,17 +143,20 @@ cpu_core_map = ""
+ temp_scale = "celsius"
+ 
+ #* Use base 10 for bits/bytes sizes, KB = 1000 instead of KiB = 1024.
+-base_10_sizes = False
++base_10_sizes = false
+ 
+ #* Show CPU frequency.
+-show_cpu_freq = True
++show_cpu_freq = true
++
++#* How to calculate CPU frequency, available values: "first", "range", "lowest", "highest" and "average".
++freq_mode = "average"
+ 
+ #* Draw a clock at top of screen, formatting according to strftime, empty string to disable.
+ #* Special formatting: /host = hostname | /user = username | /uptime = system uptime
+-clock_format = "%X"
++clock_format = "%X  /user@/host"
+ 
+ #* Update main ui in background when menus are showing, set this to false if the menus is flickering too much for comfort.
+-background_update = True
++background_update = true
+ 
+ #* Custom cpu model name, empty string to disable.
+ custom_cpu_name = ""
+@@ -154,43 +166,43 @@ custom_cpu_name = ""
+ disks_filter = ""
+ 
+ #* Show graphs instead of meters for memory values.
+-mem_graphs = True
++mem_graphs = true
+ 
+ #* Show mem box below net box instead of above.
+-mem_below_net = False
++mem_below_net = false
+ 
+ #* Count ZFS ARC in cached and available memory.
+-zfs_arc_cached = True
++zfs_arc_cached = true
+ 
+ #* If swap memory should be shown in memory box.
+-show_swap = True
++show_swap = true
+ 
+ #* Show swap as a disk, ignores show_swap value above, inserts itself after first disk.
+-swap_disk = True
++swap_disk = true
+ 
+ #* If mem box should be split to also show disks info.
+-show_disks = True
++show_disks = true
+ 
+ #* Filter out non physical disks. Set this to False to include network disks, RAM disks and similar.
+-only_physical = True
++only_physical = true
+ 
+ #* Read disks list from /etc/fstab. This also disables only_physical.
+-use_fstab = True
++use_fstab = true
+ 
+ #* Setting this to True will hide all datasets, and only show ZFS pools. (IO stats will be calculated per-pool)
+-zfs_hide_datasets = False
++zfs_hide_datasets = false
+ 
+ #* Set to true to show available disk space for privileged users.
+-disk_free_priv = False
++disk_free_priv = false
+ 
+ #* Toggles if io activity % (disk busy time) should be shown in regular disk usage view.
+-show_io_stat = True
++show_io_stat = true
+ 
+ #* Toggles io mode for disks, showing big graphs for disk read/write speeds.
+-io_mode = False
++io_mode = false
+ 
+ #* Set to True to show combined read/write io graphs in io mode.
+-io_graph_combined = False
++io_graph_combined = false
+ 
+ #* Set the top speed for the io graphs in MiB/s (100 by default), use format "mountpoint:speed" separate disks with whitespace " ".
+ #* Example: "/mnt/media:100 /:20 /boot:1".
+@@ -202,10 +214,10 @@ net_download = 100
+ net_upload = 100
+ 
+ #* Use network graphs auto rescaling mode, ignores any values set above and rescales down to 10 Kibibytes at the lowest.
+-net_auto = True
++net_auto = true
+ 
+ #* Sync the auto scaling for download and upload to whichever currently has the highest scale.
+-net_sync = True
++net_sync = true
+ 
+ #* Starts with the Network Interface specified here.
+ net_iface = ""
+@@ -214,26 +226,32 @@ net_iface = ""
+ base_10_bitrate = "Auto"
+ 
+ #* Show battery stats in top right if battery is present.
+-show_battery = True
++show_battery = false
+ 
+ #* Which battery to use if multiple are present. "Auto" for auto detection.
+ selected_battery = "Auto"
+ 
+ #* Show power stats of battery next to charge indicator.
+-show_battery_watts = True
++show_battery_watts = true
+ 
+-#* Set loglevel for "~/.config/btop/btop.log" levels are: "ERROR" "WARNING" "INFO" "DEBUG".
++#* Set loglevel for "~/.local/state/btop.log" levels are: "ERROR" "WARNING" "INFO" "DEBUG".
+ #* The level set includes all lower levels, i.e. "DEBUG" will show all logging info.
+ log_level = "WARNING"
+ 
++#* Automatically save current settings to config file on exit.
++save_config_on_exit = true
++
+ #* Measure PCIe throughput on NVIDIA cards, may impact performance on certain cards.
+-nvml_measure_pcie_speeds = True
++nvml_measure_pcie_speeds = true
+ 
+ #* Measure PCIe throughput on AMD cards, may impact performance on certain cards.
+-rsmi_measure_pcie_speeds = True
++rsmi_measure_pcie_speeds = true
+ 
+ #* Horizontally mirror the GPU graph.
+-gpu_mirror_graph = True
++gpu_mirror_graph = true
++
++#* Set which GPU vendors to show. Available values are "nvidia amd intel"
++shown_gpus = "nvidia amd intel"
+ 
+ #* Custom gpu0 model name, empty string to disable.
+ custom_gpu_name0 = ""
+diff --git a/dotfiles/fish/conf.d/done.fish b/dotfiles/fish/conf.d/done.fish
+index ae8d242..8160f06 100644
+--- a/dotfiles/fish/conf.d/done.fish
++++ b/dotfiles/fish/conf.d/done.fish
+@@ -24,15 +24,15 @@ if not status is-interactive
+     exit
+ end
+ 
+-set -g __done_version 1.20.0
++set -g __done_version 1.21.1
+ 
+ function __done_run_powershell_script
+-    set -l powershell_exe (command --search "powershell.exe")
++    set -f powershell_exe (command --search "powershell.exe")
+ 
+-    if test $status -ne 0
++    if test "$status" -ne 0
+         and command --search wslvar
+ 
+-        set -l powershell_exe (wslpath (wslvar windir)/System32/WindowsPowerShell/v1.0/powershell.exe)
++        set -f powershell_exe (wslpath (wslvar windir)/System32/WindowsPowerShell/v1.0/powershell.exe)
+     end
+ 
+     if string length --quiet "$powershell_exe"
+@@ -152,13 +152,13 @@ function __done_is_process_window_focused
+     set __done_focused_window_id (__done_get_focused_window_id)
+     if test "$__done_sway_ignore_visible" -eq 1
+         and test -n "$SWAYSOCK"
+-        string match --quiet --regex "^true" (swaymsg -t get_tree | jq ".. | objects | select(.id == "$__done_initial_window_id") | .visible")
++        string match --quiet --regex "^true" (swaymsg -t get_tree | jq ".. | objects | select(.id == "$__done_initial_window_id") | .visible" 2>/dev/null)
+         return $status
+     else if test -n "$HYPRLAND_INSTANCE_SIGNATURE"
+-        and test $__done_initial_window_id = (hyprctl activewindow | awk 'NR==1 {print $2}')
++        and test "$__done_initial_window_id" = (hyprctl activewindow | awk 'NR==1 {print $2}')
+         return $status
+     else if test -n "$NIRI_SOCKET"
+-        and test $__done_initial_window_id = (niri msg --json focused-window | jq ".id")
++        and test "$__done_initial_window_id" = (niri msg --json focused-window | jq ".id")
+         return $status
+     else if test "$__done_initial_window_id" != "$__done_focused_window_id"
+         return 1
+@@ -185,13 +185,13 @@ function __done_humanize_duration -a milliseconds
+     set -l minutes (math --scale=0 "$milliseconds/60000" % 60)
+     set -l hours (math --scale=0 "$milliseconds/3600000")
+ 
+-    if test $hours -gt 0
++    if test "$hours" -gt 0
+         printf '%s' $hours'h '
+     end
+-    if test $minutes -gt 0
++    if test "$minutes" -gt 0
+         printf '%s' $minutes'm '
+     end
+-    if test $seconds -gt 0
++    if test "$seconds" -gt 0
+         printf '%s' $seconds's'
+     end
+ end
+@@ -226,13 +226,13 @@ if set -q __done_enabled
+         # backwards compatibility for fish < v3.0
+         set -q cmd_duration; or set -l cmd_duration $CMD_DURATION
+ 
+-        if test $cmd_duration
+-            and test $cmd_duration -gt $__done_min_cmd_duration # longer than notify_duration
++        if test -n "$cmd_duration"
++            and test "$cmd_duration" -gt "$__done_min_cmd_duration" # longer than notify_duration
+             and not __done_is_process_window_focused # process pane or window not focused
+ 
+             # don't notify if command matches exclude list
+             for pattern in $__done_exclude
+-                if string match -qr $pattern $argv[1]
++                if string match -qr -- $pattern $argv[1]
+                     return
+                 end
+             end
+@@ -245,7 +245,7 @@ if set -q __done_enabled
+             set -l message "$wd/ $argv[1]"
+             set -l sender $__done_initial_window_id
+ 
+-            if test $exit_status -ne 0
++            if test "$exit_status" -ne 0
+                 set title "Failed ($exit_status) after $humanized_duration"
+             end
+ 
+@@ -258,15 +258,24 @@ if set -q __done_enabled
+                 if test "$__done_notify_sound" -eq 1
+                     echo -e "\a" # bell sound
+                 end
++
+             else if set -q KITTY_WINDOW_ID
+                 printf "\x1b]99;i=done:d=0;$title\x1b\\"
+                 printf "\x1b]99;i=done:d=1:p=body;$message\x1b\\"
++
++            else if test "$TERM_PROGRAM" = ghostty; or test "$TERM_PROGRAM" = WezTerm
++                printf "\x1b]777;notify;%s;%s\x1b\\" "$title" "$message"
++
++            else if test "$TERM_PROGRAM" = iTerm.app
++                printf "\x1b]9;%s: %s\x1b\\" "$title" "$message"
++
+             else if type -q terminal-notifier # https://github.com/julienXX/terminal-notifier
+                 if test "$__done_notify_sound" -eq 1
+                     # pipe message into terminal-notifier to avoid escaping issues (https://github.com/julienXX/terminal-notifier/issues/134). fixes #140
+-                    echo "$message" | terminal-notifier -title "$title" -sender "$__done_initial_window_id" -sound default
++                    # not using the -sender option because it hangs for some apps (https://github.com/julienXX/terminal-notifier/issues/301)
++                    echo "$message" | terminal-notifier -title "$title" -sound default
+                 else
+-                    echo "$message" | terminal-notifier -title "$title" -sender "$__done_initial_window_id"
++                    echo "$message" | terminal-notifier -title "$title"
+                 end
+ 
+             else if type -q osascript # AppleScript
+@@ -289,7 +298,7 @@ if set -q __done_enabled
+                     set urgency "$__done_notification_urgency_level"
+                 end
+                 # override user-defined urgency level if non-zero exitstatus
+-                if test $exit_status -ne 0
++                if test "$exit_status" -ne 0
+                     set urgency critical
+                     if set -q __done_notification_urgency_level_failure
+                         set urgency "$__done_notification_urgency_level_failure"
+@@ -304,7 +313,7 @@ if set -q __done_enabled
+ 
+             else if type -q notify-desktop # Linux notify-desktop
+                 set -l urgency
+-                if test $exit_status -ne 0
++                if test "$exit_status" -ne 0
+                     set urgency "--urgency=critical"
+                 end
+                 notify-desktop $urgency --icon=utilities-terminal --app-name=fish "$title" "$message"
+diff --git a/dotfiles/fish/config.fish b/dotfiles/fish/config.fish
+index 838639f..e4546c5 100644
+--- a/dotfiles/fish/config.fish
++++ b/dotfiles/fish/config.fish
+@@ -20,6 +20,7 @@ if not pgrep -x "Xorg" > /dev/null
+ end
+ 
+ set fish_greeting ""
++set -gx NO_AT_BRIDGE 1
+ 
+ # fish_greeting
+ set -gx TERM xterm-256color
+@@ -28,6 +29,7 @@ set -x PATH $GVM_ROOT/bin $PATH
+ set -x PATH $HOME/.local/bin $PATH
+ 
+ # aliases
++alias updates='checkupdates; yay -Qu'
+ alias g=git
+ alias v=nvim
+ alias z=zoxide
+diff --git a/dotfiles/fish/fish_variables b/dotfiles/fish/fish_variables
+index fd61ab6..090769e 100644
+--- a/dotfiles/fish/fish_variables
++++ b/dotfiles/fish/fish_variables
+@@ -3,7 +3,7 @@
+ SETUVAR VIRTUAL_ENV_DISABLE_PROMPT:true
+ SETUVAR __fish_initialized:4300
+ SETUVAR _fisher_franciscolourenco_2F_done_files:\x7e/\x2econfig/fish/conf\x2ed/done\x2efish
+-SETUVAR _fisher_ilancosman_2F_tide_40_v6_files:\x7e/\x2econfig/fish/functions/_tide_1_line_prompt\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_2_line_prompt\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_cache_variables\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_detect_os\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_find_and_remove\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_fish_colorize\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_aws\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_character\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_cmd_duration\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_context\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_crystal\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_direnv\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_distrobox\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_docker\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_elixir\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_gcloud\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_git\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_go\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_java\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_jobs\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_kubectl\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_nix_shell\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_node\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_os\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_php\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_private_mode\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_pulumi\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_python\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_ruby\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_rustc\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_shlvl\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_status\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_terraform\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_time\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_toolbox\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_vi_mode\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_zig\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_parent_dirs\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_print_item\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_pwd\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_remove_unusable_items\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_sub_bug\x2dreport\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_sub_configure\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_sub_reload\x2efish\x1e\x7e/\x2econfig/fish/functions/fish_mode_prompt\x2efish\x1e\x7e/\x2econfig/fish/functions/fish_prompt\x2efish\x1e\x7e/\x2econfig/fish/functions/tide\x1e\x7e/\x2econfig/fish/functions/tide\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/_tide_init\x2efish\x1e\x7e/\x2econfig/fish/completions/tide\x2efish
++SETUVAR _fisher_ilancosman_2F_tide_40_v6_files:\x7e/\x2econfig/fish/functions/_tide_1_line_prompt\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_2_line_prompt\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_cache_variables\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_detect_os\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_find_and_remove\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_fish_colorize\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_aws\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_bun\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_character\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_cmd_duration\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_context\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_crystal\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_direnv\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_distrobox\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_docker\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_elixir\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_gcloud\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_git\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_go\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_java\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_jobs\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_kubectl\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_nix_shell\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_node\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_os\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_php\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_private_mode\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_pulumi\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_python\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_ruby\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_rustc\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_shlvl\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_status\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_terraform\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_time\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_toolbox\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_vi_mode\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_item_zig\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_parent_dirs\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_print_item\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_pwd\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_remove_unusable_items\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_sub_bug\x2dreport\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_sub_configure\x2efish\x1e\x7e/\x2econfig/fish/functions/_tide_sub_reload\x2efish\x1e\x7e/\x2econfig/fish/functions/fish_mode_prompt\x2efish\x1e\x7e/\x2econfig/fish/functions/fish_prompt\x2efish\x1e\x7e/\x2econfig/fish/functions/tide\x1e\x7e/\x2econfig/fish/functions/tide\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/_tide_init\x2efish\x1e\x7e/\x2econfig/fish/completions/tide\x2efish
+ SETUVAR _fisher_jorgebucaran_2F_autopair_2E_fish_files:\x7e/\x2econfig/fish/functions/_autopair_backspace\x2efish\x1e\x7e/\x2econfig/fish/functions/_autopair_insert_left\x2efish\x1e\x7e/\x2econfig/fish/functions/_autopair_insert_right\x2efish\x1e\x7e/\x2econfig/fish/functions/_autopair_insert_same\x2efish\x1e\x7e/\x2econfig/fish/functions/_autopair_tab\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/autopair\x2efish
+ SETUVAR _fisher_jorgebucaran_2F_fisher_files:\x7e/\x2econfig/fish/functions/fisher\x2efish\x1e\x7e/\x2econfig/fish/completions/fisher\x2efish
+ SETUVAR _fisher_jorgebucaran_2F_nvm_2E_fish_files:\x7e/\x2econfig/fish/functions/_nvm_index_update\x2efish\x1e\x7e/\x2econfig/fish/functions/_nvm_list\x2efish\x1e\x7e/\x2econfig/fish/functions/_nvm_version_activate\x2efish\x1e\x7e/\x2econfig/fish/functions/_nvm_version_deactivate\x2efish\x1e\x7e/\x2econfig/fish/functions/nvm\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/nvm\x2efish\x1e\x7e/\x2econfig/fish/completions/nvm\x2efish
+@@ -12,7 +12,9 @@ SETUVAR _fisher_plugins:jorgebucaran/fisher\x1ejorgebucaran/nvm\x2efish\x1efranc
+ SETUVAR _fisher_rbenv_2F_fish_2D_rbenv_files:\x7e/\x2econfig/fish/functions/rbenv\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/rbenv\x2efish\x1e\x7e/\x2econfig/fish/completions/rbenv\x2efish
+ SETUVAR _fisher_upgraded_to_4_4:\x1d
+ SETUVAR _tide_left_items:pwd\x1egit\x1enewline\x1echaracter
++SETUVAR _tide_prompt_1036:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b175\x3b0\x3b49m\uf013\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m18\x3a05\x3a25\x1b\x5bm
+ SETUVAR _tide_prompt_10400:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x212\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m19\x3a32\x3a32\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_10454:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b49m\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x20\x2a1\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x2142\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f14\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m01\x3a57\x3a46\x1b\x5bm
+ SETUVAR _tide_prompt_1093:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m20\x3a26\x3a51\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_1106:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x20\x2a1\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x2110\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f7\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m19\x3a44\x3a49\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_1108:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f5\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m18\x3a26\x3a48\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+@@ -20,6 +22,8 @@ SETUVAR _tide_prompt_1152:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_1228:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f4\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m09\x3a06\x3a52\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_12571:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x20\x2a1\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x211\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m23\x3a00\x3a46\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_12943:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x20\u21e31\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x2111\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m20\x3a18\x3a37\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_13208:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b135\x3b135\x3b95\x3b49m1m\x2038s\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m02\x3a16\x3a34\x1b\x5bm
++SETUVAR _tide_prompt_1346:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m18\x3a09\x3a12\x1b\x5bm
+ SETUVAR _tide_prompt_1362:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x2b1\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x213\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m21\x3a35\x3a52\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_138274:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f5\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m00\x3a56\x3a29\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_1386:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f5\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m19\x3a19\x3a08\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+@@ -62,6 +66,7 @@ SETUVAR _tide_prompt_1887:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_188859:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f5\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m00\x3a04\x3a36\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_2086:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b135\x3b135\x3b95m3s\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m16\x3a18\x3a23\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_2097:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x212\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m21\x3a52\x3a12\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_2138:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b49m\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x20\x2a1\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x2141\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f2\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m01\x3a09\x3a14\x1b\x5bm
+ SETUVAR _tide_prompt_2146:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x20\x2a2\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x214\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m02\x3a05\x3a23\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_2179:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m21\x3a48\x3a14\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_2214:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x213\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f10\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m11\x3a16\x3a40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+@@ -69,6 +74,7 @@ SETUVAR _tide_prompt_2296:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_235388:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f5\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b135\x3b135\x3b95m15s\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m21\x3a51\x3a39\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_2563:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b135\x3b135\x3b95m6m\x2047s\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m10\x3a36\x3a01\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_2710:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f4\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m15\x3a49\x3a05\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_3043:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b49m\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x20\x2a1\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x2b42\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x2145\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m18\x3a12\x3a35\x1b\x5bm
+ SETUVAR _tide_prompt_3055:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x215\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m01\x3a51\x3a46\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_30680:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m16\x3a27\x3a26\x1b\x5bm
+ SETUVAR _tide_prompt_33761:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b49m\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x215\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f1\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m15\x3a40\x3a13\x1b\x5bm
+@@ -99,11 +105,15 @@ SETUVAR _tide_prompt_6813:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_720:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m11\x3a11\x3a09\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_729:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m23\x3a25\x3a18\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_731:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m17\x3a00\x3a58\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+-SETUVAR _tide_prompt_737:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m15\x3a49\x3a04\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_734:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m21\x3a38\x3a51\x1b\x5bm
++SETUVAR _tide_prompt_736:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b175\x3b0\x3b49m\uf013\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m01\x3a32\x3a48\x1b\x5bm
++SETUVAR _tide_prompt_737:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m01\x3a14\x3a07\x1b\x5bm
++SETUVAR _tide_prompt_741:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m04\x3a07\x3a11\x1b\x5bm
+ SETUVAR _tide_prompt_745:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m16\x3a59\x3a19\x1b\x5bm
+-SETUVAR _tide_prompt_747:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m01\x3a31\x3a55\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_747:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b175\x3b0\x3b49m\uf013\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m02\x3a19\x3a07\x1b\x5bm
+ SETUVAR _tide_prompt_751:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b175\x3b0\x3b49m\uf013\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m14\x3a41\x3a03\x1b\x5bm
+ SETUVAR _tide_prompt_7514:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m16\x3a49\x3a17\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_752:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m01\x3a06\x3a40\x1b\x5bm
+ SETUVAR _tide_prompt_754:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b175\x3b0\x3b49m\uf013\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m23\x3a42\x3a56\x1b\x5bm
+ SETUVAR _tide_prompt_756:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m22\x3a02\x3a28\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_763:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m11\x3a12\x3a17\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+@@ -113,6 +123,7 @@ SETUVAR _tide_prompt_767:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5
+ SETUVAR _tide_prompt_771:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b175\x3b0\x3b49m\uf013\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m18\x3a00\x3a03\x1b\x5bm
+ SETUVAR _tide_prompt_778:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m14\x3a48\x3a19\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_791:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m19\x3a32\x3a44\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_804:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b175\x3b0\x3b49m\uf013\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m17\x3a48\x3a00\x1b\x5bm
+ SETUVAR _tide_prompt_8106:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x2b24\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x212\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b179\x3b18\x3b9m\ue23e\x203\x2e3\x2e0\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m16\x3a59\x3a10\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_8220:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b135\x3b135\x3b95m22s\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m21\x3a44\x3a27\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_8313:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b101m3m\x2020s\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m11\x3a58\x3a26\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+@@ -125,10 +136,14 @@ SETUVAR _tide_prompt_874:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\
+ SETUVAR _tide_prompt_878:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b5\x3b76m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b70m\uf013\x1b\x5b38\x3b5\x3b246m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b5\x3b66m00\x3a35\x3a10\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_89726:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b135\x3b135\x3b95m17s\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m18\x3a30\x3a04\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_90173:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m16\x3a59\x3a38\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_9058:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m01\x3a31\x3a16\x1b\x5bm
+ SETUVAR _tide_prompt_91558:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x20\x3f4\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m12\x3a20\x3a10\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+ SETUVAR _tide_prompt_961:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x20\x2110\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m16\x3a32\x3a43\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
++SETUVAR _tide_prompt_964:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m01\x3a32\x3a50\x1b\x5bm
++SETUVAR _tide_prompt_969:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m01\x3a35\x3a28\x1b\x5bm
++SETUVAR _tide_prompt_974:\x1b\x5bm\x1b\x5b49m\x40PWD\x40\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276e\x1e\x1b\x5bm\x20\x1b\x5b38\x3b2\x3b95\x3b135\x3b135\x3b49m02\x3a19\x3a09\x1b\x5bm
+ SETUVAR _tide_prompt_979:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x40PWD\x40\x1b\x5b38\x3b2\x3b148\x3b148\x3b148m\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b37m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0mmain\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\x1b\x5b38\x3b2\x3b255\x3b0\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b215\x3b175\x3b0m\x1b\x5b38\x3b2\x3b0\x3b175\x3b255m\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1e\x1b\x5b38\x3b2\x3b95\x3b215\x3b0m\u276f\x1e\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x20\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x3b95\x3b135\x3b135m01\x3a34\x3a03\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm
+-SETUVAR _tide_right_items:status\x1ecmd_duration\x1econtext\x1ejobs\x1epython\x1ego\x1etime
++SETUVAR _tide_right_items:status\x1ecmd_duration\x1econtext\x1ejobs\x1enode\x1epython\x1eruby\x1ego\x1etime
+ SETUVAR nvm_default_version:25
+ SETUVAR tide_aws_bg_color:normal
+ SETUVAR tide_aws_color:FF9900
+diff --git a/dotfiles/fish/functions/_tide_detect_os.fish b/dotfiles/fish/functions/_tide_detect_os.fish
+index cf38388..bb58d07 100644
+--- a/dotfiles/fish/functions/_tide_detect_os.fish
++++ b/dotfiles/fish/functions/_tide_detect_os.fish
+@@ -10,9 +10,8 @@ function _tide_detect_os
+             printf %s\n  FFFFFF 00CCFF # https://answers.microsoft.com/en-us/windows/forum/all/what-is-the-official-windows-8-blue-rgb-or-hex/fd57144b-f69b-42d8-8c21-6ca911646e44
+         case linux
+             if test (uname -o) = Android
+-                echo ﲎ # This character is evil and messes up code display, so it's put on its own line
+                 # https://developer.android.com/distribute/marketing-tools/brand-guidelines
+-                printf %s\n 3DDC84 3C3F41 # fg is from above link, bg is from Android Studio default dark theme
++                printf %s\n  3DDC84 3C3F41 # fg is from above link, bg is from Android Studio default dark theme
+             else
+                 _tide_detect_os_linux_cases /etc/os-release ID ||
+                     _tide_detect_os_linux_cases /etc/os-release ID_LIKE ||
+diff --git a/dotfiles/fish/functions/_tide_item_git.fish b/dotfiles/fish/functions/_tide_item_git.fish
+index 3154acc..56e1e31 100644
+--- a/dotfiles/fish/functions/_tide_item_git.fish
++++ b/dotfiles/fish/functions/_tide_item_git.fish
+@@ -50,7 +50,7 @@ function _tide_item_git
+ (0|(?<dirty>.*))\n(0|(?<untracked>.*))(\n(0|(?<behind>.*))\t(0|(?<ahead>.*)))?' \
+         "$(git $_set_dir_opt stash list 2>/dev/null | count
+         string match -r ^UU $stat | count
+-        string match -r ^[ADMR]. $stat | count
++        string match -r ^[ADMR] $stat | count
+         string match -r ^.[ADMR] $stat | count
+         string match -r '^\?\?' $stat | count
+         git rev-list --count --left-right @{upstream}...HEAD 2>/dev/null)"
+diff --git a/dotfiles/fish/functions/_tide_parent_dirs.fish b/dotfiles/fish/functions/_tide_parent_dirs.fish
+index 9f31b04..00d8a14 100644
+--- a/dotfiles/fish/functions/_tide_parent_dirs.fish
++++ b/dotfiles/fish/functions/_tide_parent_dirs.fish
+@@ -1,7 +1,10 @@
+ function _tide_parent_dirs --on-variable PWD
+-    set -g _tide_parent_dirs (string escape (
+-        for dir in (string split / -- $PWD)
+-            set -la parts $dir
+-            string join / -- $parts
+-        end))
++    set -g _tide_parent_dirs (
++        string escape (
++            for dir in (string split / -- $PWD)
++                set -fa parts $dir
++                string join / -- $parts
++            end
++        )
++    )
+ end
+diff --git a/dotfiles/fish/functions/_tide_remove_unusable_items.fish b/dotfiles/fish/functions/_tide_remove_unusable_items.fish
+index deb4c10..b1d9b28 100644
+--- a/dotfiles/fish/functions/_tide_remove_unusable_items.fish
++++ b/dotfiles/fish/functions/_tide_remove_unusable_items.fish
+@@ -1,7 +1,7 @@
+ function _tide_remove_unusable_items
+     # Remove tool-specific items for tools the machine doesn't have installed
+     set -l removed_items
+-    for item in aws crystal direnv distrobox docker elixir gcloud git go java kubectl nix_shell node php pulumi python ruby rustc terraform toolbox zig
++    for item in aws bun crystal direnv distrobox docker elixir gcloud git go java kubectl nix_shell node php pulumi python ruby rustc terraform toolbox zig
+         contains $item $tide_left_prompt_items $tide_right_prompt_items || continue
+ 
+         set -l cli_names $item
+diff --git a/dotfiles/fish/functions/_tide_sub_bug-report.fish b/dotfiles/fish/functions/_tide_sub_bug-report.fish
+index a8065c8..82f08c0 100644
+--- a/dotfiles/fish/functions/_tide_sub_bug-report.fish
++++ b/dotfiles/fish/functions/_tide_sub_bug-report.fish
+@@ -11,14 +11,14 @@ function _tide_sub_bug-report
+         set --long | string match -r "^_?tide.*" | # Get only tide variables
+             string match -r --invert "^_tide_prompt_var.*" # Remove _tide_prompt_var
+     else
+-        set -l fish_version ($fish_path --version | string match -r "fish, version (\d\.\d\.\d)")[2]
+-        _tide_check_version Fish fish-shell/fish-shell "(\d\.\d\.\d)" $fish_version || return
++        $fish_path --version | string match -qr "fish, version (?<fish_version>.*)"
++        _tide_check_version Fish fish-shell/fish-shell "(?<v>[\d.]+)" $fish_version || return
+ 
+-        set -l tide_version (tide --version | string match -r "tide, version (\d\.\d\.\d)")[2]
+-        _tide_check_version Tide IlanCosman/tide "v(\d\.\d\.\d)" $tide_version || return
++        tide --version | string match -qr "tide, version (?<tide_version>.*)"
++        _tide_check_version Tide IlanCosman/tide "v(?<v>[\d.]+)" $tide_version || return
+ 
+         if command --query git
+-            test (git --version | string match -r "git version ([\d\.]*)" | string replace --all . '')[2] -gt 2220
++            test (path sort (git --version) "git version 2.22.0")[1] = "git version 2.22.0"
+             _tide_check_condition \
+                 "Your git version is too old." \
+                 "Tide requires at least version 2.22." \
+@@ -32,11 +32,12 @@ function _tide_sub_bug-report
+             "Please uninstall it before submitting a bug report." || return
+ 
+         if not set -q _flag_check
+-            set -l fish_startup_time ($fish_path -ic "time $fish_path -c exit" 2>|
+-                string match -r "Executed in(.*)fish" | string trim)[2]
++            $fish_path -ic "time $fish_path -c exit" 2>|
++                string match -rg "Executed in(.*)fish" |
++                string trim | read -l fish_startup_time
+ 
+-            read --local --prompt-str "What operating system are you using? (e.g Ubuntu 20.04): " os
+-            read --local --prompt-str "What terminal emulator are you using? (e.g Kitty): " terminal_emulator
++            read -l --prompt-str "What operating system are you using? (e.g Ubuntu 20.04): " os
++            read -l --prompt-str "What terminal emulator are you using? (e.g Kitty): " terminal_emulator
+ 
+             printf '%b\n' "\nPlease copy the following information into the issue:\n" \
+                 "fish version: $fish_version" \
+@@ -50,15 +51,14 @@ function _tide_sub_bug-report
+     end
+ end
+ 
+-function _tide_check_version -a program_name repo_name regex_to_get_version current_version
+-    curl --silent https://github.com/$repo_name/releases/latest |
+-        string match -r ".*$repo_name/releases/tag/$regex_to_get_version.*" |
+-        read --local --line __ latestVersion
++function _tide_check_version -a program_name repo_name regex_to_get_v installed_version
++    curl -sL https://github.com/$repo_name/releases/latest |
++        string match -qr "https://github.com/$repo_name/releases/tag/$regex_to_get_v"
+ 
+-    string match --quiet -r "^$latestVersion" "$current_version"
++    string match -qr "^$v" "$installed_version" # Allow git versions, e.g 3.3.1-701-gceade1629
+     _tide_check_condition \
+         "Your $program_name version is out of date." \
+-        "The latest is $latestVersion. You have $current_version." \
++        "The latest is $v. You have $installed_version." \
+         "Please update before submitting a bug report."
+ end
+ 
+diff --git a/dotfiles/fish/functions/fish_prompt.fish b/dotfiles/fish/functions/fish_prompt.fish
+index 3b58b7b..994513d 100644
+--- a/dotfiles/fish/functions/fish_prompt.fish
++++ b/dotfiles/fish/functions/fish_prompt.fish
+@@ -28,7 +28,7 @@ if contains newline $_tide_left_items # two line prompt initialization
+     test "$tide_left_prompt_frame_enabled" = true &&
+         set -l top_left_frame "$prompt_and_frame_color╭─" &&
+         set -l bot_left_frame "$prompt_and_frame_color╰─" &&
+-        set column_offset (math $column_offset-2)
++        set column_offset 3
+     test "$tide_right_prompt_frame_enabled" = true &&
+         set -l top_right_frame "$prompt_and_frame_color─╮" &&
+         set -l bot_right_frame "$prompt_and_frame_color─╯" &&
+@@ -145,21 +145,20 @@ end"
+     end
+ end
+ 
+-eval "function _tide_on_fish_exit --on-event fish_exit
++# Inheriting instead of evaling because here load time is more important than runtime
++function _tide_on_fish_exit --on-event fish_exit --inherit-variable prompt_var
+     set -e $prompt_var
+-end"
++end
+ 
+ if test "$tide_prompt_transient_enabled" = true
+     function _tide_enter_transient
+-        # If the commandline will be executed, or is empty
+-        if commandline --is-valid || test -z "$(commandline)"
+-            # Pager open usually means selecting, not running
+-            # Can be untrue, but it's better than the alternative
+-            if not commandline --paging-mode
+-                set -g _tide_transient
+-                set -g _tide_repaint
+-                commandline -f repaint
+-            end
++        # If the commandline will be executed or is empty, and the pager is not open
++        # Pager open usually means selecting, not running
++        # Can be untrue, but it's better than the alternative
++        if commandline --is-valid || test -z "$(commandline)" && not commandline --paging-mode
++            set -g _tide_transient
++            set -g _tide_repaint
++            commandline -f repaint
+         end
+         commandline -f execute
+     end
+diff --git a/dotfiles/fish/functions/fisher.fish b/dotfiles/fish/functions/fisher.fish
+index e915cb8..4f5be4f 100644
+--- a/dotfiles/fish/functions/fisher.fish
++++ b/dotfiles/fish/functions/fisher.fish
+@@ -1,17 +1,18 @@
+ function fisher --argument-names cmd --description "A plugin manager for Fish"
+     set --query fisher_path || set --local fisher_path $__fish_config_dir
+-    set --local fisher_version 4.4.5
++    set --local fisher_version 4.4.8
+     set --local fish_plugins $__fish_config_dir/fish_plugins
+ 
+     switch "$cmd"
+         case -v --version
+             echo "fisher, version $fisher_version"
+         case "" -h --help
+-            echo "Usage: fisher install <plugins...>  Install plugins"
+-            echo "       fisher remove  <plugins...>  Remove installed plugins"
+-            echo "       fisher update  <plugins...>  Update installed plugins"
+-            echo "       fisher update                Update all installed plugins"
+-            echo "       fisher list    [<regex>]     List installed plugins matching regex"
++            echo "Usage: fisher install   <plugins...>  Install plugins"
++            echo "       fisher remove    <plugins...>  Remove installed plugins" 
++            echo "       fisher uninstall <plugins...>  Remove installed plugins (alias)" 
++            echo "       fisher update    <plugins...>  Update installed plugins"
++            echo "       fisher update                  Update all installed plugins"
++            echo "       fisher list    [<regex>]       List installed plugins matching regex"
+             echo "Options:"
+             echo "       -v, --version  Print version"
+             echo "       -h, --help     Print this help message"
+@@ -19,9 +20,11 @@ function fisher --argument-names cmd --description "A plugin manager for Fish"
+             echo "       \$fisher_path  Plugin installation path. Default: $__fish_config_dir" | string replace --regex -- $HOME \~
+         case ls list
+             string match --entire --regex -- "$argv[2]" $_fisher_plugins
+-        case install update remove
++        case install update remove uninstall
+             isatty || read --local --null --array stdin && set --append argv $stdin
+ 
++            test "$cmd" = uninstall && set cmd remove
++
+             set --local install_plugins
+             set --local update_plugins
+             set --local remove_plugins
+@@ -38,6 +41,8 @@ function fisher --argument-names cmd --description "A plugin manager for Fish"
+                     echo "fisher: \"$fish_plugins\" file not found: \"$cmd\"" >&2 && return 1
+                 end
+                 set arg_plugins $file_plugins
++            else if test "$cmd" = install && ! set --query old_plugins[1] 
++                set --append arg_plugins $file_plugins
+             end
+ 
+             for plugin in $arg_plugins
+@@ -86,6 +91,7 @@ function fisher --argument-names cmd --description "A plugin manager for Fish"
+                     if test -e $plugin
+                         command cp -Rf $plugin/* $source
+                     else
++                        set resp (command mktemp)
+                         set temp (command mktemp -d)
+                         set repo (string split -- \@ $plugin) || set repo[2] HEAD
+ 
+@@ -98,8 +104,13 @@ function fisher --argument-names cmd --description "A plugin manager for Fish"
+ 
+                         echo Fetching (set_color --underline)\$url(set_color normal)
+ 
+-                        if command curl -q --silent -L \$url | command tar -xzC \$temp -f - 2>/dev/null
++                        set http (command curl -q --silent -L -o \$resp -w %{http_code} \$url)
++
++                        if test \"\$http\" = 200 && command tar -xzC \$temp -f \$resp 2>/dev/null
+                             command cp -Rf \$temp/*/* $source
++                        else if test \"\$http\" = 403
++                            echo fisher: GitHub API rate limit exceeded \(HTTP 403\) >&2
++                            command rm -rf $source
+                         else
+                             echo fisher: Invalid plugin name or host unavailable: \\\"$plugin\\\" >&2
+                             command rm -rf $source
+diff --git a/dotfiles/fish/functions/tide.fish b/dotfiles/fish/functions/tide.fish
+index 092a722..4b115a1 100644
+--- a/dotfiles/fish/functions/tide.fish
++++ b/dotfiles/fish/functions/tide.fish
+@@ -2,7 +2,7 @@ function tide --description 'Manage your Tide prompt'
+     argparse --stop-nonopt v/version h/help -- $argv
+ 
+     if set -q _flag_version
+-        echo 'tide, version 6.1.1'
++        echo 'tide, version 6.2.0'
+     else if set -q _flag_help
+         _tide_help
+     else if functions --query _tide_sub_$argv[1]
+diff --git a/dotfiles/fish/functions/tide/configure/configs/classic.fish b/dotfiles/fish/functions/tide/configure/configs/classic.fish
+index 8973cbc..6f09bba 100644
+--- a/dotfiles/fish/functions/tide/configure/configs/classic.fish
++++ b/dotfiles/fish/functions/tide/configure/configs/classic.fish
+@@ -1,5 +1,7 @@
+ tide_aws_bg_color 444444
+ tide_aws_color FF9900
++tide_bun_bg_color 14151A
++tide_bun_color FBF0DF
+ tide_character_color $_tide_color_green
+ tide_character_color_failure FF0000
+ tide_cmd_duration_bg_color 444444
+@@ -77,11 +79,11 @@ tide_pwd_bg_color 444444
+ tide_pwd_color_anchors $_tide_color_light_blue
+ tide_pwd_color_dirs $_tide_color_dark_blue
+ tide_pwd_color_truncated_dirs 8787AF
+-tide_pwd_markers .bzr .citc .git .hg .node-version .python-version .ruby-version .shorten_folder_marker .svn .terraform Cargo.toml composer.json CVS go.mod package.json build.zig
++tide_pwd_markers .bzr .citc .git .hg .node-version .python-version .ruby-version .shorten_folder_marker .svn .terraform bun.lockb Cargo.toml composer.json CVS go.mod package.json build.zig
+ tide_python_bg_color 444444
+ tide_python_color 00AFAF
+ tide_right_prompt_frame_enabled true
+-tide_right_prompt_items status cmd_duration context jobs direnv node python rustc java php pulumi ruby go gcloud kubectl distrobox toolbox terraform aws nix_shell crystal elixir zig
++tide_right_prompt_items status cmd_duration context jobs direnv bun node python rustc java php pulumi ruby go gcloud kubectl distrobox toolbox terraform aws nix_shell crystal elixir zig
+ tide_right_prompt_prefix 
+ tide_right_prompt_separator_diff_color 
+ tide_right_prompt_separator_same_color 
+diff --git a/dotfiles/fish/functions/tide/configure/configs/classic_16color.fish b/dotfiles/fish/functions/tide/configure/configs/classic_16color.fish
+index 670170f..fe730c5 100644
+--- a/dotfiles/fish/functions/tide/configure/configs/classic_16color.fish
++++ b/dotfiles/fish/functions/tide/configure/configs/classic_16color.fish
+@@ -1,5 +1,7 @@
+ tide_aws_bg_color black
+ tide_aws_color yellow
++tide_bun_bg_color black
++tide_bun_color white
+ tide_character_color brgreen
+ tide_character_color_failure brred
+ tide_cmd_duration_bg_color black
+diff --git a/dotfiles/fish/functions/tide/configure/configs/lean.fish b/dotfiles/fish/functions/tide/configure/configs/lean.fish
+index a958a17..db3f1d2 100644
+--- a/dotfiles/fish/functions/tide/configure/configs/lean.fish
++++ b/dotfiles/fish/functions/tide/configure/configs/lean.fish
+@@ -1,5 +1,7 @@
+ tide_aws_bg_color normal
+ tide_aws_color FF9900
++tide_bun_bg_color normal
++tide_bun_color FBF0DF
+ tide_character_color $_tide_color_green
+ tide_character_color_failure FF0000
+ tide_cmd_duration_bg_color normal
+@@ -77,11 +79,11 @@ tide_pwd_bg_color normal
+ tide_pwd_color_anchors $_tide_color_light_blue
+ tide_pwd_color_dirs $_tide_color_dark_blue
+ tide_pwd_color_truncated_dirs 8787AF
+-tide_pwd_markers .bzr .citc .git .hg .node-version .python-version .ruby-version .shorten_folder_marker .svn .terraform Cargo.toml composer.json CVS go.mod package.json build.zig
++tide_pwd_markers .bzr .citc .git .hg .node-version .python-version .ruby-version .shorten_folder_marker .svn .terraform bun.lockb Cargo.toml composer.json CVS go.mod package.json build.zig
+ tide_python_bg_color normal
+ tide_python_color 00AFAF
+ tide_right_prompt_frame_enabled false
+-tide_right_prompt_items status cmd_duration context jobs direnv node python rustc java php pulumi ruby go gcloud kubectl distrobox toolbox terraform aws nix_shell crystal elixir zig
++tide_right_prompt_items status cmd_duration context jobs direnv bun node python rustc java php pulumi ruby go gcloud kubectl distrobox toolbox terraform aws nix_shell crystal elixir zig
+ tide_right_prompt_prefix ' '
+ tide_right_prompt_separator_diff_color ' '
+ tide_right_prompt_separator_same_color ' '
+diff --git a/dotfiles/fish/functions/tide/configure/configs/lean_16color.fish b/dotfiles/fish/functions/tide/configure/configs/lean_16color.fish
+index 16c2511..699ce45 100644
+--- a/dotfiles/fish/functions/tide/configure/configs/lean_16color.fish
++++ b/dotfiles/fish/functions/tide/configure/configs/lean_16color.fish
+@@ -1,5 +1,7 @@
+ tide_aws_bg_color normal
+ tide_aws_color yellow
++tide_bun_bg_color normal
++tide_bun_color white
+ tide_character_color brgreen
+ tide_character_color_failure brred
+ tide_cmd_duration_bg_color normal
+diff --git a/dotfiles/fish/functions/tide/configure/configs/rainbow.fish b/dotfiles/fish/functions/tide/configure/configs/rainbow.fish
+index 60c1592..79e9cb4 100644
+--- a/dotfiles/fish/functions/tide/configure/configs/rainbow.fish
++++ b/dotfiles/fish/functions/tide/configure/configs/rainbow.fish
+@@ -1,5 +1,7 @@
+ tide_aws_bg_color FF9900
+ tide_aws_color 232F3E
++tide_bun_bg_color FBF0DF
++tide_bun_color 14151A
+ tide_character_color $_tide_color_green
+ tide_character_color_failure FF0000
+ tide_cmd_duration_bg_color C4A000
+@@ -77,11 +79,11 @@ tide_pwd_bg_color 3465A4
+ tide_pwd_color_anchors E4E4E4
+ tide_pwd_color_dirs E4E4E4
+ tide_pwd_color_truncated_dirs BCBCBC
+-tide_pwd_markers .bzr .citc .git .hg .node-version .python-version .ruby-version .shorten_folder_marker .svn .terraform Cargo.toml composer.json CVS go.mod package.json build.zig
++tide_pwd_markers .bzr .citc .git .hg .node-version .python-version .ruby-version .shorten_folder_marker .svn .terraform bun.lockb Cargo.toml composer.json CVS go.mod package.json build.zig
+ tide_python_bg_color 444444
+ tide_python_color 00AFAF
+ tide_right_prompt_frame_enabled true
+-tide_right_prompt_items status cmd_duration context jobs direnv node python rustc java php pulumi ruby go gcloud kubectl distrobox toolbox terraform aws nix_shell crystal elixir zig
++tide_right_prompt_items status cmd_duration context jobs direnv bun node python rustc java php pulumi ruby go gcloud kubectl distrobox toolbox terraform aws nix_shell crystal elixir zig
+ tide_right_prompt_prefix 
+ tide_right_prompt_separator_diff_color 
+ tide_right_prompt_separator_same_color 
+diff --git a/dotfiles/fish/functions/tide/configure/configs/rainbow_16color.fish b/dotfiles/fish/functions/tide/configure/configs/rainbow_16color.fish
+index a040f58..5d20611 100644
+--- a/dotfiles/fish/functions/tide/configure/configs/rainbow_16color.fish
++++ b/dotfiles/fish/functions/tide/configure/configs/rainbow_16color.fish
+@@ -1,5 +1,7 @@
+ tide_aws_bg_color yellow
+ tide_aws_color brblack
++tide_bun_bg_color white
++tide_bun_color black
+ tide_character_color brgreen
+ tide_character_color_failure brred
+ tide_cmd_duration_bg_color yellow
+diff --git a/dotfiles/fish/functions/tide/configure/icons.fish b/dotfiles/fish/functions/tide/configure/icons.fish
+index 70611cd..a687bed 100644
+--- a/dotfiles/fish/functions/tide/configure/icons.fish
++++ b/dotfiles/fish/functions/tide/configure/icons.fish
+@@ -1,4 +1,5 @@
+ tide_aws_icon  # Actual aws glyph is harder to see
++tide_bun_icon 󰳓
+ tide_character_icon ❯
+ tide_character_vi_icon_default ❮
+ tide_character_vi_icon_replace ▶
+diff --git a/dotfiles/gtk-3.0/settings.ini b/dotfiles/gtk-3.0/settings.ini
+deleted file mode 100644
+index 6e39af7..0000000
+--- a/dotfiles/gtk-3.0/settings.ini
++++ /dev/null
+@@ -1,7 +0,0 @@
+-[Settings]
+-gtk-theme-name=Everforest-Dark
+-gtk-icon-theme-name=hicolor
+-gtk-font-name=JetBrainsMono NF 11
+-gtk-cursor-theme-name=default
+-gtk-application-prefer-dark-theme=1
+-gtk-enable-animations=1
+diff --git a/dotfiles/kitty/kitty.conf b/dotfiles/kitty/kitty.conf
+index c70e71d..d59e777 100644
+--- a/dotfiles/kitty/kitty.conf
++++ b/dotfiles/kitty/kitty.conf
+@@ -1,49 +1,52 @@
+ # BEGIN_KITTY_THEME
+-# Monokai Classic
++# Everforest Dark Medium
+ include current-theme.conf
+ 
+ font_size 10.0
+ 
+ shell /usr/bin/fish --login
+ 
+-# Cursor customization
+-cursor_text_color #111111
+-cursor_shape underline
++# Cursor
++cursor_text_color    #111111
++cursor_shape         underline
++cursor_blink_interval 0.5
+ 
+ # Scrollback
+ scrollback_lines -1
+ 
+ # Mouse
+-open_url_with default
+-copy_on_select yes
+-url_prefixes file ftp ftps gemini git gopher http https irc ircs kitty mailto news sftp ssh
+-detect_urls yes
++open_url_with    default
++copy_on_select   yes
++url_prefixes     file ftp ftps gemini git gopher http https irc ircs kitty mailto news sftp ssh
++detect_urls      yes
+ strip_trailing_spaces smart
+ focus_follows_mouse no
+ 
+-# Performance tuning
++# Performance
+ sync_to_monitor yes
+ 
+-# Terminal Bell
++# Bell
+ bell_on_tab "🔔 "
+ 
+-# Color scheme
+-#background_opacity 0.9
++# Transparency — uncomment and tweak opacity to taste
++# background_opacity 0.92
+ 
+-# Advanced
++# Window
+ allow_remote_control yes
+-allow_hyperlinks yes
+-#macos_hide_titlebar yes
++allow_hyperlinks     yes
+ hide_window_decorations yes
+ 
+-#kitten
+-map cmd+z launch --allow-remote-control kitty +kitten kitty_search/search.py @active-kitty-window-id
++# Kittens
++# ctrl+shift+f — search scrollback buffer (like Ctrl+F in a browser)
++map ctrl+shift+f launch --allow-remote-control kitty +kitten kitty_search/search.py @active-kitty-window-id
+ 
+-map cmd+g kitten kitty_grab/grab.py
++# ctrl+shift+g — vim-like keyboard text selection and copy without mouse
++map ctrl+shift+g kitten kitty_grab/grab.py
+ # END_KITTY_THEME
+ 
+ # BEGIN_KITTY_FONTS
+-font_family      family="DejaVu Sans Mono"
++# Using JetBrainsMono NF for consistency with rofi and Nerd Font icon support
++font_family      family="JetBrainsMono Nerd Font"
+ bold_font        auto
+ italic_font      auto
+ bold_italic_font auto
+diff --git a/dotfiles/picom/picom.conf b/dotfiles/picom/picom.conf
+index 6d84878..fcf86f6 100644
+--- a/dotfiles/picom/picom.conf
++++ b/dotfiles/picom/picom.conf
+@@ -2,8 +2,7 @@
+ #             Backend           #
+ #################################
+ 
+-backend = "glx";
+-vsync = true;
++backend = "xrender";
+ use-damage = true;
+ 
+ #################################
+@@ -84,7 +83,7 @@ shadow-offset-y = -7;
+ #
+ # Range: 0.1 - 1.0
+ # Default: 1.0 (disabled)
+-frame-opacity = 0.7;
++frame-opacity = 1.0;
+ 
+ # Use fixed inactive dim value, instead of adjusting according to window opacity.
+ #
+@@ -141,20 +140,10 @@ rounded-corners-exclude = [
+ # blur-background-fixed = false
+ 
+ 
+-# Specify the blur convolution kernel, with the following format:
+-# example:
+-#   blur-kern = "5,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1";
+-# Can also be a pre-defined kernel, see the man page.
+-#
+-# Default: ""
+-blur-kern = "3x3box";
+-
+ #################################
+ #           Exclusions          #
+ #################################
+ 
+-paint-on-overlay = true;
+-
+ wintypes: {
+   tooltip = { fade = false; shadow = false; };
+   popup_menu = { fade = false; shadow = false; };
+diff --git a/dotfiles/rofi/config.rasi b/dotfiles/rofi/config.rasi
+index 986db12..368c3a2 100644
+--- a/dotfiles/rofi/config.rasi
++++ b/dotfiles/rofi/config.rasi
+@@ -1,7 +1,9 @@
+ // vim: fdm=marker
+ 
+ configuration {
+-  modes: "drun,window";
++  modes: "combi,window";
++  combi-modes: "script:~/.config/rofi/scripts/powermenu_entry,drun";
++  combi-hide-mode-prefix: true;
+   font: "JetBrainsMono NF 14";
+   drun-display-format: "{name}";
+   show-icons: false;
+@@ -25,7 +27,7 @@ configuration {
+ window {
+   width:            680px;
+   background-color: @bg;
+-  border-radius:    0px;
++  border-radius:    12px;
+   border:           0px;
+   location:         center;
+   padding:          12px;
+@@ -95,6 +97,7 @@ element.normal.normal {
+ }
+ element.selected.normal {
+   background-color: @selected-bg;
++  border-radius:    6px;
+ }
+ element.alternate.normal {
+   background-color: @t;
+@@ -102,3 +105,15 @@ element.alternate.normal {
+ element.selected.normal element-text {
+   text-color: @selected-fg;
+ }
++
++message {
++  background-color: @bg;
++  border:           0;
++  padding:          4px 0 0;
++}
++
++textbox {
++  background-color: @t;
++  text-color:       @fg;
++  padding:          8px 12px;
++}
+diff --git a/dotfiles/rofi/scripts/system_prompt b/dotfiles/rofi/scripts/system_prompt
+old mode 100644
+new mode 100755
+index 3b75d48..134fddb
+--- a/dotfiles/rofi/scripts/system_prompt
++++ b/dotfiles/rofi/scripts/system_prompt
+@@ -1,13 +1,19 @@
+ #!/usr/bin/env bash
+ 
+ res=$(echo \
+-"lock
++"kill
++lock
+ exit
+ poweroff
+ reboot
+-suspend" \
++suspend
++hibernate" \
+ | rofi -dmenu -p "system")
+ 
++if [ -z "$res" ]; then
++    exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
++fi
++
+ which systemctl &>/dev/null
+ if [ "$?" -eq 0 ]; then
+     login_manager="systemctl"
+@@ -16,15 +22,22 @@ else
+ fi
+ 
+ case $res in
++"kill")
++    ps -u "$USER" -o pid,comm,%cpu,%mem --sort=-%cpu \
++    | rofi -dmenu -p "Kill" \
++    | awk '{print $1}' \
++    | xargs -r kill;;
+ "lock")
+     sleep 0.5; # wait for picom fade --- not sure how to do this via script
+     ~/.scripts/i3lock_launch;;
+ "exit")
+-    xdotool search "" windowkill %@  --maxdepth; bspc quit;;
++    pkill -u "$USER" awesome;;
+ "poweroff")
+     $login_manager poweroff;;
+ "reboot")
+     $login_manager reboot;;
+ "suspend")
+     $login_manager suspend;;
++"hibernate")
++    $login_manager hibernate;;
+ esac 
+diff --git a/dotfiles/tmux.conf b/dotfiles/tmux.conf
+deleted file mode 100644
+index 981f817..0000000
+--- a/dotfiles/tmux.conf
++++ /dev/null
+@@ -1,301 +0,0 @@
+-# ============================================================================
+-# GENERAL SETTINGS
+-# ============================================================================
+-
+-# Change prefix from Ctrl+b to Ctrl+a (more ergonomic, similar to screen)
+-unbind C-b
+-set -g prefix C-a
+-bind C-a send-prefix
+-
+-# Remove delay when pressing escape key (important for vim/neovim)
+-set -s escape-time 0
+-
+-# Set scrollback buffer to 20000 lines (default is 2000)
+-set -g history-limit 20000
+-
+-# Enable mouse support for scrolling, selecting panes, and resizing
+-set -g mouse on
+-
+-# Send focus events to applications running in tmux
+-set -g focus-events on
+-
+-# Resize windows to smallest client currently viewing (not smallest attached session)
+-setw -g aggressive-resize on
+-
+-# Don't detach tmux when destroying a session (switch to another session)
+-set -g detach-on-destroy off
+-
+-# Increase display time for messages (default is 750ms)
+-set -g display-time 2000
+-
+-# Increase display time for pane indicators (default is 1000ms)
+-set -g display-panes-time 3000
+-
+-
+-# ============================================================================
+-# TERMINAL & COLOR SETTINGS
+-# ============================================================================
+-
+-# Set default terminal type to support modern terminal features
+-set -g default-terminal "${TERM}"
+-
+-# Enable true color (RGB) support for all terminals
+-set -as terminal-features ",*:RGB"
+-
+-# Enable true color support specifically for xterm-256color terminals
+-set-option -ga terminal-overrides ",xterm-256color:Tc"
+-
+-
+-# ============================================================================
+-# WINDOW & PANE SETTINGS
+-# ============================================================================
+-
+-# Start window numbering at 1 instead of 0 (easier to reach on keyboard)
+-set -g base-index 1
+-
+-# Start pane numbering at 1 instead of 0
+-setw -g pane-base-index 1
+-
+-# Automatically renumber windows when one is closed (keeps numbering sequential)
+-set -g renumber-windows on
+-
+-# New windows and panes open in current directory
+-bind c new-window -c "#{pane_current_path}"
+-bind '"' split-window -c "#{pane_current_path}"
+-bind % split-window -h -c "#{pane_current_path}"
+-
+-
+-# ============================================================================
+-# WINDOW TITLE & NAMING
+-# ============================================================================
+-
+-# Allow tmux to set the terminal window title
+-set -g set-titles on
+-
+-# Allow programs to rename windows automatically based on running command
+-set -g allow-rename on
+-
+-
+-# ============================================================================
+-# ACTIVITY & NOTIFICATIONS
+-# ============================================================================
+-
+-# Highlight windows with activity in the status bar
+-setw -g monitor-activity on
+-
+-# Ring bell in any window (not just current)
+-set -g bell-action none
+-
+-# Disable visual bell (no screen flash on bell)
+-set -g visual-bell on
+-
+-# Disable visual notification for window activity
+-set -g visual-activity off
+-
+-
+-# ============================================================================
+-# KEY BINDINGS
+-# ============================================================================
+-
+-# Use vim-style keybindings in copy mode (hjkl navigation, etc.)
+-setw -g mode-keys vi
+-
+-# Reload configuration file
+-bind r source-file ~/.config/tmux/tmux.conf \; display "Config reloaded!"
+-
+-# Split window keybindings (| for vertical, - for horizontal)
+-bind | split-window -h -c "#{pane_current_path}"
+-bind - split-window -v -c "#{pane_current_path}"
+-
+-# Vim-style pane navigation
+-bind h select-pane -L
+-bind j select-pane -D
+-bind k select-pane -U
+-bind l select-pane -R
+-
+-# Vim-style pane resizing
+-bind -r H resize-pane -L 5
+-bind -r J resize-pane -D 5
+-bind -r K resize-pane -U 5
+-bind -r L resize-pane -R 5
+-
+-# Quick window navigation
+-bind -r C-h select-window -t :-
+-bind -r C-l select-window -t :+
+-
+-# Toggle pane synchronization (type in all panes at once)
+-bind S set-window-option synchronize-panes\; display "Sync: #{?synchronize-panes,ON,OFF}"
+-
+-# Break pane into new window
+-bind b break-pane -d
+-
+-# Create new session
+-bind C-c new-session
+-
+-# Find session
+-bind C-f command-prompt -p find-session 'switch-client -t %%'
+-
+-# Kill pane without confirmation
+-bind x kill-pane
+-
+-# Kill window without confirmation
+-bind X kill-window
+-
+-
+-# ============================================================================
+-# COPY MODE & CLIPBOARD
+-# ============================================================================
+-
+-# Enter copy mode with PREFIX + [ or PREFIX + Escape
+-bind Escape copy-mode
+-
+-# Use 'v' to begin selection (like in vim)
+-bind-key -T copy-mode-vi v send-keys -X begin-selection
+-
+-# Use 'V' for line selection
+-bind-key -T copy-mode-vi V send-keys -X select-line
+-
+-# Use 'C-v' for rectangle selection
+-bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
+-
+-# Use 'y' to copy selection to system clipboard
+-# For macOS
+-if-shell "uname | grep -q Darwin" {
+-  bind-key -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "pbcopy"
+-}
+-# For Linux with xclip
+-if-shell "uname | grep -q Linux && command -v xclip > /dev/null" {
+-  bind-key -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "xclip -selection clipboard -i"
+-}
+-# For Linux with xsel
+-if-shell "uname | grep -q Linux && command -v xsel > /dev/null" {
+-  bind-key -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "xsel -ib"
+-}
+-
+-# Copy mouse selections directly to system clipboard (macOS)
+-bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "pbcopy"
+-
+-# Use PREFIX + p to paste from tmux's internal buffer
+-bind p paste-buffer
+-
+-# Use PREFIX + P to choose which buffer to paste
+-bind P choose-buffer
+-
+-# Vim-style search in copy mode
+-bind-key -T copy-mode-vi / command-prompt -p "search down" "send -X search-forward \"%%%\""
+-bind-key -T copy-mode-vi ? command-prompt -p "search up" "send -X search-backward \"%%%\""
+-
+-# Vim-style incremental search
+-bind-key -T copy-mode-vi n send-keys -X search-again
+-bind-key -T copy-mode-vi N send-keys -X search-reverse
+-
+-
+-# ============================================================================
+-# STATUS BAR
+-# ============================================================================
+-
+-# Update status bar every 5 seconds
+-set -g status-interval 5
+-
+-# Center the window list
+-set -g status-justify centre
+-
+-# Status bar colors
+-set -g status-style bg=black,fg=white
+-
+-# Active window style
+-setw -g window-status-current-style bg=blue,fg=white,bold
+-
+-# Pane border colors
+-set -g pane-border-style fg=colour240
+-set -g pane-active-border-style fg=blue
+-
+-# Message style
+-set -g message-style bg=colour235,fg=colour166
+-
+-# Left status: session name
+-set -g status-left-length 40
+-set -g status-left "#[fg=green]Session: #S #[fg=yellow]#I #[fg=cyan]#P"
+-
+-# Right status: prefix highlight + date and time
+-set -g status-right-length 60
+-set -g status-right "#{prefix_highlight} #[fg=cyan]%d %b %R"
+-
+-
+-# ============================================================================
+-# PLUGINS
+-# ============================================================================
+-
+-# Tmux Plugin Manager (TPM)
+-set -g @plugin 'tmux-plugins/tpm'
+-
+-# Sensible tmux defaults
+-set -g @plugin 'tmux-plugins/tmux-sensible'
+-
+-# Better clipboard integration
+-set -g @plugin 'tmux-plugins/tmux-yank'
+-
+-# Save and restore tmux sessions across reboots
+-set -g @plugin 'tmux-plugins/tmux-resurrect'
+-
+-# Auto-save tmux sessions every 15 minutes
+-set -g @plugin 'tmux-plugins/tmux-continuum'
+-
+-# Show when prefix key is pressed
+-set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
+-
+-# Smart session manager with fuzzy finder
+-set -g @plugin 'joshmedeski/tmux-nerd-font-window-name'
+-set -g @plugin 'joshmedeski/sesh'
+-
+-# Plugin settings
+-# ----------------------------------------
+-
+-# Tmux-continuum: automatic restore
+-set -g @continuum-restore 'on'
+-
+-# Tmux-continuum: save interval (in minutes)
+-set -g @continuum-save-interval '15'
+-
+-# Tmux-resurrect: restore vim sessions
+-set -g @resurrect-strategy-vim 'session'
+-
+-# Tmux-resurrect: restore neovim sessions
+-set -g @resurrect-strategy-nvim 'session'
+-
+-# Tmux-resurrect: restore pane contents
+-set -g @resurrect-capture-pane-contents 'on'
+-
+-# Tmux-resurrect: run custom commands after restore
+-set -g @resurrect-hook-post-restore-all '~/.config/tmux/resurrect-post-restore.sh'
+-
+-# Tmux-yank: copy to clipboard
+-set -g @yank_selection 'clipboard'
+-set -g @yank_selection_mouse 'clipboard'
+-
+-# Tmux-prefix-highlight: customize colors
+-set -g @prefix_highlight_fg 'black'
+-set -g @prefix_highlight_bg 'yellow'
+-set -g @prefix_highlight_show_copy_mode 'on'
+-set -g @prefix_highlight_copy_mode_attr 'fg=black,bg=cyan,bold'
+-set -g @prefix_highlight_show_sync_mode 'on'
+-set -g @prefix_highlight_sync_mode_attr 'fg=black,bg=red,bold'
+-
+-# Sesh: session manager keybinding (default configuration)
+-bind-key "T" run-shell "sesh connect \"$(
+-	sesh list --icons | fzf-tmux -p 60%,50% \
+-		--no-sort --ansi --border-label ' sesh ' --prompt '⚡  ' \
+-		--header '  ^a all ^t tmux ^g configs ^x zoxide ^d tmux kill ^f find' \
+-		--bind 'tab:down,btab:up' \
+-		--bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
+-		--bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
+-		--bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
+-		--bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
+-		--bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
+-		--bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
+-		--preview-window 'right:55%' \
+-		--preview 'sesh preview {}'
+-)\""
+-
+-# Initialize TMUX plugin manager (keep this line at the very bottom)
+-run '~/.config/tmux/plugins/tpm/tpm'
+diff --git a/dotfiles/xinitrc b/dotfiles/xinitrc
+index 69b8996..81416d3 100644
+--- a/dotfiles/xinitrc
++++ b/dotfiles/xinitrc
+@@ -1 +1,3 @@
++export PATH="$HOME/.local/bin:$PATH"
++
+ exec awesome
+diff --git a/setup.fish b/setup.fish
+index 55deb67..b738f32 100755
+--- a/setup.fish
++++ b/setup.fish
+@@ -1,4 +1,4 @@
+-#!/home/linuxbrew/.linuxbrew/bin/fish
++#!/usr/bin/env fish
+ 
+ fisher list | fisher install
+ fisher list | fisher update
+@@ -8,6 +8,6 @@ gem install bundler
+ nvm install latest
+ nvm use latest
+ gvm install go1.23.2
+-npm install --global yarn
++npm install --global yarn fast-cli
+ 
+ exec fish
+diff --git a/symlink.sh b/symlink.sh
+index d93af87..cca96af 100755
+--- a/symlink.sh
++++ b/symlink.sh
+@@ -15,6 +15,9 @@ setup_configs() {
+     "lazygit"
+     "btop"
+     "zellij"
++    "zed"
++    "yazi"
++    "tmux"
+ 	)
+ 
+ 	# Remove existing configurations
+@@ -45,7 +48,23 @@ setup_home_configs() {
+ 	echo "Home configurations have been set up."
+ }
+ 
++setup_dmenu_scripts() {
++	local scripts_dir="$HOME/.dotfiles/dotfiles/dmenu_scripts"
++	local bin_dir="$HOME/.local/bin"
++
++	mkdir -p "$bin_dir"
++
++	for script in "$scripts_dir"/*; do
++		name=$(basename "$script")
++		ln -sf "$script" "$bin_dir/$name"
++		chmod +x "$script"
++	done
++
++	echo "Dmenu scripts have been set up."
++}
++
+ # Call the functions
+ setup_configs
+ setup_home_configs
++setup_dmenu_scripts
+ exec fish
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   dotfiles/gtk-3.0/settings.ini
+	new file:   dotfiles/nvim/.stylua.toml
+	new file:   dotfiles/nvim/LICENSE
+	new file:   dotfiles/nvim/init.lua
+	new file:   dotfiles/nvim/lazy-lock.json
+	new file:   dotfiles/nvim/lua/chadrc.lua
+	new file:   dotfiles/nvim/lua/configs/cmp.lua
+	new file:   dotfiles/nvim/lua/configs/conform.lua
+	new file:   dotfiles/nvim/lua/configs/lazy.lua
+	new file:   dotfiles/nvim/lua/configs/lspconfig.lua
+	new file:   dotfiles/nvim/lua/configs/mason.lua
+	new file:   dotfiles/nvim/lua/configs/null-ls.lua
+	new file:   dotfiles/nvim/lua/configs/nvim-dap.lua
+	new file:   dotfiles/nvim/lua/configs/treesitter.lua
+	new file:   dotfiles/nvim/lua/mappings.lua
+	new file:   dotfiles/nvim/lua/options.lua
+	new file:   dotfiles/nvim/lua/plugins/init.lua
+	new file:   dotfiles/nvim/lua/themes/cyberdream-light.lua
+	new file:   dotfiles/nvim/lua/themes/cyberdream.lua
+	new file:   dotfiles/rofi/scripts/bluetooth
+	new file:   dotfiles/rofi/scripts/bookmarks
+	new file:   dotfiles/rofi/scripts/calc
+	new file:   dotfiles/rofi/scripts/clipboard
+	new file:   dotfiles/rofi/scripts/docker
+	new file:   dotfiles/rofi/scripts/emoji
+	new file:   dotfiles/rofi/scripts/logs
+	new file:   dotfiles/rofi/scripts/media
+	new file:   dotfiles/rofi/scripts/port
+	new file:   dotfiles/rofi/scripts/powermenu_entry
+	new file:   dotfiles/rofi/scripts/projects
+	new file:   dotfiles/rofi/scripts/search
+	new file:   dotfiles/rofi/scripts/snippets
+	new file:   dotfiles/rofi/scripts/speedtest
+	new file:   dotfiles/rofi/scripts/ssh
+	new file:   dotfiles/rofi/scripts/tabs
+	new file:   dotfiles/rofi/scripts/tmux
+	new file:   dotfiles/rofi/scripts/translate
+	new file:   dotfiles/rofi/scripts/wallpaper
+	new file:   dotfiles/rofi/scripts/wifi
+	new file:   dotfiles/rofi/snippets.txt
+	new file:   dotfiles/zed/keymap.json
+	new file:   dotfiles/zed/settings.json
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   dotfiles/awesome/rc.lua
+	modified:   dotfiles/awesome/themes/cccp/widgets_config/battery_widget.lua
+	modified:   dotfiles/awesome/themes/cccp/widgets_config/cpu_widget.lua
+	modified:   dotfiles/awesome/themes/cccp/widgets_config/mem_widget.lua
+	modified:   dotfiles/awesome/themes/cccp/widgets_config/music_widget.lua
+	modified:   dotfiles/awesome/themes/cccp/widgets_config/temp_widget.lua
+	modified:   dotfiles/awesome/themes/everforest/widgets_config/battery_widget.lua
+	modified:   dotfiles/awesome/themes/everforest/widgets_config/cpu_widget.lua
+	modified:   dotfiles/awesome/themes/everforest/widgets_config/mem_widget.lua
+	modified:   dotfiles/awesome/themes/everforest/widgets_config/music_widget.lua
+	modified:   dotfiles/awesome/themes/everforest/widgets_config/temp_widget.lua
+	modified:   dotfiles/awesome/utils/apps.sh
+	modified:   dotfiles/awesome/widgets/net_speed_widget/net_speed.lua
+	modified:   dotfiles/awesome/widgets_config/cpu_widget.lua
+	modified:   dotfiles/awesome/widgets_config/mem_widget.lua
+	modified:   dotfiles/awesome/widgets_config/music_widget.lua
+	modified:   dotfiles/awesome/widgets_config/temp_widget.lua
+	modified:   dotfiles/bruno/preferences.json
+	modified:   dotfiles/btop/btop.conf
+	modified:   dotfiles/fish/conf.d/done.fish
+	modified:   dotfiles/fish/config.fish
+	modified:   dotfiles/fish/fish_variables
+	modified:   dotfiles/fish/functions/_tide_detect_os.fish
+	modified:   dotfiles/fish/functions/_tide_item_git.fish
+	modified:   dotfiles/fish/functions/_tide_parent_dirs.fish
+	modified:   dotfiles/fish/functions/_tide_remove_unusable_items.fish
+	modified:   dotfiles/fish/functions/_tide_sub_bug-report.fish
+	modified:   dotfiles/fish/functions/fish_prompt.fish
+	modified:   dotfiles/fish/functions/fisher.fish
+	modified:   dotfiles/fish/functions/tide.fish
+	modified:   dotfiles/fish/functions/tide/configure/configs/classic.fish
+	modified:   dotfiles/fish/functions/tide/configure/configs/classic_16color.fish
+	modified:   dotfiles/fish/functions/tide/configure/configs/lean.fish
+	modified:   dotfiles/fish/functions/tide/configure/configs/lean_16color.fish
+	modified:   dotfiles/fish/functions/tide/configure/configs/rainbow.fish
+	modified:   dotfiles/fish/functions/tide/configure/configs/rainbow_16color.fish
+	modified:   dotfiles/fish/functions/tide/configure/icons.fish
+	deleted:    dotfiles/gtk-3.0/settings.ini
+	modified:   dotfiles/kitty/kitty.conf
+	modified:   dotfiles/picom/picom.conf
+	modified:   dotfiles/rofi/config.rasi
+	modified:   dotfiles/rofi/scripts/system_prompt
+	deleted:    dotfiles/tmux.conf
+	modified:   dotfiles/xinitrc
+	modified:   setup.fish
+	modified:   symlink.sh
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	dotfiles/tmux/
+

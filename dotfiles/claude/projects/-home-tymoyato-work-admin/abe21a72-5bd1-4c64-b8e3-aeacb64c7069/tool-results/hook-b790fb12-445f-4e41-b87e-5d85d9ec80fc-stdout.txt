@@ -1,0 +1,155 @@
+Inspecting 64 files
+.................................................C..............
+
+Offenses:
+
+spec/integration/admin/users_spec.rb:6:1: C: RSpec/MultipleMemoizedHelpers: Example group has too many memoized helpers [8/5]
+RSpec.describe 'Admin Users API', type: :request do ...
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:45:16: C: [Corrected] Style/BlockDelimiters: Avoid using {...} for multi-line blocks.
+        before { create_list(:auth_credential, 2)
+               ^
+spec/integration/admin/users_spec.rb:45:17: C: [Corrected] Layout/TrailingWhitespace: Trailing whitespace detected.
+        before { 
+                ^
+spec/integration/admin/users_spec.rb:45:18: C: [Corrected] Layout/MultilineBlockLayout: Block body expression is on the same line as the block start.
+        before { create_list(:auth_credential, 2) ...
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:46:1: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+matching
+^^^^^^^^
+spec/integration/admin/users_spec.rb:46:1: C: [Corrected] Layout/IndentationWidth: Use 2 (not 10) spaces for indentation.
+          create_list(:auth_credential, 2)
+^^^^^^^^^^
+spec/integration/admin/users_spec.rb:46:3: C: [Corrected] Layout/IndentationWidth: Use 2 (not -6) spaces for indentation.
+  create_list(:auth_credential, 2)
+  ^^^^^^
+spec/integration/admin/users_spec.rb:47:3: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+  matching
+  ^^^^^^^^
+spec/integration/admin/users_spec.rb:47:11: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+          _other
+          ^^^^^^
+spec/integration/admin/users_spec.rb:47:18: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+                 matching
+                 ^^^^^^^^
+spec/integration/admin/users_spec.rb:48:1: C: [Corrected] Layout/TrailingWhitespace: Trailing whitespace detected.
+spec/integration/admin/users_spec.rb:48:3: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+  _other
+  ^^^^^^
+spec/integration/admin/users_spec.rb:48:11: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+          _other
+          ^^^^^^
+spec/integration/admin/users_spec.rb:48:18: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+                 _other
+                 ^^^^^^
+spec/integration/admin/users_spec.rb:49:1: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+create(:auth_credential, email: 'someone@example.com') 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:49:55: C: [Corrected] Layout/TrailingWhitespace: Trailing whitespace detected.
+create(:auth_credential, email: 'someone@example.com') 
+                                                      ^
+spec/integration/admin/users_spec.rb:50:1: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+create(:auth_credential, email: 'alice@example.com')  }
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:50:3: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+  create(:auth_credential, email: 'someone@example.com')
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:50:11: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+          create(:auth_credential, email: 'someone@example.com')
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:50:18: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+                 create(:auth_credential, email: 'someone@example.com')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:50:53: C: [Corrected] Layout/ExtraSpacing: Unnecessary spacing detected.
+create(:auth_credential, email: 'alice@example.com')  }
+                                                    ^
+spec/integration/admin/users_spec.rb:50:55: C: [Corrected] Layout/BlockEndNewline: Expression at 50, 55 should be on its own line.
+create(:auth_credential, email: 'alice@example.com')  }
+                                                      ^
+spec/integration/admin/users_spec.rb:51:3: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+  create(:auth_credential, email: 'alice@example.com')
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:51:11: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+          create(:auth_credential, email: 'alice@example.com')
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:51:18: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+                 create(:auth_credential, email: 'alice@example.com')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:52:1: C: [Corrected] Layout/BlockAlignment: } at 52, 0 is not aligned with before {  at 45, 8.
+}
+^
+spec/integration/admin/users_spec.rb:72:9: C: [Corrected] RSpec/ScatteredSetup: Do not define multiple before hooks in the same example group (also defined on lines 45, 101, 127).
+        before {  ...
+        ^^^^^^^^^
+spec/integration/admin/users_spec.rb:72:9: C: [Corrected] RSpec/ScatteredSetup: Do not define multiple before hooks in the same example group (also defined on lines 45, 98, 124).
+        before { matching; _other }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:72:9: C: [Corrected] RSpec/ScatteredSetup: Do not define multiple before hooks in the same example group (also defined on lines 45, 99, 125).
+        before { matching ...
+        ^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:72:16: C: [Corrected] Style/BlockDelimiters: Avoid using {...} for multi-line blocks.
+        before { matching
+               ^
+spec/integration/admin/users_spec.rb:72:17: C: [Corrected] Layout/TrailingWhitespace: Trailing whitespace detected.
+        before { 
+                ^
+spec/integration/admin/users_spec.rb:72:18: C: [Corrected] Layout/MultilineBlockLayout: Block body expression is on the same line as the block start.
+        before { matching ...
+                 ^^^^^^^^
+spec/integration/admin/users_spec.rb:72:26: C: [Corrected] Style/Semicolon: Do not use semicolons to terminate expressions.
+        before { matching; _other }
+                         ^
+spec/integration/admin/users_spec.rb:73:1: C: [Corrected] Layout/IndentationWidth: Use 2 (not 10) spaces for indentation.
+          matching
+^^^^^^^^^^
+spec/integration/admin/users_spec.rb:73:2: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+ _other }
+ ^^^^^^
+spec/integration/admin/users_spec.rb:73:3: C: [Corrected] Layout/IndentationWidth: Use 2 (not -6) spaces for indentation.
+  matching
+  ^^^^^^
+spec/integration/admin/users_spec.rb:73:9: C: [Corrected] Layout/BlockEndNewline: Expression at 73, 9 should be on its own line.
+ _other }
+        ^
+spec/integration/admin/users_spec.rb:74:3: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+  _other
+  ^^^^^^
+spec/integration/admin/users_spec.rb:74:11: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+          _other
+          ^^^^^^
+spec/integration/admin/users_spec.rb:74:18: C: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+                 _other
+                 ^^^^^^
+spec/integration/admin/users_spec.rb:75:1: C: [Corrected] Layout/BlockAlignment: } at 75, 0 is not aligned with before {  at 72, 8.
+}
+^
+spec/integration/admin/users_spec.rb:76:32: C: [Corrected] Rails/Pluck: Prefer pluck('email') over map { |u| u['email'] }.
+          expect(data['users'].map { |u| u['email'] }).to contain_exactly('alice@example.com')
+                               ^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:77:1: C: [Corrected] Layout/EmptyLines: Extra blank line detected.
+spec/integration/admin/users_spec.rb:98:9: C: [Corrected] RSpec/ScatteredSetup: Do not define multiple before hooks in the same example group (also defined on lines 45, 72, 124).
+        before { create(:auth_credential, email: 'someone@example.com') }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:99:9: C: [Corrected] RSpec/ScatteredSetup: Do not define multiple before hooks in the same example group (also defined on lines 45, 72, 125).
+        before { create(:auth_credential, email: 'someone@example.com') }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:101:9: C: [Corrected] RSpec/ScatteredSetup: Do not define multiple before hooks in the same example group (also defined on lines 45, 72, 127).
+        before { create(:auth_credential, email: 'someone@example.com') }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:102:1: C: [Corrected] Layout/EmptyLines: Extra blank line detected.
+spec/integration/admin/users_spec.rb:124:9: C: [Corrected] RSpec/ScatteredSetup: Do not define multiple before hooks in the same example group (also defined on lines 45, 72, 98).
+        before { create(:auth_credential, email: 'alice@example.com') }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:125:9: C: [Corrected] RSpec/ScatteredSetup: Do not define multiple before hooks in the same example group (also defined on lines 45, 72, 99).
+        before { create(:auth_credential, email: 'alice@example.com') }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:127:1: C: [Corrected] Layout/EmptyLines: Extra blank line detected.
+spec/integration/admin/users_spec.rb:127:9: C: [Corrected] RSpec/ScatteredSetup: Do not define multiple before hooks in the same example group (also defined on lines 45, 72, 101).
+        before { create(:auth_credential, email: 'alice@example.com') }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spec/integration/admin/users_spec.rb:128:32: C: [Corrected] Rails/Pluck: Prefer pluck('email') over map { |u| u['email'] }.
+          expect(data['users'].map { |u| u['email'] }).to include('alice@example.com')
+                               ^^^^^^^^^^^^^^^^^^^^^^
+
+64 files inspected, 52 offenses detected, 51 offenses corrected

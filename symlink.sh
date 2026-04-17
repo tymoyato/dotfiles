@@ -36,6 +36,7 @@ setup_configs() {
 setup_home_configs() {
 	local home_configs=(
 		"xinitrc:.xinitrc"
+		"claude:.claude"
 	)
 
 	for entry in "${home_configs[@]}"; do
