@@ -11,7 +11,7 @@ end
 
 # Auth API shortcuts
 function auth-rspec
-    auth-exec bundle exec rspec $argv
+    auth-exec env RAILS_ENV=test bundle exec rspec $argv
 end
 
 function auth-rubocop
