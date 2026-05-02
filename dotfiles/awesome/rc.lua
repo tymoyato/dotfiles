@@ -142,9 +142,27 @@ naughty.config.defaults.border_color = beautiful.border_tooltip
 naughty.config.defaults.border_width = 2
 naughty.config.defaults.hover_timeout = nil
 
+local function focus_app_by_name(app_name)
+	if not app_name then return end
+	local name_lower = app_name:lower()
+	for _, c in ipairs(client.get()) do
+		local class_lower = (c.class or ""):lower()
+		local instance_lower = (c.instance or ""):lower()
+		if class_lower:find(name_lower, 1, true) or instance_lower:find(name_lower, 1, true) then
+			c:jump_to()
+			return
+		end
+	end
+end
+
 local _naughty_notify = naughty.notify
 naughty.notify = function(args)
 	awful.spawn.with_shell("paplay /usr/share/sounds/freedesktop/stereo/message.oga")
+	if not args.run then
+		args.run = function()
+			focus_app_by_name(args.app_name)
+		end
+	end
 	return _naughty_notify(args)
 end
 
