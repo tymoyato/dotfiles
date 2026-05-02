@@ -130,17 +130,21 @@ end
 naughty.config.defaults.timeout = 5
 naughty.config.defaults.screen = 1
 naughty.config.defaults.position = "top_right"
-naughty.config.defaults.margin = 8
-naughty.config.defaults.gap = 1
+naughty.config.defaults.margin = 14
+naughty.config.defaults.gap = 6
 naughty.config.defaults.ontop = true
-naughty.config.defaults.font = "Meslo LGS Regular 10"
+naughty.config.defaults.font = "Meslo LGS Regular 11"
 naughty.config.defaults.icon = nil
-naughty.config.defaults.icon_size = 32
-naughty.config.defaults.fg = beautiful.fg_tooltip
-naughty.config.defaults.bg = beautiful.bg_tooltip
-naughty.config.defaults.border_color = beautiful.border_tooltip
-naughty.config.defaults.border_width = 2
+naughty.config.defaults.icon_size = 36
+naughty.config.defaults.fg = "#1c1c1e"
+naughty.config.defaults.bg = "#f5f5f7"
+naughty.config.defaults.border_color = "#8e8e93"
+naughty.config.defaults.border_width = 1
 naughty.config.defaults.hover_timeout = nil
+naughty.config.defaults.width = 340
+naughty.config.defaults.shape = function(cr, w, h)
+    require("gears").shape.rounded_rect(cr, w, h, 12)
+end
 
 local function focus_app_by_name(app_name)
 	if not app_name then return end
@@ -155,9 +159,23 @@ local function focus_app_by_name(app_name)
 	end
 end
 
+local function resolve_app_icon(appname)
+	if not appname then return nil end
+	local icon_path = "/usr/share/pixmaps/" .. appname .. ".png"
+	local f = io.open(icon_path, "r")
+	if f then f:close(); return icon_path end
+	icon_path = "/usr/share/icons/hicolor/256x256/apps/" .. appname .. ".png"
+	f = io.open(icon_path, "r")
+	if f then f:close(); return icon_path end
+	return nil
+end
+
 local _naughty_notify = naughty.notify
 naughty.notify = function(args)
 	awful.spawn.with_shell("paplay /usr/share/sounds/freedesktop/stereo/message.oga")
+	if not args.icon and args.appname then
+		args.icon = resolve_app_icon(args.appname)
+	end
 	if not args.run then
 		args.run = function()
 			focus_app_by_name(args.app_name)
