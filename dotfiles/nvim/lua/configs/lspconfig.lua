@@ -3,7 +3,7 @@ local on_attach = require("nvchad.configs.lspconfig").on_attach
 local on_init = require("nvchad.configs.lspconfig").on_init
 local capabilities = require("nvchad.configs.lspconfig").capabilities
 
-local servers = { "html", "cssls", "clangd", "sqls", "ts_ls", "eslint", "solargraph", "tailwindcss", "gopls" }
+local servers = { "html", "cssls", "clangd", "sqls", "ts_ls", "eslint", "solargraph", "tailwindcss", "gopls", "svelte", "bashls", "jsonls", "yamlls", "dockerls" }
 
 -- lsps with default config
 for _, lsp in ipairs(servers) do
@@ -73,5 +73,15 @@ vim.lsp.config.solargraph = {
   },
 }
 
+-- lua_ls (mason installs it but needs explicit config for vim globals)
+vim.lsp.config.lua_ls = {
+  on_attach = on_attach,
+  on_init = on_init,
+  capabilities = capabilities,
+  settings = {
+    Lua = { diagnostics = { globals = { "vim" } } },
+  },
+}
+
 -- Enable the servers
-vim.lsp.enable(servers)
+vim.lsp.enable(vim.list_extend(servers, { "lua_ls" }))

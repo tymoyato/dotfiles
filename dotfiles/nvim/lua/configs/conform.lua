@@ -15,6 +15,9 @@ conform = {
     json = { "prettier" },
     yaml = { "yamlfmt" },
     go = { "goimports", "gofumpt" },
+    svelte = { "prettierd", "prettier", stop_after_first = true },
+    sh = { "shfmt" },
+    bash = { "shfmt" },
   },
 
   -- format_on_save = {

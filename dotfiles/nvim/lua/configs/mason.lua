@@ -25,6 +25,15 @@ mason.ensure_installed = {
     "goimports",
     "gofumpt",
     "golangci-lint",
+    -- svelte
+    "svelte-language-server",
+    -- bash
+    "bash-language-server",
+    "shfmt",
+    -- json/yaml/docker
+    "json-lsp",
+    "yaml-language-server",
+    "dockerfile-language-server",
   },
 }
 

@@ -18,6 +18,10 @@ treesitter.ensure_installed = {
     "c",
     "markdown",
     "markdown_inline",
+    "svelte",
+    "bash",
+    "json",
+    "dockerfile",
   },
   indent = {
     enable = true,
