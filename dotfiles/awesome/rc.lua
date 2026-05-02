@@ -49,7 +49,7 @@
 --   MODKEY + n                        minimize
 --   MODKEY + Ctrl + n                 restore minimized
 --   MODKEY + Ctrl + space             toggle floating
---   MODKEY + Shift + y                toggle keep on top
+--   MODKEY + Ctrl + y                 toggle keep on top
 --   MODKEY + y                        toggle sticky (show on all tags)
 --   MODKEY + Shift + c                close client
 --   Alt + Shift + m                   magnify client
@@ -583,7 +583,7 @@ CLIENTKEYS = gears.table.join(
 	awful.key({ MODKEY }, "o", function(c)
 		c:move_to_screen()
 	end, { description = "move to screen", group = "client" }),
-	awful.key({ MODKEY, "Shift" }, "y", function(c)
+	awful.key({ MODKEY, "Control" }, "y", function(c)
 		c.ontop = not c.ontop
 	end, { description = "toggle keep on top", group = "client" }),
 	awful.key({ MODKEY }, "y", function(c)
