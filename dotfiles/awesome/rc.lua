@@ -133,18 +133,23 @@ naughty.config.defaults.position = "top_right"
 naughty.config.defaults.margin = 14
 naughty.config.defaults.gap = 6
 naughty.config.defaults.ontop = true
-naughty.config.defaults.font = "Meslo LGS Regular 11"
+naughty.config.defaults.font = "Meslo LGS Regular 10"
 naughty.config.defaults.icon = nil
-naughty.config.defaults.icon_size = 36
+naughty.config.defaults.icon_size = 28
 naughty.config.defaults.fg = "#1c1c1e"
 naughty.config.defaults.bg = "#f5f5f7"
-naughty.config.defaults.border_color = "#8e8e93"
+naughty.config.defaults.border_color = "#ffffff"
 naughty.config.defaults.border_width = 1
 naughty.config.defaults.hover_timeout = nil
-naughty.config.defaults.width = 340
+naughty.config.defaults.width = 260
 naughty.config.defaults.shape = function(cr, w, h)
     require("gears").shape.rounded_rect(cr, w, h, 12)
 end
+
+naughty.config.presets.normal.border_width = 1
+naughty.config.presets.normal.border_color = "#ffffff"
+naughty.config.presets.low.border_width = 1
+naughty.config.presets.low.border_color = "#ffffff"
 
 local function focus_app_by_name(app_name)
 	if not app_name then return end
