@@ -34,6 +34,8 @@ mason.ensure_installed = {
     "json-lsp",
     "yaml-language-server",
     "dockerfile-language-server",
+    -- sql
+    "sqls",
   },
 }
 

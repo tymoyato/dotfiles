@@ -18,6 +18,10 @@ function _tcm_core
     make -C ~/work/core-api $argv[1]
 end
 
+function _tcm_notification
+    make -C ~/work/notification-service $argv[1]
+end
+
 # argv[1]=title, argv[2..-1]="N|cmd|description" items
 function _tcm_draw_menu
     set -l title $argv[1]
@@ -125,15 +129,25 @@ end
 
 # ── Notification / Nginx ──────────────────────────────────────────────────────
 
-function notification-logs; _tcm_logs notification-service $argv; end
-function notification-test; docker run --rm -v (pwd):/app -w /app golang:1.23 go test ./...; end
-function nginx-logs;        _tcm_logs nginx $argv; end
+function notification-exec;  _tcm_exec notification-service $argv; end
+function notification-logs;  _tcm_logs notification-service $argv; end
+function notification-test;  _tcm_notification test; end
+function notification-lint;  _tcm_notification lint; end
+function notification-fmt;   _tcm_notification fmt; end
+function notification-vet;   _tcm_notification vet; end
+function notification-build; _tcm_notification build; end
+function nginx-logs;         _tcm_logs nginx $argv; end
 
-function notif-menu
+function notification-menu
     _tcm_menu "Notification / Nginx" \
-        "1|notification-logs |follow notification-service logs" \
-        "2|notification-test |run go tests in docker" \
-        "3|nginx-logs        |follow nginx logs"
+        "1|notification-exec  |exec command in notification-service container" \
+        "2|notification-logs  |follow notification-service logs" \
+        "3|notification-test  |run tests" \
+        "4|notification-lint  |run linter" \
+        "5|notification-fmt   |format code" \
+        "6|notification-vet   |run vet" \
+        "7|notification-build |build" \
+        "8|nginx-logs         |follow nginx logs"
 end
 
 # ── Admin ─────────────────────────────────────────────────────────────────────

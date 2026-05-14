@@ -30,18 +30,6 @@ return {
     opts = require("configs.cmp").sources,
   },
   --
-  --# codeium.nvim
-  {
-    "Exafunction/codeium.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "hrsh7th/nvim-cmp",
-    },
-    config = function()
-      require("codeium").setup {}
-    end,
-    lazy = false,
-  },
   --
   --# conform.nvim
   {
@@ -460,6 +448,34 @@ return {
     config = function()
       require("mini.ai").setup()
     end,
+  },
+  --# obsidian.nvim
+  {
+    "obsidian-nvim/obsidian.nvim",
+    version = "*",
+    ---@module 'obsidian'
+    ---@type obsidian.config
+    opts = {
+      legacy_commands = false,
+      workspaces = {
+        {
+          name = "personal",
+          path = "/home/tymoyato/Obsidian-Vault",
+        },
+      },
+      notes_subdir = "notes",
+      daily_notes = {
+        folder = "daily",
+        date_format = "%Y-%m-%d",
+      },
+      templates = {
+        folder = "templates",
+      },
+      picker = { name = "telescope.nvim" },
+      note_id_func = function(title)
+        return title
+      end,
+    },
   },
   --# nvim-lint
   {
