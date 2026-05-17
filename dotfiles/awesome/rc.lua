@@ -754,14 +754,14 @@ awful.rules.rules = {
 
 	-- Only apply tag rules if this is NOT any kind of restart
 	{ rule = { class = "kitty" }, properties = { screen = 1, tag = "1" }, rule_any = { is_any_restart = false } },
-	{ rule = { class = "obsidian" }, properties = { screen = 1, tag = "2" }, rule_any = { is_any_restart = false } },
+	{ rule = { class = "Zed" }, properties = { screen = 1, tag = "2" }, rule_any = { is_any_restart = false } },
 	{
 		rule = { class = "Brave-browser" },
 		properties = { screen = 1, tag = "3" },
 		rule_any = { is_any_restart = false },
 	},
 	{ rule = { class = "bruno" }, properties = { screen = 1, tag = "4" }, rule_any = { is_any_restart = false } },
-	{ rule = { class = "firefox" }, properties = { screen = 1, tag = "5" }, rule_any = { is_any_restart = false } },
+	{ rule = { class = "obsidian" }, properties = { screen = 1, tag = "5" }, rule_any = { is_any_restart = false } },
 	{ rule = { class = "Slack" }, properties = { screen = 1, tag = "6" }, rule_any = { is_any_restart = false } },
 
 	-- Add titlebars to normal clients and dialogs

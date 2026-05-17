@@ -83,5 +83,19 @@ vim.lsp.config.lua_ls = {
   },
 }
 
+-- yamlls
+vim.lsp.config.yamlls = {
+  on_attach = on_attach,
+  on_init = on_init,
+  capabilities = capabilities,
+  settings = {
+    yaml = {
+      schemas = {
+        ["https://raw.githubusercontent.com/evilmartians/lefthook/master/schema.json"] = "lefthook.yml",
+      },
+    },
+  },
+}
+
 -- Enable the servers
 vim.lsp.enable(vim.list_extend(servers, { "lua_ls" }))

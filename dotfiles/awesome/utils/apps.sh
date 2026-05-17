@@ -28,6 +28,7 @@ declare -A processes=(
   ["Brave-browser"]="Brave-browser"
   ["kitty"]="kitty"
   ["slack"]="slack"
+  ["zeditor"]="zeditor"
   ["obsidian"]="obsidian"
   ["jetbrains-rubymine"]="jetbrains-rubymine"
 )

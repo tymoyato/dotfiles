@@ -55,6 +55,7 @@ setup_dmenu_scripts() {
 	mkdir -p "$bin_dir"
 
 	for script in "$scripts_dir"/*; do
+		[ -e "$script" ] || continue
 		name=$(basename "$script")
 		ln -sf "$script" "$bin_dir/$name"
 		chmod +x "$script"
