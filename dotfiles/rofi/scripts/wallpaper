@@ -14,8 +14,8 @@ if [ ! -d "$WALLPAPER_DIR" ]; then
     exit 1
 fi
 
-chosen=$(find "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) \
-    | xargs -I{} basename {} \
+chosen=$(find "$WALLPAPER_DIR" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) \
+    -printf '%f\n' \
     | sort \
     | rofi -dmenu -p "wallpaper" -config ~/.config/rofi/config.rasi)
 

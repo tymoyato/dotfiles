@@ -6,11 +6,8 @@ if ! command -v playerctl &>/dev/null; then
     exit 1
 fi
 
-title=$(playerctl metadata --format "{{title}}" 2>/dev/null || echo "nothing playing")
-artist=$(playerctl metadata --format "{{artist}}" 2>/dev/null)
-status=$(playerctl status 2>/dev/null || echo "stopped")
-
-prompt="${artist:+$artist - }${title} [${status}]"
+prompt=$(playerctl metadata --format "{{artist}}{{artist:+ - }}{{title}} [{{status}}]" 2>/dev/null \
+    || echo "nothing playing [stopped]")
 
 chosen=$(printf "play/pause\nnext\nprevious\nstop" \
     | rofi -dmenu -p "$prompt" -config ~/.config/rofi/config.rasi)

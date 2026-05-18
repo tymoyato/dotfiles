@@ -9,4 +9,4 @@ fi
 
 chosen=$(greenclip print | rofi -dmenu -p "clipboard" -config ~/.config/rofi/config.rasi)
 [ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
-echo -n "$chosen" | xargs -r -I{} greenclip print {} | xclip -selection clipboard
+greenclip print "$chosen" | xclip -selection clipboard

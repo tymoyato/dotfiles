@@ -2,7 +2,7 @@
 # Requires: systemd (journalctl)
 
 services=$(systemctl list-units --type=service --all --no-legend --no-pager \
-    | awk '{print $1}' | sed 's/\.service//')
+    | awk '{gsub(/\.service$/, "", $1); print $1}')
 
 [ -z "$services" ] && rofi -e "logs: no services found" && exit 1
 

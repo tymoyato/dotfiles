@@ -6,7 +6,10 @@ action=$(printf "run speedtest\ncancel" \
 
 [ -z "$action" ] || [ "$action" = "cancel" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
 
-fast_bin=$(find /home/tymoyato/.local/share/nvm -name "fast" 2>/dev/null | head -1)
+fast_bin=$(command -v fast 2>/dev/null)
+if [ -z "$fast_bin" ]; then
+    fast_bin=$(find "$HOME/.local/share/nvm" -maxdepth 4 -path "*/bin/fast" 2>/dev/null | head -1)
+fi
 
 if [ -z "$fast_bin" ]; then
     rofi -e "speedtest: fast-cli not found. Run: npm install -g fast-cli"

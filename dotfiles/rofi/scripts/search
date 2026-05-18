@@ -18,5 +18,6 @@ engine=$(printf '%s\n' "${!engines[@]}" | sort | rofi -dmenu -p "search" -config
 query=$(rofi -dmenu -p "$engine" -config ~/.config/rofi/config.rasi <<< "")
 [ -z "$query" ] && exit 0
 
-url="${engines[$engine]}$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$query")"
+encoded=$(printf '%s' "$query" | jq -sRr @uri)
+url="${engines[$engine]}${encoded}"
 brave "$url" &
