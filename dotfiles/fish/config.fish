@@ -86,3 +86,8 @@ alias dcl='docker compose logs -f'                  # Follow compose logs
 alias dcp='docker compose ps'                       # List compose services
 alias dcpull='docker compose pull'                  # Pull compose images
 
+
+# Auto startx on tty1 login
+if status is-login; and test (tty) = /dev/tty1; and not set -q DISPLAY
+    exec startx
+end
