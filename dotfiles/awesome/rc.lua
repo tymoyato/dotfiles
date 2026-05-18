@@ -292,6 +292,7 @@ local is_any_restart    = is_theme_switch or is_normal_restart
 
 TERMINAL = "kitty"
 local editor = os.getenv("EDITOR") or "editor"
+local quake_terminal = lain.util.quake({ app = TERMINAL, argname = "--name %s", extra = "--override background_opacity=0.75 --override dynamic_background_opacity=yes", height = 0.5, width = 0.7, vert = "center", horiz = "center", followtag = true })
 local editor_cmd = TERMINAL .. " -e " .. editor
 awful.spawn.with_shell("pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf")
 awful.spawn.with_shell("pgrep -x brave > /dev/null || brave --remote-debugging-port=9222")
@@ -477,6 +478,11 @@ GLOBALKEYS = gears.table.join(
 			client.focus:raise()
 		end
 	end, { description = "go back", group = "client" }),
+
+	-- Scratchpad terminal (toggle with MODKEY + grave)
+	awful.key({ MODKEY }, "grave", function()
+		quake_terminal:toggle()
+	end, { description = "toggle scratchpad terminal", group = "launcher" }),
 
 	-- Standard program
 	awful.key({ MODKEY }, "Return", function()
@@ -757,9 +763,8 @@ root.keys(GLOBALKEYS)
 -- Tag placement rules: class → tag name (only applied on fresh login, not restarts)
 local _tag_rules = {
 	kitty           = "1",
-	Zed             = "2",
-	["Brave-browser"] = "3",
-	bruno           = "4",
+	["Brave-browser"] = "2",
+	bruno           = "3",
 }
 
 awful.rules.rules = {

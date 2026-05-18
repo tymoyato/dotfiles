@@ -27,9 +27,6 @@ pgrep -fi "bruno" > /dev/null || /home/tymoyato/Downloads/bruno_3.2.2_x86_64_lin
 declare -A processes=(
   ["Brave-browser"]="Brave-browser"
   ["kitty"]="kitty"
-  ["slack"]="slack"
-  ["zeditor"]="zeditor"
-  ["jetbrains-rubymine"]="jetbrains-rubymine"
 )
 
 for process_name in "${!processes[@]}"; do
