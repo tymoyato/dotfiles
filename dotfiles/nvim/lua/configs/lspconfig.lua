@@ -98,4 +98,4 @@ vim.lsp.config.yamlls = {
 }
 
 -- Enable the servers
-vim.lsp.enable(vim.list_extend(servers, { "lua_ls" }))
+vim.lsp.enable(vim.list_extend(servers, { "lua_ls", "yamlls" }))
