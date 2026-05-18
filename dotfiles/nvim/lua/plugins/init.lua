@@ -1,4 +1,13 @@
 return {
+  --# neoscroll.nvim
+  {
+    "karb94/neoscroll.nvim",
+    event = "BufReadPost",
+    opts = {
+      duration_multiplier = 0.6,
+      easing = "sine",
+    },
+  },
   --# nvim-tree.lua
   {
     "nvim-tree/nvim-tree.lua",
@@ -519,14 +528,45 @@ return {
       daily_notes = {
         folder = "daily",
         date_format = "%Y-%m-%d",
+        default_tags = { "daily" },
       },
       templates = {
         folder = "templates",
+        substitutions = {
+          date = function() return os.date "%Y-%m-%d" end,
+        },
       },
       picker = { name = "telescope.nvim" },
-      note_id_func = function(title)
-        return title
+      note_id_func = function(title) return title end,
+      note_frontmatter_func = function(note)
+        local out = { id = note.id, tags = note.tags, aliases = note.aliases }
+        if note.metadata ~= nil and not vim.tbl_isempty(note.metadata) then
+          for k, v in pairs(note.metadata) do out[k] = v end
+        end
+        return out
       end,
+      ui = { enable = false },
+      follow_url_func = function(url)
+        vim.fn.jobstart({ "xdg-open", url })
+      end,
+      completion = {
+        nvim_cmp = true,
+        min_chars = 2,
+      },
+      attachments = {
+        img_folder = "assets/images",
+      },
+    },
+    keys = {
+      { "<leader>on", "<cmd>ObsidianNew<cr>",       desc = "New note" },
+      { "<leader>os", "<cmd>ObsidianSearch<cr>",    desc = "Search notes" },
+      { "<leader>od", "<cmd>ObsidianToday<cr>",     desc = "Daily note" },
+      { "<leader>ot", "<cmd>ObsidianTags<cr>",      desc = "Browse tags" },
+      { "<leader>ob", "<cmd>ObsidianBacklinks<cr>", desc = "Backlinks" },
+      { "<leader>ol", "<cmd>ObsidianLinks<cr>",     desc = "Links in note" },
+      { "<leader>oT", "<cmd>ObsidianTemplate<cr>",  desc = "Insert template" },
+      { "<leader>op", "<cmd>ObsidianPasteImg<cr>",  desc = "Paste image" },
+      { "<leader>or", "<cmd>ObsidianRename<cr>",    desc = "Rename note" },
     },
   },
   --# nvim-lint
