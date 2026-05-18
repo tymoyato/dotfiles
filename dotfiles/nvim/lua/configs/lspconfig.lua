@@ -3,15 +3,16 @@ local on_attach = require("nvchad.configs.lspconfig").on_attach
 local on_init = require("nvchad.configs.lspconfig").on_init
 local capabilities = require("nvchad.configs.lspconfig").capabilities
 
-local servers = { "html", "cssls", "clangd", "sqls", "ts_ls", "eslint", "solargraph", "tailwindcss", "gopls", "svelte", "bashls", "jsonls", "yamlls", "dockerls" }
+-- tailwindcss and ts_ls are excluded here — configured explicitly below
+local servers = {
+  "html", "cssls", "clangd", "sqls", "eslint", "solargraph",
+  "gopls", "svelte", "bashls", "jsonls", "dockerls",
+}
 
--- lsps with default config
+local defaults = { on_attach = on_attach, on_init = on_init, capabilities = capabilities }
+
 for _, lsp in ipairs(servers) do
-  vim.lsp.config[lsp] = {
-    on_attach = on_attach,
-    on_init = on_init,
-    capabilities = capabilities,
-  }
+  vim.lsp.config[lsp] = defaults
 end
 
 -- tailwindcss
@@ -53,7 +54,7 @@ vim.lsp.config.ts_ls = {
   capabilities = capabilities,
 }
 
--- solargraph
+-- solargraph — diagnostics/autoformat off; rubocop via nvim-lint handles those
 vim.lsp.config.solargraph = {
   on_attach = on_attach,
   on_init = on_init,
@@ -61,10 +62,10 @@ vim.lsp.config.solargraph = {
   filetypes = { "ruby", "eruby", "gemfile", "rakefile" },
   settings = {
     solargraph = {
-      diagnostics = true,
+      diagnostics = false,
       completion = true,
-      autoformat = true,
-      formatting = true,
+      autoformat = false,
+      formatting = false,
       folding = true,
       references = true,
       rename = true,
@@ -97,5 +98,8 @@ vim.lsp.config.yamlls = {
   },
 }
 
--- Enable the servers
-vim.lsp.enable(vim.list_extend(servers, { "lua_ls", "yamlls" }))
+-- Enable all servers (avoid mutating the servers table with list_extend)
+local all_servers = vim.list_extend(vim.deepcopy(servers), {
+  "lua_ls", "yamlls", "tailwindcss", "ts_ls",
+})
+vim.lsp.enable(all_servers)

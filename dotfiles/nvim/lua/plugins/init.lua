@@ -27,7 +27,9 @@ return {
   --# nvim-cmp
   {
     "hrsh7th/nvim-cmp",
-    opts = require("configs.cmp").sources,
+    opts = function()
+      return require("configs.cmp").sources
+    end,
   },
   --
   --
@@ -35,7 +37,9 @@ return {
   {
     "stevearc/conform.nvim",
     lazy = true,
-    opts = require "configs.conform",
+    opts = function()
+      return require "configs.conform"
+    end,
   },
   --
   --@LSP and Language Servers
@@ -53,7 +57,9 @@ return {
   --# mason.nvim
   {
     "williamboman/mason.nvim",
-    opts = require("configs.mason").ensure_installed,
+    opts = function()
+      return require("configs.mason").ensure_installed
+    end,
   },
   --
   --@Treesitter and Syntax Highlighting
@@ -61,14 +67,16 @@ return {
   --# nvim-treesitter
   {
     "nvim-treesitter/nvim-treesitter",
-    opts = require("configs.treesitter").ensure_installed,
+    opts = function()
+      return require("configs.treesitter").ensure_installed
+    end,
   },
   --
   --# nvim-treesitter-endwise
-  { "RRethy/nvim-treesitter-endwise", ft = "ruby", lazy = false },
+  { "RRethy/nvim-treesitter-endwise", ft = "ruby" },
 
   --# tree-sitter-embedded-template
-  { "tree-sitter/tree-sitter-embedded-template", ft = "embedded_template", lazy = false },
+  { "tree-sitter/tree-sitter-embedded-template", ft = "embedded_template" },
 
   --# nvim-treesitter-textobjects
   { "nvim-treesitter/nvim-treesitter-textobjects" },
@@ -97,15 +105,18 @@ return {
   --@Ruby Development
   --
   --# vim-rails
-  { "tpope/vim-rails", ft = "ruby", lazy = false },
+  { "tpope/vim-rails", ft = { "ruby", "eruby" } },
 
   --# rainbow-delimiters.nvim
-  { "HiPhish/rainbow-delimiters.nvim", ft = "ruby", lazy = false },
+  { "HiPhish/rainbow-delimiters.nvim", ft = "ruby" },
   --
   --@Git and Version Control
   --
   --# vim-fugitive
-  { "tpope/vim-fugitive", lazy = false },
+  {
+    "tpope/vim-fugitive",
+    cmd = { "Git", "G", "Gread", "Gwrite", "Gdiffsplit", "GMove", "GDelete", "GBrowse", "Gblame" },
+  },
 
   --# diffview
   { "sindrets/diffview.nvim", lazy = true },
@@ -132,7 +143,6 @@ return {
   --# neogit
   {
     "NeogitOrg/neogit",
-    lazy = false,
     dependencies = {
       "nvim-lua/plenary.nvim",
       "sindrets/diffview.nvim",
@@ -147,10 +157,13 @@ return {
   --@Editing and Navigation
   --
   --# vim-visual-multi
-  { "mg979/vim-visual-multi", lazy = false },
+  {
+    "mg979/vim-visual-multi",
+    keys = { "<C-n>", "<C-Up>", "<C-Down>", "<S-Left>", "<S-Right>" },
+  },
 
   --# vim-surround
-  { "tpope/vim-surround", lazy = false },
+  { "tpope/vim-surround", event = "BufReadPost" },
 
   --# nvim-colorizer.lua
   {
@@ -220,7 +233,7 @@ return {
   --# goto-preview
   {
     "rmagatti/goto-preview",
-    event = "BufEnter",
+    event = "LspAttach",
     config = true,
     keys = {
       {
@@ -291,7 +304,6 @@ return {
   --# neotest
   {
     "nvim-neotest/neotest",
-    lazy = false,
     dependencies = {
       "nvim-neotest/nvim-nio",
       "nvim-lua/plenary.nvim",
@@ -300,6 +312,13 @@ return {
       "nvim-neotest/neotest-go",
       "olimorris/neotest-rspec",
       "haydenmeade/neotest-jest",
+    },
+    keys = {
+      { "<leader>nt", function() require("neotest").run.run() end, desc = "Run nearest test" },
+      { "<leader>nf", function() require("neotest").run.run(vim.fn.expand "%") end, desc = "Run file tests" },
+      { "<leader>ns", function() require("neotest").summary.toggle() end, desc = "Test summary" },
+      { "<leader>no", function() require("neotest").output.open() end, desc = "Test output" },
+      { "<leader>nS", function() require("neotest").run.stop() end, desc = "Stop test" },
     },
     config = function()
       require("neotest").setup {
@@ -332,26 +351,29 @@ return {
     "ThePrimeagen/harpoon",
     branch = "harpoon2",
     dependencies = { "nvim-lua/plenary.nvim" },
+    keys = {
+      { "<leader>ha", function() require("harpoon"):list():add() end, desc = "Harpoon add file" },
+      { "<leader>hh", function() require("harpoon").ui:toggle_quick_menu(require("harpoon"):list()) end, desc = "Harpoon menu" },
+      { "<leader>1", function() require("harpoon"):list():select(1) end, desc = "Harpoon file 1" },
+      { "<leader>2", function() require("harpoon"):list():select(2) end, desc = "Harpoon file 2" },
+      { "<leader>3", function() require("harpoon"):list():select(3) end, desc = "Harpoon file 3" },
+      { "<leader>4", function() require("harpoon"):list():select(4) end, desc = "Harpoon file 4" },
+    },
   },
-  --# rest.nvim
-  -- {
-  --   "rest-nvim/rest.nvim",
-  -- },
   {
     "rachartier/tiny-glimmer.nvim",
-    lazy = false,
     event = "VeryLazy",
     opts = {},
   },
   {
     "folke/todo-comments.nvim",
-    lazy = false,
+    event = "BufReadPost",
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {},
   },
   {
     "sphamba/smear-cursor.nvim",
-    lazy = false,
+    event = "VeryLazy",
     opts = {},
   },
   --
@@ -417,7 +439,7 @@ return {
   --# Comment.nvim
   {
     "numToStr/Comment.nvim",
-    lazy = false,
+    event = "BufReadPost",
     config = function()
       require("Comment").setup()
     end,
@@ -491,9 +513,14 @@ return {
         javascriptreact = { "eslint_d" },
         typescriptreact = { "eslint_d" },
       }
-      vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
+
+      local timer = vim.uv.new_timer()
+      vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
         callback = function()
-          require("lint").try_lint()
+          timer:stop()
+          timer:start(500, 0, vim.schedule_wrap(function()
+            require("lint").try_lint()
+          end))
         end,
       })
     end,
