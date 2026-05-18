@@ -569,6 +569,48 @@ return {
       { "<leader>or", "<cmd>ObsidianRename<cr>",    desc = "Rename note" },
     },
   },
+  --# catppuccin (zen mode theme)
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    lazy = true,
+    opts = {
+      flavour = "frappe",
+    },
+  },
+  --# zen-mode.nvim
+  {
+    "folke/zen-mode.nvim",
+    cmd = "ZenMode",
+    keys = {
+      { "<leader>zz", "<cmd>ZenMode<cr>", desc = "Toggle Zen Mode" },
+    },
+    opts = {
+      window = { width = 0.75, backdrop = 0.85 },
+      integrations = {
+        kitty = { enabled = true, font = "+4" },
+      },
+      on_open = function()
+        vim.opt.number = false
+        vim.opt.relativenumber = false
+        vim.opt.cursorline = false
+        vim.opt.signcolumn = "no"
+        vim.opt.laststatus = 0
+        vim.opt.showtabline = 0
+        vim.cmd "highlight @markup.heading.1.markdown gui=bold"
+        vim.cmd "highlight @markup.heading.2.markdown gui=bold"
+        vim.cmd "highlight @markup.heading.3.markdown gui=bold"
+      end,
+      on_close = function()
+        vim.opt.number = true
+        vim.opt.relativenumber = true
+        vim.opt.cursorline = true
+        vim.opt.signcolumn = "yes"
+        vim.opt.laststatus = 2
+        vim.opt.showtabline = 2
+      end,
+    },
+  },
   --# nvim-lint
   {
     "mfussenegger/nvim-lint",
