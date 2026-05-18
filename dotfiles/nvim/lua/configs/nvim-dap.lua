@@ -19,13 +19,6 @@ dap.listeners.before.event_exited.dapui_config = function()
   dapui.close()
 end
 
-vim.keymap.set("n", "<Leader>dt", function()
-  dap.toggle_breakpoint()
-end, { desc = "Toggle breakpoint" })
-vim.keymap.set("n", "<Leader>dc", function()
-  dap.continue()
-end, { desc = "Continue debugging session" })
-
 -- dap.adapters.ruby = function(callback, config)
 --   callback {
 --     type = "server",

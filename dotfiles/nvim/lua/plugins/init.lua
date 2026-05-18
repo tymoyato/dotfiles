@@ -12,7 +12,16 @@ return {
   --# telescope.nvim
   {
     "nvim-telescope/telescope.nvim",
+    dependencies = { "nvim-telescope/telescope-fzf-native.nvim" },
     opts = {
+      extensions = {
+        fzf = {
+          fuzzy = true,
+          override_generic_sorter = true,
+          override_file_sorter = true,
+          case_mode = "smart_case",
+        },
+      },
       pickers = {
         find_files = {
           hidden = true,
@@ -20,6 +29,17 @@ return {
         },
       },
     },
+    config = function(_, opts)
+      local telescope = require "telescope"
+      telescope.setup(opts)
+      telescope.load_extension "fzf"
+    end,
+  },
+  --# telescope-fzf-native
+  {
+    "nvim-telescope/telescope-fzf-native.nvim",
+    build = "make",
+    lazy = true,
   },
   --
   --@Autocompletion and Code Intelligence
@@ -78,8 +98,12 @@ return {
   --# tree-sitter-embedded-template
   { "tree-sitter/tree-sitter-embedded-template", ft = "embedded_template" },
 
-  --# nvim-treesitter-textobjects
-  { "nvim-treesitter/nvim-treesitter-textobjects" },
+  --# nvim-treesitter-textobjects (loaded as treesitter dependency)
+  {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    event = "BufReadPost",
+  },
   --
   --@Markdown and Documentation
   --
@@ -119,7 +143,10 @@ return {
   },
 
   --# diffview
-  { "sindrets/diffview.nvim", lazy = true },
+  {
+    "sindrets/diffview.nvim",
+    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles", "DiffviewFileHistory" },
+  },
 
   --# lazygit.nvim
   {
@@ -286,13 +313,16 @@ return {
   --# nvim-dap
   {
     "mfussenegger/nvim-dap",
-    lazy = true,
     dependencies = {
       "nvim-neotest/nvim-nio",
       "rcarriga/nvim-dap-ui",
       "leoluz/nvim-dap-go",
       "suketa/nvim-dap-ruby",
       "theHamsta/nvim-dap-virtual-text",
+    },
+    keys = {
+      { "<Leader>dt", function() require("dap").toggle_breakpoint() end, desc = "Toggle breakpoint" },
+      { "<Leader>dc", function() require("dap").continue() end, desc = "Continue debugging session" },
     },
     config = function()
       require "configs.nvim-dap"
@@ -307,7 +337,6 @@ return {
     dependencies = {
       "nvim-neotest/nvim-nio",
       "nvim-lua/plenary.nvim",
-      "antoinemadec/FixCursorHold.nvim",
       "nvim-treesitter/nvim-treesitter",
       "nvim-neotest/neotest-go",
       "olimorris/neotest-rspec",
@@ -475,6 +504,7 @@ return {
   {
     "obsidian-nvim/obsidian.nvim",
     version = "*",
+    ft = "markdown",
     ---@module 'obsidian'
     ---@type obsidian.config
     opts = {

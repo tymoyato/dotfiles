@@ -1,6 +1,12 @@
 local cmp = {}
 
 cmp.sources = {
+  performance = {
+    debounce = 60,
+    throttle = 30,
+    fetching_timeout = 500,
+    max_view_entries = 15,
+  },
   sources = {
     { name = "codeium",  group_index = 1 },
     { name = "nvim_lsp", group_index = 1 },
