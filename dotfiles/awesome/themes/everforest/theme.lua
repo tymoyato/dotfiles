@@ -141,6 +141,10 @@ local docker_resources_widget  = require("themes.everforest.widgets_config.docke
 local docker_health_widget     = require("themes.everforest.widgets_config.docker_health_widget")
 local docker_compose_widget    = require("themes.everforest.widgets_config.docker_compose_widget")
 local docker_disk_widget       = require("themes.everforest.widgets_config.docker_disk_widget")
+local cpu_graph_widget = require("themes.everforest.widgets_config.cpu_graph_widget")
+local vpn_widget       = require("themes.everforest.widgets_config.vpn_widget")
+local display_widget   = require("themes.everforest.widgets_config.display_widget")
+local journal_widget   = require("themes.everforest.widgets_config.journal_widget")
 
 local _net_speed_widget_mod = require("widgets.net_speed_widget.net_speed")
 
@@ -209,7 +213,7 @@ function theme.connect(s)
             wibox.widget.textbox(" "),
             temp_widget,
             wibox.widget.textbox(" "),
-            cpu_widget,
+            cpu_graph_widget,
             wibox.widget.textbox(" "),
             mem_widget,
             wibox.widget.textbox(" "),
@@ -226,6 +230,12 @@ function theme.connect(s)
             rss_widget,
             wibox.widget.textbox(" "),
             procman_widget,
+            wibox.widget.textbox(" "),
+            journal_widget,
+            wibox.widget.textbox(" "),
+            vpn_widget,
+            wibox.widget.textbox(" "),
+            display_widget,
             wibox.widget.textbox(" "),
             notif_widget,
             wibox.widget.textbox(" "),

@@ -760,8 +760,6 @@ local _tag_rules = {
 	Zed             = "2",
 	["Brave-browser"] = "3",
 	bruno           = "4",
-	obsidian        = "5",
-	Slack           = "6",
 }
 
 awful.rules.rules = {

@@ -29,7 +29,6 @@ declare -A processes=(
   ["kitty"]="kitty"
   ["slack"]="slack"
   ["zeditor"]="zeditor"
-  ["obsidian"]="obsidian"
   ["jetbrains-rubymine"]="jetbrains-rubymine"
 )
 
