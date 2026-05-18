@@ -1,143 +1,121 @@
--------------------------------------------------
--- Net Speed Widget for Awesome Window Manager
--- Shows current upload/download speed
--- More details could be found here:
--- https://github.com/streetturtle/awesome-wm-widgets/tree/master/net-speed-widget
-
--- @author Pavel Makhov
--- @copyright 2020 Pavel Makhov
--------------------------------------------------
-
-local watch = require("awful.widget.watch")
-local wibox = require("wibox")
+-- Net Speed Widget — reads /proc/net/dev directly, zero subprocesses.
+-- One shared timer; each call to worker() gets its own display widget
+-- updated by the shared timer callback. Safe for multi-monitor setups.
+local wibox     = require("wibox")
+local gears     = require("gears")
 local beautiful = require("beautiful")
-local markup = require("lain.util.markup")
+local markup    = require("lain.util.markup")
 
-local HOME_DIR = os.getenv("HOME")
-local WIDGET_DIR = HOME_DIR .. "/.config/awesome/widgets/net_speed_widget/"
-local ICONS_DIR = WIDGET_DIR .. "icons/"
+local ICONS_DIR = os.getenv("HOME") .. "/.config/awesome/widgets/net_speed_widget/icons/"
+
+local function fmt_speed(bytes_per_sec)
+    local bits = bytes_per_sec * 8
+    if bits < 1000 then
+        return string.format("%d b/s", math.floor(bits))
+    elseif bits < 1e6 then
+        return string.format("%d kb/s", math.floor(bits / 1000 + 0.5))
+    elseif bits < 1e9 then
+        return string.format("%.1f Mb/s", bits / 1e6)
+    else
+        return string.format("%.2f Gb/s", bits / 1e9)
+    end
+end
+
+local function read_net_stats(iface)
+    local rx, tx = 0, 0
+    local f = io.open("/proc/net/dev", "r")
+    if not f then return 0, 0 end
+    for line in f:lines() do
+        local name, rbytes, tbytes = line:match(
+            "^%s*(%S+):%s*(%d+)%s+%d+%s+%d+%s+%d+%s+%d+%s+%d+%s+%d+%s+%d+%s+(%d+)")
+        if name then
+            local skip = (name == "lo")
+            if iface ~= "*" then skip = (name ~= iface) end
+            if not skip then
+                rx = rx + (tonumber(rbytes) or 0)
+                tx = tx + (tonumber(tbytes) or 0)
+            end
+        end
+    end
+    f:close()
+    return rx, tx
+end
+
+-- Shared state per interface
+local _shared = {}   -- [iface] = { timer, prev_rx, prev_tx, displays=[] }
 
 local net_speed_widget = {}
 
-local function convert_to_h(bytes)
-	local speed
-	local dim
-	local bits = bytes * 8
-	if bits < 1000 then
-		speed = bits
-		dim = "b/s"
-	elseif bits < 1000000 then
-		speed = bits / 1000
-		dim = "kb/s"
-	elseif bits < 1000000000 then
-		speed = bits / 1000000
-		dim = "Mb/s"
-	elseif bits < 1000000000000 then
-		speed = bits / 1000000000
-		dim = "Gb/s"
-	else
-		speed = tonumber(bits)
-		dim = "b/s"
-	end
-	return math.floor(speed + 0.5) .. " " .. dim
-end
-
-local function split(string_to_split, separator)
-	if separator == nil then
-		separator = "%s"
-	end
-	local t = {}
-
-	for str in string.gmatch(string_to_split, "([^" .. separator .. "]+)") do
-		table.insert(t, str)
-	end
-
-	return t
-end
-
 local function worker(user_args)
-	local args = user_args or {}
+    local args    = user_args or {}
+    local iface   = args.interface or "*"
+    local timeout = args.timeout or 2
+    local width   = args.width or 55
 
-	local interface = args.interface or "*"
-	local timeout = args.timeout or 2
-	local width = args.width or 55
+    -- Per-screen display widget
+    local widget = wibox.widget({
+        {
+            id           = "rx_speed",
+            forced_width = width,
+            align        = "right",
+            widget       = wibox.widget.textbox,
+        },
+        {
+            image  = ICONS_DIR .. "down.svg",
+            widget = wibox.widget.imagebox,
+        },
+        {
+            image  = ICONS_DIR .. "up.svg",
+            widget = wibox.widget.imagebox,
+        },
+        {
+            id           = "tx_speed",
+            forced_width = width,
+            align        = "left",
+            widget       = wibox.widget.textbox,
+        },
+        layout = wibox.layout.fixed.horizontal,
+        set_rx_text = function(self, v)
+            self:get_children_by_id("rx_speed")[1]:set_markup(
+                markup.font(beautiful.font, markup.fg.color(beautiful.fg_normal, tostring(v))))
+        end,
+        set_tx_text = function(self, v)
+            self:get_children_by_id("tx_speed")[1]:set_markup(
+                markup.font(beautiful.font, markup.fg.color(beautiful.fg_normal, tostring(v))))
+        end,
+    })
 
-	net_speed_widget = wibox.widget({
-		{
-			id = "rx_speed",
-			forced_width = width,
-			align = "right",
-			widget = wibox.widget.textbox,
-			bg = "#FFFF00",
-		},
-		{
-			image = ICONS_DIR .. "down.svg",
-			widget = wibox.widget.imagebox,
-			bg = "#FFFF00",
-		},
-		{
-			image = ICONS_DIR .. "up.svg",
-			widget = wibox.widget.imagebox,
-			bg = "#FFFF00",
-		},
-		{
-			id = "tx_speed",
-			forced_width = width,
-			align = "left",
-			widget = wibox.widget.textbox,
-			bg = "#FFFF00",
-		},
-		layout = wibox.layout.fixed.horizontal,
-		set_rx_text = function(self, new_rx_speed)
-			self:get_children_by_id("rx_speed")[1]:set_markup(markup.font(beautiful.font, markup.fg.color(beautiful.fg_normal, tostring(new_rx_speed))))
-		end,
-		set_tx_text = function(self, new_tx_speed)
-			self:get_children_by_id("tx_speed")[1]:set_markup(markup.font(beautiful.font, markup.fg.color(beautiful.fg_normal, tostring(new_tx_speed))))
-		end,
-	})
+    -- Create shared timer for this interface if not yet done
+    if not _shared[iface] then
+        local prev_rx, prev_tx = read_net_stats(iface)
+        _shared[iface] = {
+            prev_rx   = prev_rx,
+            prev_tx   = prev_tx,
+            displays  = {},
+            rx_text   = "0 b/s",
+            tx_text   = "0 b/s",
+        }
+        gears.timer({
+            timeout   = timeout,
+            autostart = true,
+            callback  = function()
+                local sh = _shared[iface]
+                local cur_rx, cur_tx = read_net_stats(iface)
+                sh.rx_text = fmt_speed((cur_rx - sh.prev_rx) / timeout)
+                sh.tx_text = fmt_speed((cur_tx - sh.prev_tx) / timeout)
+                sh.prev_rx, sh.prev_tx = cur_rx, cur_tx
+                for _, w in ipairs(sh.displays) do
+                    w:set_rx_text(sh.rx_text)
+                    w:set_tx_text(sh.tx_text)
+                end
+            end,
+        })
+    end
 
-	-- make sure these are not shared across different worker/widgets (e.g. two monitors)
-	-- otherwise the speed will be randomly split among the worker in each monitor
-	local prev_rx = 0
-	local prev_tx = 0
-
-	local update_widget = function(widget, stdout)
-		local cur_vals = split(stdout, "\r\n")
-
-		local cur_rx = 0
-		local cur_tx = 0
-
-		for i, v in ipairs(cur_vals) do
-			if i % 2 == 1 then
-				cur_rx = cur_rx + v
-			end
-			if i % 2 == 0 then
-				cur_tx = cur_tx + v
-			end
-		end
-
-		local speed_rx = (cur_rx - prev_rx) / timeout
-		local speed_tx = (cur_tx - prev_tx) / timeout
-
-		widget:set_rx_text(convert_to_h(speed_rx))
-		widget:set_tx_text(convert_to_h(speed_tx))
-
-		prev_rx = cur_rx
-		prev_tx = cur_tx
-	end
-
-	watch(
-		string.format([[bash -c "cat /sys/class/net/%s/statistics/*_bytes"]], interface),
-		timeout,
-		update_widget,
-		net_speed_widget
-	)
-
-	return net_speed_widget
+    table.insert(_shared[iface].displays, widget)
+    return widget
 end
 
 return setmetatable(net_speed_widget, {
-	__call = function(_, ...)
-		return worker(...)
-	end,
+    __call = function(_, ...) return worker(...) end,
 })

@@ -1,18 +1,10 @@
-if not command -s rbenv > /dev/null
-    echo "rbenv: command not found. See https://github.com/rbenv/rbenv"
-    exit 1
-end
+type -q rbenv || return
 
-set -l rbenv_root ''
-if test -z "$RBENV_ROOT"
-    set rbenv_root "$HOME/.rbenv"
-    set -x RBENV_ROOT "$HOME/.rbenv"
-else
-    set rbenv_root "$RBENV_ROOT"
-end
+set -l rbenv_root (test -n "$RBENV_ROOT" && echo $RBENV_ROOT || echo $HOME/.rbenv)
+set -gx RBENV_ROOT $rbenv_root
+set -gxp PATH $rbenv_root/shims
+set -gx RBENV_SHELL fish
 
-set -x PATH $rbenv_root/shims $PATH
-set -x RBENV_SHELL fish
-if test ! -d "$rbenv_root/shims"; or test ! -d "$rbenv_root/versions"
-    command mkdir -p $rbenv_root/{shims,versions}
-end
+# Create dirs only if missing (avoids mkdir fork on every startup)
+test -d $rbenv_root/shims || command mkdir -p $rbenv_root/shims
+test -d $rbenv_root/versions || command mkdir -p $rbenv_root/versions

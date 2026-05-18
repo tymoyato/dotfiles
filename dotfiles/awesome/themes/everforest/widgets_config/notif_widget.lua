@@ -42,12 +42,17 @@ local function close_popup()
     end
 end
 
--- Intercept naughty.notify to capture notifications (legacy naughty API)
-local _orig_notify = naughty.notify
-naughty.notify = function(args)
-    local title   = (args and args.title) or ""
-    local message = (args and (args.text or args.message)) or ""
-    if (title ~= "" or message ~= "") and not title:find("🍅", 1, true) and not title:find("☕", 1, true) then
+-- Register a post-notify hook via the shared hook table set up in rc.lua.
+-- rc.lua wraps naughty.notify once and calls all functions in _notif_hooks[].
+-- This avoids a second naughty.notify wrap from this module.
+if not _G._notif_hooks then _G._notif_hooks = {} end
+table.insert(_G._notif_hooks, function(args)
+    local title   = (args and args.title)                   or ""
+    local message = (args and (args.text or args.message))  or ""
+    if (title ~= "" or message ~= "")
+        and not title:find("🍅", 1, true)
+        and not title:find("☕", 1, true)
+    then
         table.insert(history, {
             title   = title,
             message = message,
@@ -56,8 +61,7 @@ naughty.notify = function(args)
         if #history > MAX_HISTORY then table.remove(history, 1) end
         refresh_label()
     end
-    return _orig_notify(args)
-end
+end)
 
 -- Build and show the history popup
 local function show_popup()

@@ -123,8 +123,13 @@ print(json.dumps(results, separators=(',', ':')))
 ]=]
 
 do
-    local f = io.open(SCRIPT_FILE, "w")
-    if f then f:write(python_code) f:close() end
+    local existing = io.open(SCRIPT_FILE, "r")
+    if existing then
+        existing:close()
+    else
+        local f = io.open(SCRIPT_FILE, "w")
+        if f then f:write(python_code); f:close() end
+    end
 end
 
 -- ── Fetch feeds ────────────────────────────────────────────────────

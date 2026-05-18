@@ -2,10 +2,11 @@
 -- Shows total space used by Docker (images + containers + volumes + build cache)
 -- Left-click: detailed breakdown popup
 -- Right-click: confirm and run docker system prune
-local wibox  = require("wibox")
-local awful  = require("awful")
-local gears  = require("gears")
+local wibox   = require("wibox")
+local awful   = require("awful")
+local gears   = require("gears")
 local naughty = require("naughty")
+local docker  = require("themes.everforest.widgets_config.shared_docker")
 
 local bg_widget = "#425047"
 local bg_popup  = "#2D353B"
@@ -142,14 +143,15 @@ local function show_prune_confirm()
 
     local yes_btn = make_btn(" Prune ", fg_red, "#4a3030", function()
         confirm_popup.visible = false
-        naughty.notify({ title = "Docker", text = "Running system prune…" })
+        naughty.notify({ title = "Docker", text = "Running system prune…", silent = true })
         awful.spawn.easy_async_with_shell("docker system prune -f 2>&1", function(out, _, _, ec)
             if ec == 0 then
-                naughty.notify({ title = "Docker", text = "Prune complete.\n" .. out:sub(1, 120) })
+                naughty.notify({ title = "Docker", text = "Prune complete.\n" .. out:sub(1, 120), silent = true })
             else
                 naughty.notify({ title = "Docker", text = "Prune failed:\n" .. out:sub(1, 200), timeout = 10 })
             end
             check_disk()
+            docker.refresh()
         end)
     end)
 

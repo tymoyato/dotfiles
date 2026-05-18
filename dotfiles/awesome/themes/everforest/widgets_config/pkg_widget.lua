@@ -15,7 +15,7 @@ local fg_green  = "#A7C080"
 local fg_yellow = "#DBBC7F"
 local fg_grey   = "#7A8478"
 
-local CHECK_INTERVAL = 300  -- seconds between checks
+local CHECK_INTERVAL = 3600  -- 1 hour between checks
 
 local updates = {}  -- list of { name, current, latest }
 local popup   = nil

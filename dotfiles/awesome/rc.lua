@@ -142,8 +142,9 @@ naughty.config.defaults.border_color = "#ffffff"
 naughty.config.defaults.border_width = 1
 naughty.config.defaults.hover_timeout = nil
 naughty.config.defaults.width = 260
+local _rounded_rect = gears.shape.rounded_rect
 naughty.config.defaults.shape = function(cr, w, h)
-    require("gears").shape.rounded_rect(cr, w, h, 12)
+    _rounded_rect(cr, w, h, 12)
 end
 
 naughty.config.presets.normal.border_width = 1
@@ -175,9 +176,16 @@ local function resolve_app_icon(appname)
 	return nil
 end
 
+-- Shared hook table — widgets register here instead of wrapping naughty.notify again
+_G._notif_hooks = {}
+
 local _naughty_notify = naughty.notify
+local _notif_sound = { "paplay", "/usr/share/sounds/freedesktop/stereo/message.oga" }
 naughty.notify = function(args)
-	awful.spawn.with_shell("paplay /usr/share/sounds/freedesktop/stereo/message.oga")
+	args = args or {}
+	if not args.silent then
+		awful.spawn(_notif_sound)
+	end
 	if not args.icon and args.appname then
 		args.icon = resolve_app_icon(args.appname)
 	end
@@ -185,6 +193,9 @@ naughty.notify = function(args)
 		args.run = function()
 			focus_app_by_name(args.app_name)
 		end
+	end
+	for _, hook in ipairs(_G._notif_hooks) do
+		hook(args)
 	end
 	return _naughty_notify(args)
 end
@@ -269,13 +280,25 @@ end
 local theme_path = string.format("%s/.config/awesome/themes/%s/theme.lua", os.getenv("HOME"), chosen_theme)
 beautiful.init(theme_path)
 
+-- Detect restart type early so spawn calls and rules can use it
+local function file_exists(path)
+    local f = io.open(path, "r")
+    if f then f:close(); return true end
+    return false
+end
+local is_theme_switch   = file_exists("/tmp/awesome_theme_switch")
+local is_normal_restart = file_exists("/tmp/awesome_normal_restart")
+local is_any_restart    = is_theme_switch or is_normal_restart
+
 TERMINAL = "kitty"
 local editor = os.getenv("EDITOR") or "editor"
 local editor_cmd = TERMINAL .. " -e " .. editor
 awful.spawn.with_shell("pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf")
 awful.spawn.with_shell("pgrep -x brave > /dev/null || brave --remote-debugging-port=9222")
-awful.spawn.with_shell("~/.config/awesome/utils/apps.sh")
-awful.spawn.with_shell("~/.config/awesome/display-setup.sh")
+if not is_any_restart then
+	awful.spawn.with_shell("~/.config/awesome/utils/apps.sh")
+	awful.spawn.with_shell("~/.config/awesome/display-setup.sh")
+end
 -- awful.spawn.with_shell("sudo -u ervin DISPLAY=:0 /home/ervin/.utils/home_reset_display.sh")
 -- awful.spawn.with_shell("~/.utils/apps.sh")
 -- awful.spawn.with_shell("~/.utils/vpn.sh")
@@ -318,21 +341,21 @@ local myawesomemenu = {
 
 local menu_awesome = { "awesome", myawesomemenu, beautiful.awesome_icon }
 local menu_terminal = { "open terminal", TERMINAL }
-local mymainmenu
-
-if has_fdo then
-	mymainmenu = freedesktop.menu.build({
-		before = { menu_awesome },
-		after = { menu_terminal },
-	})
-else
-	mymainmenu = awful.menu({
-		items = {
-			menu_awesome,
-			--{ "Debian", debian.menu.Debian_menu.Debian },
-			menu_terminal,
-		},
-	})
+local _mymainmenu = nil
+local function get_main_menu()
+	if not _mymainmenu then
+		if has_fdo then
+			_mymainmenu = freedesktop.menu.build({
+				before = { menu_awesome },
+				after = { menu_terminal },
+			})
+		else
+			_mymainmenu = awful.menu({
+				items = { menu_awesome, menu_terminal },
+			})
+		end
+	end
+	return _mymainmenu
 end
 
 -- Menubar configuration
@@ -392,7 +415,7 @@ screen.connect_signal("property::geometry", set_wallpaper)
 -- {{{ Mouse bindings
 root.buttons(gears.table.join(
 	awful.button({}, 3, function()
-		mymainmenu:toggle()
+		get_main_menu():toggle()
 	end),
 	awful.button({}, 4, awful.tag.viewnext),
 	awful.button({}, 5, awful.tag.viewprev)
@@ -431,7 +454,7 @@ GLOBALKEYS = gears.table.join(
 		awful.client.focus.byidx(-1)
 	end, { description = "focus previous by index", group = "client" }),
 	awful.key({ MODKEY }, "w", function()
-		mymainmenu:show()
+		get_main_menu():show()
 	end, { description = "show main menu", group = "awesome" }),
 
 	-- Layout manipulation
@@ -731,10 +754,15 @@ root.keys(GLOBALKEYS)
 -- table.insert(rules, { rule = { class = "Slack" }, properties = { screen = 1, tag = "4" } })
 -- end
 
--- Check if this is a theme switch restart or normal restart
-local is_theme_switch = io.open("/tmp/awesome_theme_switch", "r") ~= nil
-local is_normal_restart = io.open("/tmp/awesome_normal_restart", "r") ~= nil
-local is_any_restart = is_theme_switch or is_normal_restart
+-- Tag placement rules: class → tag name (only applied on fresh login, not restarts)
+local _tag_rules = {
+	kitty           = "1",
+	Zed             = "2",
+	["Brave-browser"] = "3",
+	bruno           = "4",
+	obsidian        = "5",
+	Slack           = "6",
+}
 
 awful.rules.rules = {
 	-- All clients will match this rule.
@@ -752,18 +780,6 @@ awful.rules.rules = {
 		},
 	},
 
-	-- Only apply tag rules if this is NOT any kind of restart
-	{ rule = { class = "kitty" }, properties = { screen = 1, tag = "1" }, rule_any = { is_any_restart = false } },
-	{ rule = { class = "Zed" }, properties = { screen = 1, tag = "2" }, rule_any = { is_any_restart = false } },
-	{
-		rule = { class = "Brave-browser" },
-		properties = { screen = 1, tag = "3" },
-		rule_any = { is_any_restart = false },
-	},
-	{ rule = { class = "bruno" }, properties = { screen = 1, tag = "4" }, rule_any = { is_any_restart = false } },
-	{ rule = { class = "obsidian" }, properties = { screen = 1, tag = "5" }, rule_any = { is_any_restart = false } },
-	{ rule = { class = "Slack" }, properties = { screen = 1, tag = "6" }, rule_any = { is_any_restart = false } },
-
 	-- Add titlebars to normal clients and dialogs
 	{ rule_any = { type = { "normal", "dialog" } }, properties = { titlebars_enabled = false } },
 }
@@ -772,18 +788,23 @@ awful.rules.rules = {
 -- {{{ Signals
 -- Signal function to execute when a new client appears.
 client.connect_signal("manage", function(c)
-	-- Set the windows at the slave,
-	-- i.e. put it at the end of others instead of setting it master.
-	-- if not awesome.startup then awful.client.setslave(c) end
-
 	if awesome.startup and not c.size_hints.user_position and not c.size_hints.program_position then
-		-- Prevent clients from being unreachable after screen count changes.
 		awful.placement.no_offscreen(c)
 	end
 
 	-- Don't focus this client if we're restoring a tag
 	if _restoring_tag then
 		c:emit_signal("request::activate", "manage", { raise = false })
+	end
+
+	-- Apply tag placement only on fresh login (not restarts or theme switches)
+	if not is_any_restart then
+		local tag_name = _tag_rules[c.class]
+		if tag_name then
+			local s = c.screen or awful.screen.focused()
+			local t = awful.tag.find_by_name(s, tag_name)
+			if t then c:move_to_tag(t) end
+		end
 	end
 end)
 

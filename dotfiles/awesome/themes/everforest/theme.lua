@@ -142,6 +142,8 @@ local docker_health_widget     = require("themes.everforest.widgets_config.docke
 local docker_compose_widget    = require("themes.everforest.widgets_config.docker_compose_widget")
 local docker_disk_widget       = require("themes.everforest.widgets_config.docker_disk_widget")
 
+local _net_speed_widget_mod = require("widgets.net_speed_widget.net_speed")
+
 function theme.connect(s)
     -- Quake application
     s.quake = lain.util.quake({ app = awful.util.terminal })
@@ -177,7 +179,6 @@ function theme.connect(s)
 
     -- Wibar
     s.mywibox = awful.wibar({ position = "top", screen = s, height = 16, bg = "#00000000", fg = theme.fg_focus })
-    local net_speed_widget = require("widgets.net_speed_widget.net_speed")
 
     -- Setup
     s.mywibox:setup({
@@ -195,7 +196,7 @@ function theme.connect(s)
             music_widget,
             wibox.widget.textbox(" "),
             wibox.container.background(
-                wibox.container.margin(net_speed_widget(), 2, 2),
+                wibox.container.margin(_net_speed_widget_mod(), 2, 2),
                 "#425047",
                 gears.shape.rounded_rect
             ),

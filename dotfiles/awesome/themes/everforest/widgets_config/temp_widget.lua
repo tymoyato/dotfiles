@@ -1,44 +1,27 @@
--- Coretemp (lain, average)
-local awful = require("awful")
-local wibox = require("wibox")
-local gears = require("gears")
-local lain = require("lain")
+-- Coretemp widget
+local wibox  = require("wibox")
+local gears  = require("gears")
+local lain   = require("lain")
 local markup = lain.util.markup
 
--- Function to auto-detect the first available temp*_input file
+-- Find hwmon temp file once at startup. io.popen here is ~5ms on sysfs —
+-- acceptable tradeoff vs async complexity with lain's named timer.
 local function find_temp_file()
-    local command = [[
-        for hwmon in /sys/class/hwmon/hwmon*; do
-            for temp in "$hwmon"/temp*_input; do
-                if [ -f "$temp" ]; then
-                    echo "$temp"
-                    exit 0
-                fi
-            done
-        done
-    ]]
-
-    -- Use awful.spawn.easy_async_with_shell for async shell command
-    local handle = io.popen(command)
-    if handle then
-        local result = handle:read("*l")  -- Only read the first line
-        handle:close()
-        return result or nil
-    else
-        return nil
-    end
+    local h = io.popen("ls /sys/class/hwmon/hwmon*/temp1_input 2>/dev/null | head -1")
+    if not h then return "/dev/null" end
+    local result = h:read("*l") or ""
+    h:close()
+    return result ~= "" and result or "/dev/null"
 end
 
--- Get temperature file path
-local temp_file = find_temp_file() or "/dev/null"
+local temp_file = find_temp_file()
 
--- Create the widget
 local temp = lain.widget.temp({
     tempfiles = { temp_file },
     timeout = 10,
     settings = function()
         local temp_str = "N/A"
-        if CORETEMP_NOW ~= "N/A" then
+        if CORETEMP_NOW ~= "N/A" and CORETEMP_NOW ~= nil then
             temp_str = string.format("%.0f", CORETEMP_NOW)
         end
         WIDGET:set_markup(

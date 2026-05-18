@@ -24,5 +24,12 @@ function _nvm_uninstall --on-event nvm_uninstall
 end
 
 if status is-interactive && set --query nvm_default_version && ! set --query nvm_current_version
-    nvm use --silent $nvm_default_version
+    # Activate directly via PATH to avoid nvm use overhead on every shell start
+    set -l node_bin $nvm_data/versions/node/v$nvm_default_version/bin
+    if test -d $node_bin
+        set -gxp PATH $node_bin
+        set -g nvm_current_version $nvm_default_version
+    else
+        nvm use --silent $nvm_default_version
+    end
 end

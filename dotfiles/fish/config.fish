@@ -1,41 +1,20 @@
-# Check if Xorg (or startx) is running
-xrandr --output DP-2 --mode 1920x1080 --rate 239.76 #tmp
-if pgrep -x "Xorg" > /dev/null
-    # echo "Xorg is already running (likely with Awesome)"
-else
-    echo "Xorg is not running"
-end
-
-# Check if Awesome is running
-if pgrep -x "awesome" > /dev/null
-    # echo "Awesome window manager is running"
-else
-    echo "Awesome is not running"
-end
-
-# Automatically start Xorg if it's not running
-if not pgrep -x "Xorg" > /dev/null
-    # echo "Starting Xorg (Awesome window manager)..."
-    startx &
-end
-
 set fish_greeting ""
 set -gx NO_AT_BRIDGE 1
 
 # fish_greeting
 set -gx TERM xterm-256color
-set -x GVM_ROOT $HOME/.gvm
-set -x PATH $GVM_ROOT/bin $PATH
-set -x PATH $HOME/.local/bin $PATH
+set -gx GVM_ROOT $HOME/.gvm
+test -d $GVM_ROOT/bin && set -gxp PATH $GVM_ROOT/bin
+set -gxp PATH $HOME/.local/bin
 
-# aliases
-alias updates='checkupdates; yay -Qu'
-alias g=git
-alias v=nvim
-alias z=zoxide
-alias coverage_rspec='COVERAGE=true bundle exec rspec spec/'
-alias idl_rswag='RAILS_ENV=test rails rswag'
-alias lazydocker='sudo $(which lazydocker)'
+# abbreviations (expand inline, faster than alias)
+abbr -a g git
+abbr -a v nvim
+abbr -a z zoxide
+abbr -a updates 'checkupdates; yay -Qu'
+abbr -a coverage_rspec 'COVERAGE=true bundle exec rspec spec/'
+abbr -a idl_rswag 'RAILS_ENV=test rails rswag'
+abbr -a lazydocker 'sudo (which lazydocker)'
 
 # eza - general use aliases updated for eza
 alias ls='eza'                                      # Basic replacement for ls with eza
