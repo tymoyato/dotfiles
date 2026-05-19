@@ -134,7 +134,6 @@ local notif_widget  = require("themes.everforest.widgets_config.notif_widget")
 local pkg_widget      = require("themes.everforest.widgets_config.pkg_widget")
 local pomodoro_widget = require("themes.everforest.widgets_config.pomodoro_widget")
 local todo_widget     = require("themes.everforest.widgets_config.todo_widget")
-local rss_widget      = require("themes.everforest.widgets_config.rss_widget")
 local procman_widget  = require("themes.everforest.widgets_config.procman_widget")
 local docker_containers_widget = require("themes.everforest.widgets_config.docker_containers_widget")
 local docker_resources_widget  = require("themes.everforest.widgets_config.docker_resources_widget")
@@ -226,8 +225,6 @@ function theme.connect(s)
             pomodoro_widget,
             wibox.widget.textbox(" "),
             pkg_widget,
-            wibox.widget.textbox(" "),
-            rss_widget,
             wibox.widget.textbox(" "),
             procman_widget,
             wibox.widget.textbox(" "),

@@ -1,20 +1,41 @@
 set fish_greeting ""
 set -gx NO_AT_BRIDGE 1
 
-# fish_greeting
 set -gx TERM xterm-256color
+set -gx EDITOR nvim
 set -gx GVM_ROOT $HOME/.gvm
 test -d $GVM_ROOT/bin && set -gxp PATH $GVM_ROOT/bin
 set -gxp PATH $HOME/.local/bin
 
+# zoxide (smarter cd)
+command -q zoxide && zoxide init fish | source
+
+# direnv
+command -q direnv && direnv hook fish | source
+
 # abbreviations (expand inline, faster than alias)
 abbr -a g git
 abbr -a v nvim
-abbr -a z zoxide
 abbr -a updates 'checkupdates; yay -Qu'
 abbr -a coverage_rspec 'COVERAGE=true bundle exec rspec spec/'
 abbr -a idl_rswag 'RAILS_ENV=test rails rswag'
 abbr -a lazydocker 'sudo (which lazydocker)'
+
+# git
+abbr -a gc 'git commit'
+abbr -a gp 'git push'
+abbr -a gst 'git status'
+
+# tools
+abbr -a k kubectl
+abbr -a tf terraform
+
+# gh - PR/issue flow (available when gh installed)
+abbr -a ghpr 'gh pr create'
+abbr -a ghprl 'gh pr list'
+abbr -a ghprv 'gh pr view --web'
+abbr -a ghil 'gh issue list'
+abbr -a ghic 'gh issue create'
 
 # eza - general use aliases updated for eza
 alias ls='eza'                                      # Basic replacement for ls with eza

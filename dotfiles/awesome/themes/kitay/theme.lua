@@ -119,27 +119,31 @@ theme.black = theme.bg_normal
 local markup = lain.util.markup
 
 -- Widgets --
-
--- Clock
-local clock_widget = require("widgets_config.clock_widget")
--- Battery
-local battery_widget = require("widgets_config.battery_widget")
--- MEM
-local mem_widget = require("widgets_config.mem_widget")
--- CPU
-local cpu_widget = require("widgets_config.cpu_widget")
--- Coretemp
-local temp_widget = require("widgets_config.temp_widget")
--- ALSA volume bar
-local volume_widget = require("widgets_config.volume_widget")
--- Keyboard layout switcher
-local kbd_widget = require("widgets.kbd_widget.kbd_widget")
--- brightness
-local brightness_widget = require("widgets_config.brightness_widget")
--- music
-local music_widget = require("widgets_config.music_widget")
--- package log
-local package_log_widget = require("themes.kitay.widgets_config.package_log_widget")
+local clock_widget     = require("themes.kitay.widgets_config.clock_widget")
+local battery_widget   = require("themes.kitay.widgets_config.battery_widget")
+local mem_widget       = require("themes.kitay.widgets_config.mem_widget")
+local cpu_widget       = require("themes.kitay.widgets_config.cpu_widget")
+local temp_widget      = require("themes.kitay.widgets_config.temp_widget")
+local disk_widget      = require("themes.kitay.widgets_config.disk_widget")
+local volume_widget    = require("themes.kitay.widgets_config.volume_widget")
+local kbd_widget       = require("widgets.kbd_widget.kbd_widget")
+local brightness_widget = require("themes.kitay.widgets_config.brightness_widget")
+local music_widget     = require("themes.kitay.widgets_config.music_widget")
+local crypto_widget    = require("themes.kitay.widgets_config.crypto_widget")
+local notif_widget     = require("themes.kitay.widgets_config.notif_widget")
+local pkg_widget       = require("themes.kitay.widgets_config.pkg_widget")
+local pomodoro_widget  = require("themes.kitay.widgets_config.pomodoro_widget")
+local todo_widget      = require("themes.kitay.widgets_config.todo_widget")
+local procman_widget   = require("themes.kitay.widgets_config.procman_widget")
+local docker_containers_widget = require("themes.kitay.widgets_config.docker_containers_widget")
+local docker_resources_widget  = require("themes.kitay.widgets_config.docker_resources_widget")
+local docker_health_widget     = require("themes.kitay.widgets_config.docker_health_widget")
+local docker_compose_widget    = require("themes.kitay.widgets_config.docker_compose_widget")
+local docker_disk_widget       = require("themes.kitay.widgets_config.docker_disk_widget")
+local cpu_graph_widget = require("themes.kitay.widgets_config.cpu_graph_widget")
+local vpn_widget       = require("themes.kitay.widgets_config.vpn_widget")
+local display_widget   = require("themes.kitay.widgets_config.display_widget")
+local journal_widget   = require("themes.kitay.widgets_config.journal_widget")
 
 function theme.connect(s)
 	-- Quake application
@@ -191,73 +195,101 @@ function theme.connect(s)
 
 	-- Create the wibox
 	s.mywibox = awful.wibar({ position = "top", screen = s, height = 16, bg = "#00000000", fg = theme.fg_focus })
-	local net_speed_widget = require("widgets.net_speed_widget.net_speed")
+	local _net_speed_widget_mod = require("widgets.net_speed_widget.net_speed")
 
-	-- Add widgets to the wibox
 	s.mywibox:setup({
 		layout = wibox.layout.align.horizontal,
-		{ -- Left widgets
+		{ -- Left
 			layout = wibox.layout.fixed.horizontal,
 			s.mytaglist,
 			s.mypromptbox,
 		},
-		-- s.mytasklist, -- Middle widget
-		{ -- Right widgets
+		{ -- Middle
 			layout = wibox.layout.fixed.horizontal,
-			-- default
 		},
-		{ -- Right widgets
+		{ -- Right
 			layout = wibox.layout.fixed.horizontal,
-			-- Music widget
 			music_widget,
-			-- Spacer
 			wibox.widget.textbox(" "),
-			-- Net speed widget
 			wibox.container.background(
-				wibox.container.margin(net_speed_widget(), 2, 2),
+				wibox.container.margin(_net_speed_widget_mod(), 2, 2),
 				"#55a3ff",
 				gears.shape.rounded_rect
 			),
-			-- Spacer
 			wibox.widget.textbox(" "),
-			-- Keyboard
-			kbd_widget,
-			-- Spacer
-			wibox.widget.textbox(" "),
-			-- Volume
 			brightness_widget,
-			-- Spacer
 			wibox.widget.textbox(" "),
 			volume_widget,
-			-- Spacer
 			wibox.widget.textbox(" "),
-			-- Temp
+			disk_widget,
+			wibox.widget.textbox(" "),
 			temp_widget,
-			-- Spacer
 			wibox.widget.textbox(" "),
-			-- CPU widget
-			cpu_widget,
-			-- Spacer
+			cpu_graph_widget,
 			wibox.widget.textbox(" "),
-			-- Mem widget
 			mem_widget,
-			-- Spacer
 			wibox.widget.textbox(" "),
-			-- Battery widget
-			battery_widget.battery_widget1,
-			battery_widget.battery_widget2,
-			-- Spacer
+			battery_widget,
 			wibox.widget.textbox(" "),
-			-- Package log widget
-			package_log_widget.widget,
-			-- Spacer
+			crypto_widget,
 			wibox.widget.textbox(" "),
-			-- Clock
+			todo_widget,
+			wibox.widget.textbox(" "),
+			pomodoro_widget,
+			wibox.widget.textbox(" "),
+			pkg_widget,
+			wibox.widget.textbox(" "),
+			procman_widget,
+			wibox.widget.textbox(" "),
+			journal_widget,
+			wibox.widget.textbox(" "),
+			vpn_widget,
+			wibox.widget.textbox(" "),
+			display_widget,
+			wibox.widget.textbox(" "),
+			notif_widget,
+			wibox.widget.textbox(" "),
 			clock_widget,
-			-- Spacer
 			wibox.widget.textbox(" "),
-			-- Layout box
+			kbd_widget,
+			wibox.widget.textbox(" "),
 			s.mylayoutbox,
+		},
+	})
+
+	s.mydockerwibox = awful.wibar({ position = "bottom", screen = s, height = 16, bg = "#00000000", fg = theme.fg_focus })
+	s.mydockerwibox:setup({
+		layout = wibox.layout.align.horizontal,
+		{ -- Left
+			layout = wibox.layout.fixed.horizontal,
+			wibox.container.background(
+				wibox.container.margin(
+					wibox.widget {
+						markup = '<span font="Meslo LGS Regular 10" color="' .. theme.fg_widget .. '"> 🐳 docker </span>',
+						widget = wibox.widget.textbox,
+					},
+					2, 2
+				),
+				"#000000",
+				gears.shape.rounded_rect
+			),
+			wibox.widget.textbox(" "),
+		},
+		{ -- Middle
+			layout = wibox.layout.fixed.horizontal,
+		},
+		{ -- Right
+			layout = wibox.layout.fixed.horizontal,
+			docker_containers_widget,
+			wibox.widget.textbox(" "),
+			docker_resources_widget,
+			wibox.widget.textbox(" "),
+			docker_health_widget,
+			wibox.widget.textbox(" "),
+			docker_compose_widget,
+			wibox.widget.textbox(" "),
+			docker_disk_widget,
+			wibox.widget.textbox(" "),
 		},
 	})
 end

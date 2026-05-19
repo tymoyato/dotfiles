@@ -7,7 +7,7 @@ local gears = require("gears")
 local cpu = lain.widget.cpu({
 	timeout = 5,
 	settings = function()
-		widget:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " 🔲 " .. cpu_now.usage .. "% ")))
+		widget:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " " .. cpu_now.usage .. "% ")))
 	end,
 })
 local cpu_widget = wibox.container.background(
