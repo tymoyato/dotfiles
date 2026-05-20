@@ -224,7 +224,7 @@ local themes = {
 	"kitay",
 	"cccp",
 }
-local i3lock_settings = "/home/tymoyato/.config/awesome/i3lock-fancy"
+local betterlockscreen_cmd = "betterlockscreen -l dim --off 30"
 -- Try to read saved theme index from file
 local current_theme_index = 1
 local theme_file = io.open("/tmp/awesome_current_theme", "r")
@@ -441,7 +441,7 @@ GLOBALKEYS = gears.table.join(
 	end, { description = "toggle wibox", group = "awesome" }),
 
 	awful.key({ MODKEY, "Control" }, "x", function()
-		awful.util.spawn(i3lock_settings)
+		awful.util.spawn(betterlockscreen_cmd)
 	end, { description = "lock screen", group = "awesome" }),
 	awful.key({ MODKEY }, "s", hotkeys_popup.show_help, { description = "show help", group = "awesome" }),
 	awful.key({ MODKEY }, "Left", awful.tag.viewprev, { description = "view previous", group = "tag" }),

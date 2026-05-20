@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Run opencode with a prompt via rofi
+
+if ! command -v opencode &>/dev/null; then
+    rofi -e "opencode: not installed"
+    exit 1
+fi
+
+prompt=$(rofi -dmenu -p "opencode" -config ~/.config/rofi/config.rasi < /dev/null)
+[ -z "$prompt" ] && exit 0
+
+result=$(opencode run "$prompt" 2>&1)
+[ -z "$result" ] && result="(no output)"
+
+rofi -e "$result" -config ~/.config/rofi/config.rasi

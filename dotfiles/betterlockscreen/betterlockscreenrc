@@ -1,0 +1,41 @@
+# ~/.config/betterlockscreenrc
+# Everforest Dark Medium Contrast
+
+display_on=0
+span_image=false
+lock_timeout=300
+fx_list=(dim)
+dim_level=60
+solid_color=2D353B
+wallpaper_cmd="feh --bg-fill"
+quiet=true
+
+# Everforest theme
+loginbox=2D353Bcc
+loginshadow=00000000
+locktext="Type password to unlock"
+font="sans-serif"
+
+ringcolor=A7C080ff
+insidecolor=2D353B66
+separatorcolor=00000000
+
+ringvercolor=83C092ff
+insidevercolor=2D353B66
+
+ringwrongcolor=E67E80ff
+insidewrongcolor=51404566
+
+timecolor=D3C6AAff
+time_format="%H:%M"
+greetercolor=859289ff
+layoutcolor=859289ff
+
+keyhlcolor=A7C080ff
+bshlcolor=E67E80ff
+veriftext="Verifying..."
+verifcolor=D3C6AAff
+wrongtext="Wrong password"
+wrongcolor=E67E80ff
+modifcolor=DBBC7Fff
+bgcolor=2D353Bff
