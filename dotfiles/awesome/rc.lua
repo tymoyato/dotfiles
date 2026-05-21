@@ -764,7 +764,6 @@ root.keys(GLOBALKEYS)
 local _tag_rules = {
 	kitty           = "1",
 	["Brave-browser"] = "2",
-	bruno           = "3",
 }
 
 awful.rules.rules = {

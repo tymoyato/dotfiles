@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Requires: strawberry, playerctl
+
+if ! command -v strawberry &>/dev/null; then
+    rofi -e "strawberry: not installed"
+    exit 1
+fi
+
+prompt=$(playerctl -p strawberry metadata --format "{{artist}}{{artist:+ - }}{{title}} [{{status}}]" 2>/dev/null \
+    || echo "strawberry [stopped]")
+
+chosen=$(printf "open\nplay/pause\nnext\nprevious\nstop" \
+    | rofi -dmenu -p "$prompt" -config ~/.config/rofi/config.rasi)
+
+[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+case "$chosen" in
+    "open")       strawberry & ;;
+    "play/pause") playerctl -p strawberry play-pause ;;
+    "next")       playerctl -p strawberry next ;;
+    "previous")   playerctl -p strawberry previous ;;
+    "stop")       playerctl -p strawberry stop ;;
+esac

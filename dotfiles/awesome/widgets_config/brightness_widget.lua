@@ -1,31 +1,19 @@
--- Brightness control bar using the 'light' program
+-- Brightness control using ddcutil (DDC/CI)
 local wibox = require("wibox")
 local awful = require("awful")
 local lain = require("lain")
 local gears = require("gears")
 local naughty = require("naughty")
 
--- Icons for brightness states
 theme.widget_brightness = theme.dir .. "/icons/widgets/brightness.png"
 local brightness_icon = wibox.widget.imagebox(theme.widget_brightness)
+local busy = false
 
--- Function to get current brightness level
-local function get_brightness()
-	awful.spawn.easy_async_with_shell("light -G", function(stdout)
-		local brightness = tonumber(stdout:match("(%d+)"))
-		brightness_icon:set_image(theme.widget_brightness)
-	end)
-end
-
--- Initial brightness check
-get_brightness()
-
--- Brightness bar widget
 local brightness_bar = wibox.widget({
 	{
 		id = "brightness_bar",
 		max_value = 100,
-		value = 50, -- Initial value, will be updated
+		value = 50,
 		forced_width = 45,
 		shape = gears.shape.rectangle,
 		bar_shape = gears.shape.rectangle,
@@ -37,9 +25,8 @@ local brightness_bar = wibox.widget({
 	layout = wibox.layout.align.horizontal,
 })
 
--- Update brightness bar
 local function update_brightness_bar()
-	awful.spawn.easy_async_with_shell("light -G", function(stdout)
+	awful.spawn.easy_async_with_shell("ddcutil --sleep-multiplier 0.1 getvcp 10 --brief 2>/dev/null | awk '{print $4}'", function(stdout)
 		local brightness = tonumber(stdout:match("(%d+)"))
 		if brightness then
 			brightness_bar:get_children_by_id("brightness_bar")[1].value = brightness
@@ -47,35 +34,29 @@ local function update_brightness_bar()
 	end)
 end
 
--- Initial update
+local function set_brightness(cmd)
+	if busy then return end
+	busy = true
+	awful.spawn.easy_async_with_shell(cmd, function()
+		busy = false
+		update_brightness_bar()
+	end)
+end
+
 update_brightness_bar()
 
--- Brightness control buttons
 brightness_bar:buttons(awful.util.table.join(
 	awful.button({}, 1, function()
-		awful.spawn.with_shell("sudo light -S 100")
-		get_brightness()
-		update_brightness_bar()
-	end),
-	awful.button({}, 2, function()
-		awful.spawn.with_shell("sudo light -A 1")
-		update_brightness_bar()
-		get_brightness()
+		set_brightness("ddcutil --sleep-multiplier 0.1 setvcp 10 100")
 	end),
 	awful.button({}, 3, function()
-		awful.spawn.with_shell("sudo light -U 25")
-		update_brightness_bar()
-		get_brightness()
+		set_brightness("ddcutil --sleep-multiplier 0.1 setvcp 10 - 25")
 	end),
 	awful.button({}, 4, function()
-		awful.spawn.with_shell("sudo light -A 1")
-		update_brightness_bar()
-		get_brightness()
+		set_brightness("ddcutil --sleep-multiplier 0.1 setvcp 10 + 5")
 	end),
 	awful.button({}, 5, function()
-		awful.spawn.with_shell("sudo light -U 1")
-		update_brightness_bar()
-		get_brightness()
+		set_brightness("ddcutil --sleep-multiplier 0.1 setvcp 10 - 5")
 	end)
 ))
 

@@ -11,4 +11,4 @@ if [ -n "$1" ]; then
     exit 0
 fi
 
-printf "powermenu\nclipboard\nemoji\nsnippets\nwifi\nbluetooth\nprojects\nssh\nmedia\nwallpaper\ncalc\nbookmarks\ndocker\ntmux\nsearch\ntabs\nspeedtest\ntranslate\nlogs\nport\n"
+printf "powermenu\nclipboard\nemoji\nsnippets\nwifi\nbluetooth\nprojects\nssh\nmedia\nstrawberry\neasyeffects\nwallpaper\ncalc\nbookmarks\ndocker\ntmux\nsearch\ntabs\nspeedtest\ntranslate\nlogs\nport\n"
