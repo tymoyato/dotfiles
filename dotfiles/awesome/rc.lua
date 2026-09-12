@@ -789,6 +789,7 @@ root.keys(GLOBALKEYS)
 local _tag_rules = {
 	kitty           = "1",
 	["Brave-browser"] = "2",
+	["brave-browser"] = "2", -- c.instance fallback, see manage signal below
   ["dev.zed.Zed"] = "3",
   ["md.obsidian.Obsidian"] = "4",
   ["bruno"] = "5"
@@ -829,7 +830,11 @@ client.connect_signal("manage", function(c)
 
 	-- Apply tag placement only on fresh login (not restarts or theme switches)
 	if not is_any_restart then
-		local tag_name = _tag_rules[c.class]
+		-- Brave is single-instance: once a quake scratchpad spawns it with
+		-- --class=Quake*, every later brave window (incl. the real browser)
+		-- inherits that class from the master process. c.instance stays
+		-- reliable ("brave-browser") so fall back to it.
+		local tag_name = _tag_rules[c.class] or _tag_rules[c.instance]
 		if tag_name then
 			local s = c.screen or awful.screen.focused()
 			local t = awful.tag.find_by_name(s, tag_name)
