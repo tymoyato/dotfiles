@@ -293,12 +293,26 @@ local is_any_restart    = is_theme_switch or is_normal_restart
 TERMINAL = "kitty"
 local editor = os.getenv("EDITOR") or "editor"
 local quake_terminal = lain.util.quake({ app = TERMINAL, argname = "--name %s", extra = "--override background_opacity=0.75 --override dynamic_background_opacity=yes", height = 0.5, width = 0.7, vert = "center", horiz = "center", followtag = true })
+
+-- AI chat scratchpads (firefox, separate profiles so sessions/logins stay independent)
+local quake_gemini = lain.util.quake({ app = "brave", name = "QuakeGemini", instance_pattern = "gemini%.google%.com", argname = "--class=%s", extra = "--app=https://gemini.google.com/app", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true })
+local quake_chatgpt = lain.util.quake({ app = "brave", name = "QuakeChatGPT", instance_pattern = "chatgpt%.com", argname = "--class=%s", extra = "--app=https://chatgpt.com", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true })
+local quake_mistral = lain.util.quake({ app = "brave", name = "QuakeMistral", instance_pattern = "chat%.mistral%.ai", argname = "--class=%s", extra = "--app=https://chat.mistral.ai", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true })
 local editor_cmd = TERMINAL .. " -e " .. editor
 awful.spawn.with_shell("pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf")
 awful.spawn.with_shell("pgrep -x brave > /dev/null || brave --remote-debugging-port=9222")
 if not is_any_restart then
 	awful.spawn.with_shell("~/.config/awesome/utils/apps.sh")
 	awful.spawn.with_shell("~/.config/awesome/display-setup.sh")
+
+	-- Pre-warm AI chat scratchpads: spawn hidden now so first toggle is instant
+	for _, q in ipairs({ quake_gemini, quake_chatgpt, quake_mistral }) do
+		q:toggle() -- spawns + shows
+		gears.timer.start_new(2, function()
+			q:toggle() -- hides once mapped
+			return false
+		end)
+	end
 end
 -- awful.spawn.with_shell("sudo -u ervin DISPLAY=:0 /home/ervin/.utils/home_reset_display.sh")
 -- awful.spawn.with_shell("~/.utils/apps.sh")
@@ -483,6 +497,17 @@ GLOBALKEYS = gears.table.join(
 	awful.key({ MODKEY }, "grave", function()
 		quake_terminal:toggle()
 	end, { description = "toggle scratchpad terminal", group = "launcher" }),
+
+	-- AI chat scratchpads
+	awful.key({ MODKEY, "Shift" }, "g", function()
+		quake_gemini:toggle()
+	end, { description = "toggle Gemini scratchpad", group = "launcher" }),
+	awful.key({ MODKEY, "Shift" }, "e", function()
+		quake_chatgpt:toggle()
+	end, { description = "toggle ChatGPT scratchpad", group = "launcher" }),
+	awful.key({ MODKEY, "Shift" }, "t", function()
+		quake_mistral:toggle()
+	end, { description = "toggle Mistral scratchpad", group = "launcher" }),
 
 	-- Standard program
 	awful.key({ MODKEY }, "Return", function()

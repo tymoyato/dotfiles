@@ -36,6 +36,8 @@ function quake:display()
 		awful.client.iterate(function(c)
 			-- c.name may be changed!
 			return c.instance == self.name
+				or (self.tracked_client and c == self.tracked_client)
+				or (self.instance_pattern and c.instance and c.instance:find(self.instance_pattern))
 		end)
 	do
 		i = i + 1
@@ -59,7 +61,10 @@ function quake:display()
 	if not client then
 		-- The client does not exist, we spawn it
 		cmd = string.format("%s %s %s", self.app, string.format(self.argname, self.name), self.extra)
-		awful.spawn(cmd, { tag = self.screen.selected_tag })
+		local pid = awful.spawn(cmd, { tag = self.screen.selected_tag })
+		if type(pid) == "number" then
+			self.pending_pid = pid
+		end
 		return
 	end
 
@@ -158,14 +163,33 @@ function quake:new(config)
 
 	local dropdown = setmetatable(conf, { __index = quake })
 
-	capi.client.connect_signal("manage", function(c)
+	local function matches(c)
 		if c.instance == dropdown.name and c.screen == dropdown.screen then
+			return true
+		end
+		if dropdown.pending_pid and c.pid == dropdown.pending_pid then
+			dropdown.pending_pid = nil
+			dropdown.tracked_client = c
+			return true
+		end
+		if dropdown.instance_pattern and c.instance and c.instance:find(dropdown.instance_pattern) and c.screen == dropdown.screen then
+			dropdown.tracked_client = c
+			return true
+		end
+		return false
+	end
+
+	capi.client.connect_signal("manage", function(c)
+		if matches(c) then
 			dropdown:display()
 		end
 	end)
 	capi.client.connect_signal("unmanage", function(c)
-		if c.instance == dropdown.name and c.screen == dropdown.screen then
+		if (c.instance == dropdown.name or c == dropdown.tracked_client) and c.screen == dropdown.screen then
 			dropdown.visible = false
+			if c == dropdown.tracked_client then
+				dropdown.tracked_client = nil
+			end
 		end
 	end)
 
