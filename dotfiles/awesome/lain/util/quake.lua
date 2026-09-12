@@ -68,6 +68,11 @@ function quake:display()
 		return
 	end
 
+	-- Capture the current (possibly dragged) geometry before we hide it
+	if not self.visible then
+		self.geometry[self.screen] = client:geometry()
+	end
+
 	-- Set geometry
 	client.floating = true
 	client.border_width = self.border
