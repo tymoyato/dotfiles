@@ -17,7 +17,7 @@ check_and_start() {
 pgrep -x greenclip > /dev/null || greenclip daemon &
 
 declare -A processes=(
-  ["brave"]="brave"
+  ["Brave-browser"]="Brave-browser"
   ["kitty"]="kitty"
 )
 

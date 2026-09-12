@@ -93,7 +93,6 @@ function quake:display()
 		client:tags({ self.screen.selected_tag })
 		capi.client.focus = client
 	else
-		self.geometry[self.screen] = client:geometry()
 		client.hidden = true
 		local ctags = client:tags()
 		for i, t in pairs(ctags) do
@@ -188,7 +187,6 @@ function quake:new(config)
 	capi.client.connect_signal("unmanage", function(c)
 		if (c.instance == dropdown.name or c == dropdown.tracked_client) and c.screen == dropdown.screen then
 			dropdown.visible = false
-			dropdown.geometry[dropdown.screen] = nil
 			if c == dropdown.tracked_client then
 				dropdown.tracked_client = nil
 			end
