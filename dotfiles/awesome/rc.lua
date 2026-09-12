@@ -292,7 +292,35 @@ local is_any_restart    = is_theme_switch or is_normal_restart
 
 TERMINAL = "kitty"
 local editor = os.getenv("EDITOR") or "editor"
-local quake_terminal = lain.util.quake({ app = TERMINAL, argname = "--name %s", extra = "--override background_opacity=0.75 --override dynamic_background_opacity=yes", height = 0.5, width = 0.7, vert = "center", horiz = "center", followtag = true })
+local quake_terminal = lain.util.quake({
+	app = TERMINAL,
+	argname = "--name %s",
+	extra = "--override background_opacity=0.75 --override dynamic_background_opacity=yes --override remember_window_size=no",
+	height = 0.5,
+	width = 0.7,
+	vert = "center",
+	horiz = "center",
+	followtag = true,
+	settings = function(c)
+		-- kitty snaps its size to terminal-cell multiples right after
+		-- mapping, which shifts it off-center since resize keeps the
+		-- top-left corner fixed. Recenter once the size settles.
+		if c._quake_recenter_connected then
+			return
+		end
+		c._quake_recenter_connected = true
+		c:connect_signal("property::size", function()
+			local geo = c:geometry()
+			local workarea = c.screen.workarea
+			c:geometry({
+				x = workarea.x + (workarea.width - geo.width) / 2,
+				y = workarea.y + (workarea.height - geo.height) / 2,
+				width = geo.width,
+				height = geo.height,
+			})
+		end)
+	end,
+})
 
 -- AI chat scratchpads (firefox, separate profiles so sessions/logins stay independent)
 local quake_gemini = lain.util.quake({ app = "brave", name = "QuakeGemini", instance_pattern = "gemini%.google%.com", argname = "--class=%s", extra = "--app=https://gemini.google.com/app", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true })
