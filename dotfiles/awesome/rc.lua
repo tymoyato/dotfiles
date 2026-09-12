@@ -301,6 +301,7 @@ local quake_terminal = lain.util.quake({
 	vert = "center",
 	horiz = "center",
 	followtag = true,
+	border = 0,
 	settings = function(c)
 		-- kitty snaps its size to terminal-cell multiples right after
 		-- mapping, which shifts it off-center since resize keeps the
@@ -323,9 +324,9 @@ local quake_terminal = lain.util.quake({
 })
 
 -- AI chat scratchpads (firefox, separate profiles so sessions/logins stay independent)
-local quake_gemini = lain.util.quake({ app = "brave", name = "QuakeGemini", instance_pattern = "gemini%.google%.com", argname = "--class=%s", extra = "--app=https://gemini.google.com/app", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true })
-local quake_chatgpt = lain.util.quake({ app = "brave", name = "QuakeChatGPT", instance_pattern = "chatgpt%.com", argname = "--class=%s", extra = "--app=https://chatgpt.com", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true })
-local quake_mistral = lain.util.quake({ app = "brave", name = "QuakeMistral", instance_pattern = "chat%.mistral%.ai", argname = "--class=%s", extra = "--app=https://chat.mistral.ai", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true })
+local quake_gemini = lain.util.quake({ app = "brave", name = "QuakeGemini", instance_pattern = "gemini%.google%.com", argname = "--class=%s", extra = "--app=https://gemini.google.com/app", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true, border = 0 })
+local quake_chatgpt = lain.util.quake({ app = "brave", name = "QuakeChatGPT", instance_pattern = "chatgpt%.com", argname = "--class=%s", extra = "--app=https://chatgpt.com", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true, border = 0 })
+local quake_mistral = lain.util.quake({ app = "brave", name = "QuakeMistral", instance_pattern = "chat%.mistral%.ai", argname = "--class=%s", extra = "--app=https://chat.mistral.ai", height = 0.6, width = 0.6, vert = "center", horiz = "center", followtag = true, border = 0 })
 local editor_cmd = TERMINAL .. " -e " .. editor
 awful.spawn.with_shell("pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf")
 awful.spawn.with_shell("pgrep -x brave > /dev/null || brave --remote-debugging-port=9222")
