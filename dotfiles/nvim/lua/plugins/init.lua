@@ -1,4 +1,24 @@
 return {
+  --# image.nvim
+  {
+    "3rd/image.nvim",
+    build = false,
+    ft = { "markdown", "norg", "rst", "typst" },
+    opts = {
+      backend = "kitty",
+      processor = "magick_cli",
+      integrations = {
+        markdown = {
+          enabled = true,
+          download_remote_images = true,
+          filetypes = { "markdown" },
+        },
+      },
+      max_width_window_percentage = 75,
+      max_height_window_percentage = 50,
+      hijack_file_patterns = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.svg" },
+    },
+  },
   --# neoscroll.nvim
   {
     "karb94/neoscroll.nvim",

@@ -35,7 +35,7 @@ gears.timer {
 
 local disk_widget = wibox.container.background(
     wibox.container.margin(disk_label, 2, 2),
-    "#425047",
+    "#000000",
     gears.shape.rounded_rect
 )
 

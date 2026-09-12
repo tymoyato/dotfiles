@@ -42,7 +42,7 @@ brightness_text:buttons(awful.util.table.join(
 
 local brightness_final_widget = wibox.container.background(
 	wibox.container.margin(brightness_text, 2, 4),
-	"#425047",
+	"#000000",
 	gears.shape.rounded_rect
 )
 

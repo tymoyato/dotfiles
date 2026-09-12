@@ -8,7 +8,7 @@ local gears  = require("gears")
 local lain   = require("lain")
 local markup = lain.util.markup
 
-local bg_widget  = "#425047"
+local bg_widget  = "#000000"
 local bg_vpn_on  = "#374247"
 local bg_vpn_off = "#514045"
 local bg_popup   = "#2D353B"

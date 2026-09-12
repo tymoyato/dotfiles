@@ -22,13 +22,13 @@ theme.fg_urgent = "#E67E80"     -- red
 theme.fg_widget = "#A7C080"     -- green
 
 -- Taglist colors with Everforest theme
-theme.taglist_bg_focus = "#425047"      -- bg_green
+theme.taglist_bg_focus = "#000000"
 theme.taglist_fg_focus = "#D3C6AA"      -- fg
-theme.taglist_bg_occupied = "#3D484D"   -- bg2
+theme.taglist_bg_occupied = "#000000"
 theme.taglist_fg_occupied = "#A7C080"   -- green
-theme.taglist_bg_empty = "#475258"      -- bg3
+theme.taglist_bg_empty = "#000000"
 theme.taglist_fg_empty = "#859289"      -- grey1
-theme.taglist_bg_urgent = "#514045"     -- bg_red
+theme.taglist_bg_urgent = "#000000"
 theme.taglist_fg_urgent = "#E67E80"     -- red
 theme.taglist_shape = gears.shape.rounded_rect
 
@@ -200,7 +200,7 @@ function theme.connect(s)
             wibox.widget.textbox(" "),
             wibox.container.background(
                 wibox.container.margin(_net_speed_widget_mod(), 2, 2),
-                "#425047",
+                "#000000",
                 gears.shape.rounded_rect
             ),
             wibox.widget.textbox(" "),
@@ -258,7 +258,7 @@ function theme.connect(s)
                     },
                     2, 2
                 ),
-                "#2D353B",
+                "#000000",
                 gears.shape.rounded_rect
             ),
             wibox.widget.textbox(" "),

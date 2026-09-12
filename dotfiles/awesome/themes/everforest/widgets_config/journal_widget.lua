@@ -9,7 +9,7 @@ local lain   = require("lain")
 local markup = lain.util.markup
 local naughty = require("naughty")
 
-local bg_ok     = "#425047"
+local bg_ok     = "#000000"
 local bg_err    = "#514045"
 local bg_popup  = "#2D353B"
 local bg_row    = "#374247"

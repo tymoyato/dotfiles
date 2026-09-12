@@ -7,7 +7,7 @@ local awful   = require("awful")
 local gears   = require("gears")
 local naughty = require("naughty")
 
-local bg_widget = "#425047"
+local bg_widget = "#000000"
 local fg_color  = "#D3C6AA"
 local fg_active = "#A7C080"
 local fg_paused = "#DBBC7F"

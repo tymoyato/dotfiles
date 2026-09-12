@@ -112,3 +112,7 @@ alias dcpull='docker compose pull'                  # Pull compose images
 if status is-login; and test (tty) = /dev/tty1; and not set -q DISPLAY
     exec startx
 end
+
+
+# Added by Antigravity CLI installer
+set -gx PATH "/home/tymoyato/.local/bin" $PATH

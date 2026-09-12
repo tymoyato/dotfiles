@@ -5,7 +5,7 @@ local gears   = require("gears")
 local naughty = require("naughty")
 local docker  = require("themes.everforest.widgets_config.shared_docker")
 
-local bg_widget = "#425047"
+local bg_widget = "#000000"
 local bg_popup  = "#2D353B"
 local bg_row    = "#374247"
 local fg_color  = "#D3C6AA"

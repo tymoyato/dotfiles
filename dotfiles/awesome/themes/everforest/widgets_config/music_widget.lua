@@ -115,7 +115,7 @@ local music_widget = wibox.container.background(
 		2,
 		4
 	),
-	"#425047",
+	"#000000",
 	gears.shape.rounded_rect
 )
 

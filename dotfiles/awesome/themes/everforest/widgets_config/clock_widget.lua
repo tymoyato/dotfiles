@@ -9,7 +9,7 @@ local calendar_popup = require("awful.widget.calendar_popup").month
 local clock = awful.widget.textclock('<span font="Meslo LGS Regular 10" color="#D3C6AA"> 📅 %a %d %b  %H:%M </span>')
 local clock_widget = wibox.container.background(
 	wibox.container.margin(clock, 2, 2),
-	"#425047",
+	"#000000",
 	gears.shape.rounded_rect
 )
 

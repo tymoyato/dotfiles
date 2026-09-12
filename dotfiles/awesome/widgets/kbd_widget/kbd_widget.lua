@@ -33,7 +33,7 @@ end)))
 
 local kbd_widget_container = wibox.container.background(
 	wibox.container.margin(kbd_widget, 2, 4),
-	theme.bg_focus,
+	"#000000",
 	gears.shape.rounded_rect
 )
 

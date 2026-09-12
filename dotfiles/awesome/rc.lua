@@ -578,7 +578,7 @@ GLOBALKEYS = gears.table.join(
 	awful.key({ MODKEY }, "d", function()
 		awful.spawn("dmenu_run")
 	end, { description = "launch dmenu", group = "launcher" }),
-	awful.key({ MODKEY }, "o", function()
+	awful.key({ MODKEY, "Shift" }, "o", function()
 		awful.spawn("flameshot gui")
 	end, { description = "start flameshot", group = "launcher" }),
 	awful.key({ "Control", altkey, "Shift" }, "Right", function()
@@ -764,6 +764,9 @@ root.keys(GLOBALKEYS)
 local _tag_rules = {
 	kitty           = "1",
 	["Brave-browser"] = "2",
+  ["dev.zed.Zed"] = "3",
+  ["md.obsidian.Obsidian"] = "4",
+  ["bruno"] = "5"
 }
 
 awful.rules.rules = {

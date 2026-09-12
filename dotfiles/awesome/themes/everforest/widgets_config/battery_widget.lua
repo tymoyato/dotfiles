@@ -64,7 +64,7 @@ battery_widget = wibox.container.background(
 		wibox.widget({ bat_icon, bat.widget, layout = wibox.layout.align.horizontal }),
 		2, 4
 	),
-	"#425047",
+	"#000000",
 	gears.shape.rounded_rect
 )
 battery_widget.visible = false

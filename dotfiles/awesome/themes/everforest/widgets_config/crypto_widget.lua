@@ -36,7 +36,7 @@ watch(
 
 local crypto_widget = wibox.container.background(
     wibox.container.margin(crypto_text, 2, 2),
-    "#425047",
+    "#000000",
     gears.shape.rounded_rect
 )
 
