@@ -129,6 +129,7 @@ local volume_widget = require("themes.everforest.widgets_config.volume_widget")
 local kbd_widget = require("widgets.kbd_widget.kbd_widget")
 local brightness_widget = require("themes.everforest.widgets_config.brightness_widget")
 local music_widget = require("themes.everforest.widgets_config.music_widget")
+local claude_usage_widget = require("themes.everforest.widgets_config.claude_usage_widget")
 local crypto_widget = require("themes.everforest.widgets_config.crypto_widget")
 local notif_widget  = require("themes.everforest.widgets_config.notif_widget")
 local pkg_widget      = require("themes.everforest.widgets_config.pkg_widget")
@@ -196,6 +197,8 @@ function theme.connect(s)
         },
         { -- Right
             layout = wibox.layout.fixed.horizontal,
+            claude_usage_widget,
+            wibox.widget.textbox(" "),
             music_widget,
             wibox.widget.textbox(" "),
             wibox.container.background(
