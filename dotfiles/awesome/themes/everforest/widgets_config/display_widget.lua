@@ -31,7 +31,7 @@ local disp_label = wibox.widget {
 local disp_widget = wibox.container.background(
     wibox.container.margin(disp_label, 2, 2),
     bg_widget,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 -- Parse connected outputs from xrandr
@@ -69,7 +69,7 @@ local function make_layout_btn(label, cmd, parent_rows)
                 markup = markup.font(theme.font, markup.fg.color(fg_color, " " .. label .. " ")),
                 widget = wibox.widget.textbox,
             }, 6, 6, 2, 2
-        ), bg_row, gears.shape.rounded_rect
+        ), bg_row, gears.shape.octogon
     )
     btn:connect_signal("mouse::enter", function() btn.bg = "#4a5e53" end)
     btn:connect_signal("mouse::leave", function() btn.bg = bg_row end)
@@ -169,7 +169,7 @@ local function show_popup()
             placement = function(w)
                 awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
             end,
-            shape        = gears.shape.rounded_rect,
+            shape        = gears.shape.octogon,
             border_width = 2,
             border_color = fg_green,
             ontop         = true,

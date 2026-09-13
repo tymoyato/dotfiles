@@ -28,7 +28,7 @@ end
 local claude_usage_widget = wibox.container.background(
 	wibox.container.margin(claude_text, 2, 2),
 	"#000000",
-	gears.shape.rounded_rect
+	gears.shape.octogon
 )
 
 local function render()

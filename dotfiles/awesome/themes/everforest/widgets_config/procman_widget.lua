@@ -28,7 +28,7 @@ procman_label:set_markup(
 local procman_widget = wibox.container.background(
     wibox.container.margin(procman_label, 2, 2),
     bg_widget,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 -- ── Popup helpers ──────────────────────────────────────────────────
@@ -60,7 +60,7 @@ local function show_confirm(pid, name, anchor_widget)
             8, 8, 3, 3
         ),
         "#4a3030",
-        gears.shape.rounded_rect
+        gears.shape.octogon
     )
     yes_btn:connect_signal("mouse::enter", function() yes_btn.bg = "#6b3030" end)
     yes_btn:connect_signal("mouse::leave", function() yes_btn.bg = "#4a3030" end)
@@ -90,7 +90,7 @@ local function show_confirm(pid, name, anchor_widget)
             8, 8, 3, 3
         ),
         bg_row,
-        gears.shape.rounded_rect
+        gears.shape.octogon
     )
     no_btn:connect_signal("mouse::enter", function() no_btn.bg = "#4a5e53" end)
     no_btn:connect_signal("mouse::leave", function() no_btn.bg = bg_row end)
@@ -121,7 +121,7 @@ local function show_confirm(pid, name, anchor_widget)
                 margins        = { top = 18, right = 0 },
             })
         end,
-        shape        = gears.shape.rounded_rect,
+        shape        = gears.shape.octogon,
         border_width = 2,
         border_color = fg_red,
         ontop        = true,
@@ -202,7 +202,7 @@ function show_popup()
                     4, 4, 1, 1
                 ),
                 "#4a3030",
-                gears.shape.rounded_rect
+                gears.shape.octogon
             )
             kill_btn:connect_signal("mouse::enter", function() kill_btn.bg = "#6b3030" end)
             kill_btn:connect_signal("mouse::leave", function() kill_btn.bg = "#4a3030" end)
@@ -264,7 +264,7 @@ function show_popup()
                 margins        = { top = 18, right = 0 },
             })
         end,
-        shape         = gears.shape.rounded_rect,
+        shape         = gears.shape.octogon,
         border_width  = 2,
         border_color  = fg_green,
         ontop         = true,

@@ -37,7 +37,7 @@ refresh_label()
 local docker_disk_widget = wibox.container.background(
     wibox.container.margin(label, 2, 2),
     bg_widget,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 -- Parse "1.2GB" / "500MB" / "0B" → bytes (float) for summing
@@ -133,7 +133,7 @@ local function show_prune_confirm()
                 8, 8, 3, 3
             ),
             bg_default,
-            gears.shape.rounded_rect
+            gears.shape.octogon
         )
         btn:connect_signal("mouse::enter", function() btn.bg = "#4a5e53" end)
         btn:connect_signal("mouse::leave", function() btn.bg = bg_default end)
@@ -179,7 +179,7 @@ local function show_prune_confirm()
         placement = function(w)
             awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
         end,
-        shape        = gears.shape.rounded_rect,
+        shape        = gears.shape.octogon,
         border_width = 2,
         border_color = fg_red,
         ontop        = true,
@@ -281,7 +281,7 @@ local function show_popup()
         placement = function(w)
             awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
         end,
-        shape         = gears.shape.rounded_rect,
+        shape         = gears.shape.octogon,
         border_width  = 2,
         border_color  = fg_green,
         ontop         = true,

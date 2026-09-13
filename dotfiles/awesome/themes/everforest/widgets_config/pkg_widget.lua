@@ -33,7 +33,7 @@ refresh_label()
 local pkg_widget = wibox.container.background(
     wibox.container.margin(pkg_label, 2, 2),
     bg_widget,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 local close_detail   -- forward declaration
@@ -205,7 +205,7 @@ local function show_detail(pkg)
                         margins        = { top = 18, right = 410 },
                     })
                 end,
-                shape        = gears.shape.rounded_rect,
+                shape        = gears.shape.octogon,
                 border_width = 2,
                 border_color = fg_green,
                 ontop        = true,
@@ -329,7 +329,7 @@ local function show_popup()
                 margins        = { top = 18, right = 0 },
             })
         end,
-        shape         = gears.shape.rounded_rect,
+        shape         = gears.shape.octogon,
         border_width  = 2,
         border_color  = fg_green,
         ontop         = true,
@@ -375,7 +375,7 @@ pkg_widget:buttons(gears.table.join(
                 8, 8, 3, 3
             ),
             "#374247",
-            gears.shape.rounded_rect
+            gears.shape.octogon
         )
 
         local no_btn = wibox.container.background(
@@ -387,7 +387,7 @@ pkg_widget:buttons(gears.table.join(
                 8, 8, 3, 3
             ),
             "#374247",
-            gears.shape.rounded_rect
+            gears.shape.octogon
         )
 
         yes_btn:connect_signal("button::press", function()
@@ -446,7 +446,7 @@ pkg_widget:buttons(gears.table.join(
                     margins        = { top = 18, right = 0 },
                 })
             end,
-            shape        = gears.shape.rounded_rect,
+            shape        = gears.shape.octogon,
             border_width = 2,
             border_color = fg_green,
             bg           = bg_popup,

@@ -34,7 +34,7 @@ end)))
 local kbd_widget_container = wibox.container.background(
 	wibox.container.margin(kbd_widget, 2, 4),
 	"#000000",
-	gears.shape.rounded_rect
+	gears.shape.octogon
 )
 
 return kbd_widget_container

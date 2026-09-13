@@ -116,7 +116,7 @@ local music_widget = wibox.container.background(
 		4
 	),
 	"#000000",
-	gears.shape.rounded_rect
+	gears.shape.octogon
 )
 
 -- Make buttons clickable

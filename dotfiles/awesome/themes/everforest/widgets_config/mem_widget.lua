@@ -20,7 +20,7 @@ local mem = lain.widget.mem({
 local mem_widget = wibox.container.background(
 	wibox.container.margin(wibox.widget({ mem_icon, mem.widget, layout = wibox.layout.align.horizontal }), 2, 4),
 	"#000000",
-	gears.shape.rounded_rect
+	gears.shape.octogon
 )
 
 return mem_widget

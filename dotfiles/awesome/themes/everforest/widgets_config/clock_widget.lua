@@ -10,7 +10,7 @@ local clock = awful.widget.textclock('<span font="Meslo LGS Regular 10" color="#
 local clock_widget = wibox.container.background(
 	wibox.container.margin(clock, 2, 2),
 	"#000000",
-	gears.shape.rounded_rect
+	gears.shape.octogon
 )
 
 -- Everforest colors
@@ -29,7 +29,7 @@ local cal_popup = calendar_popup({
 		padding = 8,
 		bg_color = everforest_bg,
 		fg_color = everforest_fg,
-		shape = gears.shape.rounded_rect,
+		shape = gears.shape.octogon,
 	},
 	style_header = { fg_color = everforest_green, font = "Meslo LGS Regular 12", bg_color = everforest_bg },
 	style_weekday = { fg_color = everforest_green, font = "Meslo LGS Regular 10", bg_color = everforest_bg },

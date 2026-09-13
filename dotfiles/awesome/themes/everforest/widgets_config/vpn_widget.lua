@@ -36,7 +36,7 @@ local vpn_label = wibox.widget {
 local vpn_widget = wibox.container.background(
     wibox.container.margin(vpn_label, 2, 2),
     bg_widget,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 local function detect_vpn(org)
@@ -139,7 +139,7 @@ local function show_popup()
         placement = function(w)
             awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
         end,
-        shape        = gears.shape.rounded_rect,
+        shape        = gears.shape.octogon,
         border_width = 2,
         border_color = is_vpn and fg_green or fg_red,
         ontop         = true,

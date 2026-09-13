@@ -70,7 +70,7 @@ refresh_label()
 local todo_widget = wibox.container.background(
     wibox.container.margin(todo_label, 2, 2),
     bg_widget,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 -- ── Popup ──────────────────────────────────────────────────────────
@@ -215,7 +215,7 @@ local function show_popup()
                 margins        = { top = 18, right = 0 },
             })
         end,
-        shape         = gears.shape.rounded_rect,
+        shape         = gears.shape.octogon,
         border_width  = 2,
         border_color  = fg_green,
         ontop         = true,
@@ -235,7 +235,7 @@ local prompt_popup = awful.popup {
     bg      = bg_popup,
     border_color = fg_green,
     border_width = 2,
-    shape   = gears.shape.rounded_rect,
+    shape   = gears.shape.octogon,
     minimum_width = 320,
     placement = function(w)
         awful.placement.top_right(w, {

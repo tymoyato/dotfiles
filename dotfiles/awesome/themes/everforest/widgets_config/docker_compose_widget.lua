@@ -47,7 +47,7 @@ refresh_label()
 local docker_compose_widget = wibox.container.background(
     wibox.container.margin(label, 2, 2),
     bg_widget,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 docker.subscribe(function(data)
@@ -127,7 +127,7 @@ local function action_btn(lbl, color, bg, project_name, action)
                 markup = string.format('<span font="Meslo LGS Regular 10" color="%s">%s</span>', color, lbl),
                 widget = wibox.widget.textbox,
             }, 5, 5, 1, 1),
-        bg, gears.shape.rounded_rect)
+        bg, gears.shape.octogon)
     btn:connect_signal("mouse::enter", function() btn.bg = "#4a5e53" end)
     btn:connect_signal("mouse::leave", function() btn.bg = bg end)
     btn:connect_signal("button::press", function()
@@ -211,7 +211,7 @@ local function show_popup()
         placement = function(w)
             awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
         end,
-        shape = gears.shape.rounded_rect, border_width = 2, border_color = fg_green,
+        shape = gears.shape.octogon, border_width = 2, border_color = fg_green,
         ontop = true, visible = true, minimum_width = 380, maximum_width = 580,
     }
     popup:connect_signal("mouse::enter", function() cancel_close() end)

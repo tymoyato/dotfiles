@@ -78,7 +78,7 @@ refresh_label()
 local rss_widget = wibox.container.background(
     wibox.container.margin(rss_label, 2, 2),
     bg_widget,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 -- ── Python script written to disk for reliable execution ───────────
@@ -316,7 +316,7 @@ local function show_popup()
                 margins        = { top = 18, right = 0 },
             })
         end,
-        shape         = gears.shape.rounded_rect,
+        shape         = gears.shape.octogon,
         border_width  = 2,
         border_color  = fg_green,
         ontop         = true,
@@ -359,7 +359,7 @@ rss_widget:buttons(awful.util.table.join(
                 8, 8, 3, 3
             ),
             "#374247",
-            gears.shape.rounded_rect
+            gears.shape.octogon
         )
 
         local no_btn = wibox.container.background(
@@ -371,7 +371,7 @@ rss_widget:buttons(awful.util.table.join(
                 8, 8, 3, 3
             ),
             "#374247",
-            gears.shape.rounded_rect
+            gears.shape.octogon
         )
 
         yes_btn:connect_signal("button::press", function()
@@ -423,7 +423,7 @@ rss_widget:buttons(awful.util.table.join(
                     margins        = { top = 18, right = 0 },
                 })
             end,
-            shape        = gears.shape.rounded_rect,
+            shape        = gears.shape.octogon,
             border_width = 2,
             border_color = fg_green,
             bg           = bg_popup,

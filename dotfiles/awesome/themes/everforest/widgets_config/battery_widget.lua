@@ -65,7 +65,7 @@ battery_widget = wibox.container.background(
 		2, 4
 	),
 	"#000000",
-	gears.shape.rounded_rect
+	gears.shape.octogon
 )
 battery_widget.visible = false
 bat.update()

@@ -204,7 +204,7 @@ function theme.connect(s)
             wibox.container.background(
                 wibox.container.margin(_net_speed_widget_mod(), 2, 2),
                 "#000000",
-                gears.shape.rounded_rect
+                gears.shape.octogon
             ),
             wibox.widget.textbox(" "),
             brightness_widget,
@@ -262,7 +262,7 @@ function theme.connect(s)
                     2, 2
                 ),
                 "#000000",
-                gears.shape.rounded_rect
+                gears.shape.octogon
             ),
             wibox.widget.textbox(" "),
         },

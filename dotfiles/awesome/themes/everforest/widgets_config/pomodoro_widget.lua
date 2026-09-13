@@ -105,7 +105,7 @@ local margin = wibox.container.margin(label, 2, 2)
 local pomodoro_widget = wibox.container.background(
     margin,
     bg_widget,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 pomodoro_widget:buttons(awful.util.table.join(

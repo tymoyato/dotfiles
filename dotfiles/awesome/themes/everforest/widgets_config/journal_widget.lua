@@ -34,7 +34,7 @@ local journal_label = wibox.widget {
 local journal_widget = wibox.container.background(
     wibox.container.margin(journal_label, 2, 2),
     bg_ok,
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 local function refresh_label()
@@ -144,7 +144,7 @@ local function show_popup()
         placement = function(w)
             awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
         end,
-        shape        = gears.shape.rounded_rect,
+        shape        = gears.shape.octogon,
         border_width = 2,
         border_color = #errors > 0 and fg_red or fg_green,
         ontop        = true,

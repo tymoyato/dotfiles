@@ -33,7 +33,7 @@ local temp = lain.widget.temp({
 local temp_widget = wibox.container.background(
     wibox.container.margin(temp.widget, 2, 2),
     "#000000",
-    gears.shape.rounded_rect
+    gears.shape.octogon
 )
 
 return temp_widget
