@@ -6,7 +6,7 @@ local docker = require("themes.everforest.widgets_config.shared_docker")
 
 local bg_widget = "#000000"
 local bg_popup  = "#000000"
-local bg_row    = "#374247"
+local bg_row    = "#000000"
 local fg_color  = "#D3C6AA"
 local fg_green  = "#A7C080"
 local fg_yellow = "#DBBC7F"
