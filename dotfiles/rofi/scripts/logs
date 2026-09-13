@@ -10,6 +10,4 @@ chosen=$(echo "$services" \
     | rofi -dmenu -p "logs" -config ~/.config/rofi/config.rasi)
 [ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
 
-kitty --title "logs: $chosen" bash -c "
-    journalctl -u '$chosen' -f --no-pager -n 50
-" &
+kitty --title "logs: $chosen" journalctl -u "$chosen" -f --no-pager -n 50 &

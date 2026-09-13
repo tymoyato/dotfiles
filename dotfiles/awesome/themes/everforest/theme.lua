@@ -198,9 +198,10 @@ function theme.connect(s)
         },
         { -- Right
             layout = wibox.layout.fixed.horizontal,
-            claude_usage_widget,
             wibox.widget.textbox(" "),
             music_widget,
+            wibox.widget.textbox(" "),
+            claude_usage_widget,
             wibox.widget.textbox(" "),
             wibox.container.background(
                 wibox.container.margin(_net_speed_widget_mod(), 2, 2),

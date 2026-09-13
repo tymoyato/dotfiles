@@ -8,7 +8,7 @@ fi
 
 PRESETS_DIR="$HOME/.local/share/easyeffects/output"
 
-chosen=$(printf "open gui\ntoggle\n$(ls "$PRESETS_DIR" 2>/dev/null | sed 's/\.json$//')" \
+chosen=$(printf '%s\n' "open gui" "toggle" "$(ls "$PRESETS_DIR" 2>/dev/null | sed 's/\.json$//')" \
     | rofi -dmenu -p "easyeffects" -config ~/.config/rofi/config.rasi)
 
 [ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"

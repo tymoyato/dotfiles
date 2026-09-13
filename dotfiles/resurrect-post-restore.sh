@@ -5,15 +5,14 @@
 wait_for_shell() {
   local target="$1"
   local timeout="${2:-10}"
-  local elapsed=0
+  local start=$SECONDS
 
-  while [ "$elapsed" -lt "$timeout" ]; do
+  while (( SECONDS - start < timeout )); do
     pane_cmd=$(tmux display-message -t "$target" -p '#{pane_current_command}' 2>/dev/null)
     if [[ "$pane_cmd" == "bash" || "$pane_cmd" == "zsh" || "$pane_cmd" == "fish" ]]; then
       return 0
     fi
     sleep 0.2
-    elapsed=$((elapsed + 1))
   done
   return 1
 }

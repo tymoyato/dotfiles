@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
 SCRIPTS_DIR="$HOME/.config/rofi/scripts"
+KNOWN_ENTRIES="powermenu clipboard emoji snippets wifi bluetooth projects ssh media strawberry easyeffects wallpaper calc bookmarks docker tmux search tabs speedtest translate logs port"
 
 if [ -n "$1" ]; then
+    case " $KNOWN_ENTRIES " in
+        *" $1 "*) ;;
+        *) exit 1 ;;
+    esac
     case "$1" in
         powermenu) script="system_prompt" ;;
         *)         script="$1" ;;

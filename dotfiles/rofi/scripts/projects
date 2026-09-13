@@ -11,7 +11,7 @@ PROJECT_DIRS=(
 
 projects=$(find "${PROJECT_DIRS[@]}" -maxdepth 3 -name ".git" -type d 2>/dev/null \
     | sed 's|/.git||' \
-    | sort)
+    | sort -u)
 
 [ -z "$projects" ] && rofi -e "No git projects found" && exit 1
 

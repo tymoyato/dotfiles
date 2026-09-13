@@ -8,7 +8,7 @@ fi
 
 langs="en\nfr\nes\nde\nit\npt\nzh\nja\nar\nru"
 
-target=$(printf "$langs" \
+target=$(printf '%b' "$langs" \
     | rofi -dmenu -p "translate to" -config ~/.config/rofi/config.rasi)
 [ -z "$target" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
 

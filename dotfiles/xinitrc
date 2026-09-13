@@ -7,6 +7,6 @@ xrandr --output DP-2 --mode 1920x1080 --rate 239.76 --primary
 systemctl --user import-environment DISPLAY XAUTHORITY DBUS_SESSION_BUS_ADDRESS
 dbus-update-activation-environment DISPLAY XAUTHORITY DBUS_SESSION_BUS_ADDRESS
 
-exec dbus-run-session awesome
-
 nvidia-settings -a "CurrentMetaMode=DPY-3: 1920x1080_240 @1920x1080 +0+0 {ViewPortIn=1920x1080, ViewPortOut=1920x1080+0+0, ForceCompositionPipeline=On}"
+
+exec dbus-run-session awesome

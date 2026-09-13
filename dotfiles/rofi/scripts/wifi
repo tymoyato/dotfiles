@@ -3,18 +3,24 @@
 
 connected=$(nmcli -t -f active,ssid dev wifi | grep "^yes" | cut -d: -f2)
 
-options=$(nmcli -f SSID,SIGNAL,SECURITY dev wifi list --rescan no 2>/dev/null \
-    | tail -n +2 \
-    | awk '{printf "%-35s %s%% %s\n", $1, $2, $3}' \
-    | sort -t'%' -k1 -rn)
+options=$(nmcli -t -f SSID,SIGNAL,SECURITY dev wifi list --rescan no 2>/dev/null \
+    | awk -F: '{
+        security = $NF
+        signal = $(NF-1)
+        ssid = $1
+        for (i = 2; i <= NF-2; i++) ssid = ssid ":" $i
+        printf "%s\t%s%%\t%s\n", ssid, signal, security
+    }' \
+    | sort -t$'\t' -k2 -rn)
 
-chosen=$(printf "disconnect\n%s" "$options" \
-    | rofi -dmenu -p "wifi [${connected:-none}]" -config ~/.config/rofi/config.rasi \
-    | awk '{print $1}')
+chosen_line=$(printf "disconnect\n%s" "$options" \
+    | rofi -dmenu -p "wifi [${connected:-none}]" -config ~/.config/rofi/config.rasi)
 
-[ -z "$chosen" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+[ -z "$chosen_line" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
+
+chosen=$(printf '%s' "$chosen_line" | cut -f1)
 
 case "$chosen" in
-    disconnect) nmcli device disconnect wlan0 ;;
+    disconnect) nmcli device disconnect "$(nmcli -t -f DEVICE,TYPE device | awk -F: '$2=="wifi"{print $1; exit}')" ;;
     *)          nmcli device wifi connect "$chosen" ;;
 esac

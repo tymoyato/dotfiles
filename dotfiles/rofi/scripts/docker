@@ -27,5 +27,5 @@ case "$action" in
     "logs")       kitty --hold docker logs --tail 100 -f "$name" &;;
     "stop")       docker stop "$name" &;;
     "restart")    docker restart "$name" &;;
-    "inspect")    kitty --hold sh -c "docker inspect $name | less" &;;
+    "inspect")    kitty --hold sh -c 'docker inspect "$1" | less' _ "$name" &;;
 esac
