@@ -243,8 +243,6 @@ function theme.connect(s)
             clock_widget,
             wibox.widget.textbox(" "),
             kbd_widget,
-            wibox.widget.textbox(" "),
-            s.mylayoutbox,
         },
     })
 
