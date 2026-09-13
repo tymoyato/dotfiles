@@ -14,7 +14,7 @@ local clock_widget = wibox.container.background(
 )
 
 -- Everforest colors
-local everforest_bg = "#2D353B"
+local everforest_bg = "#000000"
 local everforest_green = "#A7C080"
 local everforest_fg = "#D3C6AA"
 local everforest_bg_green = "#425047"
@@ -24,8 +24,7 @@ local cal_popup = calendar_popup({
 	start_sunday = false,
 	spacing = 10,
 	style_month = {
-		border_width = 2,
-		border_color = everforest_green,
+		border_width = 0,
 		padding = 8,
 		bg_color = everforest_bg,
 		fg_color = everforest_fg,

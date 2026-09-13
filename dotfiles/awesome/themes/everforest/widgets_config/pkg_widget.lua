@@ -8,7 +8,7 @@ local naughty = require("naughty")
 
 -- Everforest colors
 local bg_widget = "#000000"
-local bg_popup  = "#2D353B"
+local bg_popup  = "#000000"
 local bg_row    = "#374247"
 local fg_color  = "#D3C6AA"
 local fg_green  = "#A7C080"
@@ -162,12 +162,12 @@ local function show_detail(pkg)
                             },
                             6, 6, 2, 2
                         ),
-                        "#232A2E"
+                        "#000000"
                     )
                     if is_url then
                         local url = trimmed
                         row:connect_signal("mouse::enter", function() row.bg = "#2e3e43" end)
-                        row:connect_signal("mouse::leave", function() row.bg = "#232A2E" end)
+                        row:connect_signal("mouse::leave", function() row.bg = "#000000" end)
                         row:connect_signal("button::press", function(_, _, _, btn)
                             if btn == 1 then
                                 awful.spawn("xdg-open " .. url)
@@ -196,7 +196,7 @@ local function show_detail(pkg)
             detail_popup = awful.popup {
                 widget = {
                     rows,
-                    bg     = "#232A2E",
+                    bg     = "#000000",
                     widget = wibox.container.background,
                 },
                 placement = function(w)
@@ -206,8 +206,7 @@ local function show_detail(pkg)
                     })
                 end,
                 shape        = gears.shape.octogon,
-                border_width = 2,
-                border_color = fg_green,
+                border_width = 0,
                 ontop        = true,
                 visible      = true,
                 minimum_width = 260,
@@ -330,8 +329,7 @@ local function show_popup()
             })
         end,
         shape         = gears.shape.octogon,
-        border_width  = 2,
-        border_color  = fg_green,
+        border_width  = 0,
         ontop         = true,
         visible       = true,
         minimum_width = 300,
@@ -447,8 +445,7 @@ pkg_widget:buttons(gears.table.join(
                 })
             end,
             shape        = gears.shape.octogon,
-            border_width = 2,
-            border_color = fg_green,
+            border_width = 0,
             bg           = bg_popup,
             ontop        = true,
             visible      = true,

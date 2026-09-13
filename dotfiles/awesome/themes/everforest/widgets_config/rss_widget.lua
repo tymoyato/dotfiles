@@ -20,7 +20,7 @@ local READ_FILE        = os.getenv("HOME") .. "/.config/awesome/rss_read.txt"
 
 -- ── Everforest colors ──────────────────────────────────────────────
 local bg_widget = "#425047"
-local bg_popup  = "#2D353B"
+local bg_popup  = "#000000"
 local bg_row    = "#374247"
 local bg_read   = "#2D353B"
 local fg_color  = "#D3C6AA"
@@ -317,8 +317,7 @@ local function show_popup()
             })
         end,
         shape         = gears.shape.octogon,
-        border_width  = 2,
-        border_color  = fg_green,
+        border_width  = 0,
         ontop         = true,
         visible       = true,
         minimum_width = 340,
@@ -424,8 +423,7 @@ rss_widget:buttons(awful.util.table.join(
                 })
             end,
             shape        = gears.shape.octogon,
-            border_width = 2,
-            border_color = fg_green,
+            border_width = 0,
             bg           = bg_popup,
             ontop        = true,
             visible      = true,

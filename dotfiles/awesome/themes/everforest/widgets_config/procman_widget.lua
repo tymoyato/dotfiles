@@ -7,7 +7,7 @@ local gears  = require("gears")
 
 -- Everforest colors
 local bg_widget  = "#000000"
-local bg_popup   = "#2D353B"
+local bg_popup   = "#000000"
 local bg_row     = "#374247"
 local bg_header  = "#3D484D"
 local fg_color   = "#D3C6AA"
@@ -122,8 +122,7 @@ local function show_confirm(pid, name, anchor_widget)
             })
         end,
         shape        = gears.shape.octogon,
-        border_width = 2,
-        border_color = fg_red,
+        border_width = 0,
         ontop        = true,
         visible      = true,
         bg           = bg_popup,
@@ -265,8 +264,7 @@ function show_popup()
             })
         end,
         shape         = gears.shape.octogon,
-        border_width  = 2,
-        border_color  = fg_green,
+        border_width  = 0,
         ontop         = true,
         visible       = true,
         minimum_width = 280,

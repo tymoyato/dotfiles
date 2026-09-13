@@ -11,7 +11,7 @@ local naughty = require("naughty")
 
 local bg_ok     = "#000000"
 local bg_err    = "#514045"
-local bg_popup  = "#2D353B"
+local bg_popup  = "#000000"
 local bg_row    = "#374247"
 local fg_color  = "#D3C6AA"
 local fg_green  = "#A7C080"
@@ -25,6 +25,15 @@ local popup  = nil
 
 local function close_popup()
     if popup then popup.visible = false; popup = nil end
+end
+
+local function copy_to_clipboard(text)
+    local p = io.popen("xclip -selection clipboard", "w")
+    if p then
+        p:write(text)
+        p:close()
+        naughty.notify({ title = "Copied", text = "Copied to clipboard", timeout = 2, silent = true })
+    end
 end
 
 local journal_label = wibox.widget {
@@ -103,7 +112,7 @@ local function show_popup()
         for i = #errors, 1, -1 do
             local e = errors[i]
             local msg = #e.msg > 60 and (e.msg:sub(1, 57) .. "…") or e.msg
-            rows:add(wibox.container.background(
+            local row = wibox.container.background(
                 wibox.container.margin(
                     wibox.widget {
                         markup = markup.font(theme.font,
@@ -113,7 +122,13 @@ local function show_popup()
                         widget = wibox.widget.textbox,
                     }, 6, 6, 3, 3
                 ), bg_row
-            ))
+            )
+            row:connect_signal("mouse::enter", function() row.bg = "#4a5e53" end)
+            row:connect_signal("mouse::leave", function() row.bg = bg_row end)
+            row:connect_signal("button::press", function()
+                copy_to_clipboard(e.time .. "  " .. e.msg)
+            end)
+            rows:add(row)
         end
     end
 
@@ -145,8 +160,7 @@ local function show_popup()
             awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
         end,
         shape        = gears.shape.octogon,
-        border_width = 2,
-        border_color = #errors > 0 and fg_red or fg_green,
+        border_width = 0,
         ontop        = true,
         visible      = true,
         minimum_width = 300,

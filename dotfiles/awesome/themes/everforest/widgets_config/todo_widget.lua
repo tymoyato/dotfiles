@@ -9,7 +9,7 @@ local gears  = require("gears")
 
 -- Everforest colors
 local bg_widget  = "#000000"
-local bg_popup   = "#2D353B"
+local bg_popup   = "#000000"
 local bg_row     = "#374247"
 local bg_done    = "#2D353B"
 local fg_color   = "#D3C6AA"
@@ -216,8 +216,7 @@ local function show_popup()
             })
         end,
         shape         = gears.shape.octogon,
-        border_width  = 2,
-        border_color  = fg_green,
+        border_width  = 0,
         ontop         = true,
         visible       = true,
         minimum_width = 240,
@@ -233,8 +232,7 @@ local prompt_popup = awful.popup {
     visible = false,
     ontop   = true,
     bg      = bg_popup,
-    border_color = fg_green,
-    border_width = 2,
+    border_width = 0,
     shape   = gears.shape.octogon,
     minimum_width = 320,
     placement = function(w)

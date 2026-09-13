@@ -8,7 +8,7 @@ local naughty = require("naughty")
 
 -- Everforest colors
 local bg_widget  = "#000000"
-local bg_popup   = "#2D353B"
+local bg_popup   = "#000000"
 local bg_latest  = "#374247"
 local fg_color   = "#D3C6AA"
 local fg_green   = "#A7C080"
@@ -39,6 +39,15 @@ local function close_popup()
     if popup then
         popup.visible = false
         popup = nil
+    end
+end
+
+local function copy_to_clipboard(text)
+    local p = io.popen("xclip -selection clipboard", "w")
+    if p then
+        p:write(text)
+        p:close()
+        naughty.notify({ title = "Copied", text = "Copied to clipboard", timeout = 2, silent = true })
     end
 end
 
@@ -107,7 +116,7 @@ local function show_popup()
             local msg    = (n.title ~= "" and (n.title .. ": ") or "") .. n.message
             local row_bg = (i == #history) and bg_latest or bg_popup
 
-            rows:add(wibox.container.background(
+            local row = wibox.container.background(
                 wibox.container.margin(
                     wibox.widget {
                         markup = string.format(
@@ -122,7 +131,13 @@ local function show_popup()
                     6, 6, 4, 4
                 ),
                 row_bg
-            ))
+            )
+            row:connect_signal("mouse::enter", function() row.bg = "#4a5e53" end)
+            row:connect_signal("mouse::leave", function() row.bg = row_bg end)
+            row:connect_signal("button::press", function()
+                copy_to_clipboard(n.time .. "  " .. msg)
+            end)
+            rows:add(row)
         end
     end
 
@@ -139,8 +154,7 @@ local function show_popup()
             })
         end,
         shape        = gears.shape.octogon,
-        border_width = 2,
-        border_color = fg_green,
+        border_width = 0,
         ontop        = true,
         visible      = true,
         minimum_width = 200,
@@ -229,8 +243,7 @@ notif_widget:buttons(gears.table.join(
                 })
             end,
             shape        = gears.shape.octogon,
-            border_width = 2,
-            border_color = fg_green,
+            border_width = 0,
             bg           = bg_popup,
             ontop        = true,
             visible      = true,

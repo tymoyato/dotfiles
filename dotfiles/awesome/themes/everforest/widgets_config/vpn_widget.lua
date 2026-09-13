@@ -11,7 +11,7 @@ local markup = lain.util.markup
 local bg_widget  = "#000000"
 local bg_vpn_on  = "#374247"
 local bg_vpn_off = "#514045"
-local bg_popup   = "#2D353B"
+local bg_popup   = "#000000"
 local fg_color   = "#D3C6AA"
 local fg_green   = "#A7C080"
 local fg_red     = "#E67E80"
@@ -140,8 +140,7 @@ local function show_popup()
             awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
         end,
         shape        = gears.shape.octogon,
-        border_width = 2,
-        border_color = is_vpn and fg_green or fg_red,
+        border_width = 0,
         ontop         = true,
         visible       = true,
         minimum_width = 160,

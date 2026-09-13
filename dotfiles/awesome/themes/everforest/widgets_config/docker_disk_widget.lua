@@ -9,7 +9,7 @@ local naughty = require("naughty")
 local docker  = require("themes.everforest.widgets_config.shared_docker")
 
 local bg_widget = "#000000"
-local bg_popup  = "#2D353B"
+local bg_popup  = "#000000"
 local bg_row    = "#374247"
 local fg_color  = "#D3C6AA"
 local fg_green  = "#A7C080"
@@ -180,8 +180,7 @@ local function show_prune_confirm()
             awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
         end,
         shape        = gears.shape.octogon,
-        border_width = 2,
-        border_color = fg_red,
+        border_width = 0,
         ontop        = true,
         visible      = true,
         bg           = bg_popup,
@@ -282,8 +281,7 @@ local function show_popup()
             awful.placement.top_right(w, { honor_workarea = true, margins = { top = 18, right = 0 } })
         end,
         shape         = gears.shape.octogon,
-        border_width  = 2,
-        border_color  = fg_green,
+        border_width  = 0,
         ontop         = true,
         visible       = true,
         minimum_width = 440,
