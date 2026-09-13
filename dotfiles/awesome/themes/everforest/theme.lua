@@ -30,7 +30,8 @@ theme.taglist_bg_empty = "#000000"
 theme.taglist_fg_empty = "#859289"      -- grey1
 theme.taglist_bg_urgent = "#000000"
 theme.taglist_fg_urgent = "#E67E80"     -- red
-theme.taglist_shape = gears.shape.rounded_rect
+theme.taglist_shape = gears.shape.octogon
+theme.taglist_spacing = 1
 
 -- Tasklist colors
 theme.tasklist_bg_normal = "#2D353B"    -- bg0
@@ -220,7 +221,6 @@ function theme.connect(s)
             mem_widget,
             wibox.widget.textbox(" "),
             battery_widget,
-            wibox.widget.textbox(" "),
             crypto_widget,
             wibox.widget.textbox(" "),
             todo_widget,
