@@ -146,8 +146,42 @@ local cpu_graph_widget = require("themes.everforest.widgets_config.cpu_graph_wid
 local vpn_widget       = require("themes.everforest.widgets_config.vpn_widget")
 local display_widget   = require("themes.everforest.widgets_config.display_widget")
 local journal_widget   = require("themes.everforest.widgets_config.journal_widget")
+local widget_manager    = require("themes.everforest.widgets_config.widget_manager")
 
 local _net_speed_widget_mod = require("widgets.net_speed_widget.net_speed")
+local net_speed_widget = wibox.container.background(
+    wibox.container.margin(_net_speed_widget_mod(), 2, 2),
+    "#000000",
+    gears.shape.octogon
+)
+
+-- Registry for the widget manager popup (left-click 🧩 to toggle any of these)
+widget_manager.register("music", music_widget)
+widget_manager.register("claude usage", claude_usage_widget)
+widget_manager.register("net speed", net_speed_widget)
+widget_manager.register("brightness", brightness_widget)
+widget_manager.register("volume", volume_widget)
+widget_manager.register("disk", disk_widget)
+widget_manager.register("temp", temp_widget)
+widget_manager.register("cpu", cpu_graph_widget)
+widget_manager.register("mem", mem_widget)
+widget_manager.register("battery", battery_widget)
+widget_manager.register("crypto", crypto_widget)
+widget_manager.register("todo", todo_widget)
+widget_manager.register("pomodoro", pomodoro_widget)
+widget_manager.register("pkg updates", pkg_widget)
+widget_manager.register("procman", procman_widget)
+widget_manager.register("journal", journal_widget)
+widget_manager.register("vpn", vpn_widget)
+widget_manager.register("display", display_widget)
+widget_manager.register("notifications", notif_widget)
+widget_manager.register("clock", clock_widget)
+widget_manager.register("keyboard layout", kbd_widget)
+widget_manager.register("docker containers", docker_containers_widget)
+widget_manager.register("docker resources", docker_resources_widget)
+widget_manager.register("docker health", docker_health_widget)
+widget_manager.register("docker compose", docker_compose_widget)
+widget_manager.register("docker disk", docker_disk_widget)
 
 function theme.connect(s)
     -- Quake application
@@ -203,11 +237,7 @@ function theme.connect(s)
             wibox.widget.textbox(" "),
             claude_usage_widget,
             wibox.widget.textbox(" "),
-            wibox.container.background(
-                wibox.container.margin(_net_speed_widget_mod(), 2, 2),
-                "#000000",
-                gears.shape.octogon
-            ),
+            net_speed_widget,
             wibox.widget.textbox(" "),
             brightness_widget,
             wibox.widget.textbox(" "),
@@ -243,6 +273,8 @@ function theme.connect(s)
             clock_widget,
             wibox.widget.textbox(" "),
             kbd_widget,
+            wibox.widget.textbox(" "),
+            widget_manager.widget,
         },
     })
 
