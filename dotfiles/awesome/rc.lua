@@ -15,10 +15,10 @@
 --
 -- [Launcher]
 --   MODKEY + Return                   open terminal
---   MODKEY + p                        rofi (app launcher)
---   MODKEY + a                        rofi (window switcher)
+--   MODKEY + p                        app launcher
+--   MODKEY + a                        window switcher
 --   MODKEY + o                        flameshot (screenshot)
---   MODKEY + d                        dmenu
+--   MODKEY + d                        run menu
 --
 -- [Tags]
 --   MODKEY + [1-9]                    view tag
@@ -291,6 +291,7 @@ local is_normal_restart = file_exists("/tmp/awesome_normal_restart")
 local is_any_restart    = is_theme_switch or is_normal_restart
 
 TERMINAL = "kitty"
+local launcher = require("utils.launcher")
 local editor = os.getenv("EDITOR") or "editor"
 local quake_terminal = lain.util.quake({
 	app = TERMINAL,
@@ -616,11 +617,11 @@ GLOBALKEYS = gears.table.join(
 	-- awful.key({ MODKEY }, "o", function() menubar.show() end,
 	--           {description = "show the menubar", group = "launcher"}),
 	awful.key({ MODKEY }, "p", function()
-		awful.util.spawn(string.format("rofi -show combi -modes 'combi,window' -config ~/.config/rofi/config.rasi"))
-	end, { description = "launch rofi (drun)", group = "launcher" }),
+		launcher.show_apps()
+	end, { description = "launch app launcher", group = "launcher" }),
 	awful.key({ MODKEY }, "a", function()
-		awful.util.spawn(string.format("rofi -show window -modes 'drun,window' -config ~/.config/rofi/config.rasi"))
-	end, { description = "launch rofi (window switcher)", group = "launcher" }),
+		launcher.show_windows()
+	end, { description = "launch window switcher", group = "launcher" }),
 
 	-- Theme switching
 	awful.key({ MODKEY }, "t", function()
@@ -630,8 +631,8 @@ GLOBALKEYS = gears.table.join(
 	-- awful.key({ MODKEY }, "o", function () scratch.drop("kitty", "bottom", "left", 0.60, 0.60, true, mouse.screen) end),
 	-- Custom
 	awful.key({ MODKEY }, "d", function()
-		awful.spawn("dmenu_run")
-	end, { description = "launch dmenu", group = "launcher" }),
+		launcher.show_run()
+	end, { description = "launch run menu", group = "launcher" }),
 	awful.key({ MODKEY, "Shift" }, "o", function()
 		awful.spawn("flameshot gui")
 	end, { description = "start flameshot", group = "launcher" }),

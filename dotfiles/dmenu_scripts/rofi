@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Drop-in `rofi` shim: routes calls into the native awesome launcher
+# (awesome/utils/launcher.lua) instead of spawning real rofi.
+#
+# rofi/scripts/* and rofi/config.rasi are untouched — this only
+# intercepts the `rofi` command itself, which those scripts still call
+# normally (-dmenu, -e, -show combi). Requires ~/.local/bin to come
+# before /usr/bin in PATH (it already does — set up by symlink.sh).
+
+mode="dmenu"
+prompt=""
+filter=""
+message=""
+
+args=("$@")
+i=0
+while [ "$i" -lt "${#args[@]}" ]; do
+	case "${args[$i]}" in
+		-dmenu) mode="dmenu" ;;
+		-show)
+			i=$((i + 1))
+			mode="${args[$i]}"
+			;;
+		-p)
+			i=$((i + 1))
+			prompt="${args[$i]}"
+			;;
+		-filter)
+			i=$((i + 1))
+			filter="${args[$i]}"
+			;;
+		-e)
+			i=$((i + 1))
+			message="${args[$i]}"
+			mode="message"
+			;;
+		-modes | -combi-modes | -config)
+			i=$((i + 1)) # consume value, ignore
+			;;
+	esac
+	i=$((i + 1))
+done
+
+lua_str() {
+	# Single-quote a Lua string literal, escaping ' and \.
+	printf "%s" "$1" | sed "s/\\\\/\\\\\\\\/g; s/'/\\\\'/g"
+}
+
+case "$mode" in
+message)
+	awesome-client "require('utils.launcher').show_message('$(lua_str "$message")')" >/dev/null 2>&1
+	;;
+window)
+	awesome-client "require('utils.launcher').show_windows()" >/dev/null 2>&1
+	;;
+combi | drun)
+	awesome-client "require('utils.launcher').show_apps('$(lua_str "$filter")')" >/dev/null 2>&1
+	;;
+dmenu)
+	req=$(mktemp /tmp/rofi-shim-items.XXXXXX)
+	resp=$(mktemp /tmp/rofi-shim-resp.XXXXXX)
+	cat >"$req"
+
+	awesome-client "require('utils.launcher').show_dmenu('$(lua_str "$req")', '$(lua_str "$resp")', '$(lua_str "$prompt")')" >/dev/null 2>&1
+
+	waited=0
+	while [ ! -e "$resp.done" ] && [ "$waited" -lt 72000 ]; do
+		sleep 0.05
+		waited=$((waited + 1))
+	done
+	cat "$resp" 2>/dev/null
+	rm -f "$req" "$resp" "$resp.done"
+	;;
+esac
