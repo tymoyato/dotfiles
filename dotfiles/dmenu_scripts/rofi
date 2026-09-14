@@ -42,8 +42,12 @@ while [ "$i" -lt "${#args[@]}" ]; do
 done
 
 lua_str() {
-	# Single-quote a Lua string literal, escaping ' and \.
-	printf "%s" "$1" | sed "s/\\\\/\\\\\\\\/g; s/'/\\\\'/g"
+	# Single-quote a Lua string literal, escaping \, ' and real newlines
+	# (a Lua short string can't contain a raw newline byte — messages like
+	# translate's "text → result\n\n(copied)" are multi-line).
+	local s
+	s=$(printf "%s" "$1" | sed "s/\\\\/\\\\\\\\/g; s/'/\\\\'/g")
+	printf "%s" "${s//$'\n'/\\n}"
 }
 
 case "$mode" in

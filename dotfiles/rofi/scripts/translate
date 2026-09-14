@@ -20,5 +20,5 @@ result=$(trans -b ":${target}" "$text" 2>/dev/null)
 
 echo "$result" | xclip -selection clipboard 2>/dev/null || true
 
-rofi -e "$(printf '%s\n\n(copied to clipboard)' "$result")" \
+rofi -e "$(printf '%s → %s\n\n(copied to clipboard)' "$text" "$result")" \
     -config ~/.config/rofi/config.rasi
