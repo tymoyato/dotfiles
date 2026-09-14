@@ -37,6 +37,13 @@ local shifted_symbols = {
 	greater = ">", question = "?", asciitilde = "~", backslash = "\\",
 }
 
+-- Async so a stuck/empty clipboard can never stall the event loop.
+local function paste_clipboard(callback)
+	awful.spawn.easy_async({ "xclip", "-selection", "clipboard", "-o" }, function(stdout)
+		callback((stdout:gsub("\n$", "")))
+	end)
+end
+
 local function close()
 	if not state then return end
 	if state.grabber then awful.keygrabber.stop(state.grabber) end
@@ -198,8 +205,19 @@ local function build_ui()
 end
 
 local function open_grabber()
-	state.grabber = awful.keygrabber.run(function(_, key, event)
+	state.grabber = awful.keygrabber.run(function(mods, key, event)
 		if not state or event ~= "press" then return end
+
+		if gears.table.hasitem(mods, "Control") and (key == "v" or key == "V") then
+			paste_clipboard(function(text)
+				if not state then return end
+				state.query = state.query .. text
+				filter_items()
+				render()
+				render_input()
+			end)
+			return
+		end
 
 		if key == "Escape" then
 			if #state.query > 0 then
@@ -637,6 +655,14 @@ function M.show_translate(target, response_path)
 		end)
 	end
 
+	local function schedule_translate()
+		if translate_debounce then translate_debounce:stop() end
+		translate_debounce = gears.timer.start_new(0.35, function()
+			do_translate()
+			return false
+		end)
+	end
+
 	translate_popup = awful.popup {
 		widget = wibox.container.background(
 			wibox.widget {
@@ -661,8 +687,18 @@ function M.show_translate(target, response_path)
 	render_input()
 	render_result()
 
-	translate_grabber = awful.keygrabber.run(function(_, key, event)
+	translate_grabber = awful.keygrabber.run(function(mods, key, event)
 		if event ~= "press" then return end
+
+		if gears.table.hasitem(mods, "Control") and (key == "v" or key == "V") then
+			paste_clipboard(function(text)
+				if not translate_popup then return end
+				query = query .. text
+				render_input()
+				schedule_translate()
+			end)
+			return
+		end
 
 		if key == "Escape" then
 			if #query > 0 then
@@ -707,11 +743,7 @@ function M.show_translate(target, response_path)
 			render_input()
 			if query == "" then result_text = "" end
 			render_result()
-			if translate_debounce then translate_debounce:stop() end
-			translate_debounce = gears.timer.start_new(0.35, function()
-				do_translate()
-				return false
-			end)
+			schedule_translate()
 		end
 	end)
 end
