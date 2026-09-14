@@ -16,8 +16,13 @@ local fg_grey    = "#7A8478"
 local fg_red     = "#E67E80"
 local fg_yellow  = "#DBBC7F"
 
-local popup   = nil
-local confirm = nil  -- confirmation sub-popup
+local VISIBLE_ROWS = 10
+
+local popup         = nil
+local confirm       = nil  -- confirmation sub-popup
+local list_layout    = nil
+local unique_clients = nil
+local scroll_offset  = 0
 
 -- ── Label ──────────────────────────────────────────────────────────
 local procman_label = wibox.widget.textbox()
@@ -129,13 +134,112 @@ local function show_confirm(pid, name, anchor_widget)
     }
 end
 
+-- ── Row builder ────────────────────────────────────────────────────
+local function make_row(c)
+    local name = c.class or c.name or "Unknown"
+    -- Truncate long names
+    if #name > 40 then name = name:sub(1, 37) .. "..." end
+    local pid = c.pid
+
+    -- App name label
+    local name_label = wibox.widget {
+        markup = '<span font="Meslo LGS Regular 10" color="' .. fg_color .. '"> '
+            .. gears.string.xml_escape(name) .. ' </span>',
+        wrap   = "char",
+        widget = wibox.widget.textbox,
+    }
+
+    -- Kill button
+    local kill_btn = wibox.container.background(
+        wibox.container.margin(
+            wibox.widget {
+                markup = '<span font="Meslo LGS Regular 10" color="' .. fg_red .. '"> ✕ </span>',
+                widget = wibox.widget.textbox,
+            },
+            4, 4, 1, 1
+        ),
+        "#4a3030",
+        gears.shape.octogon
+    )
+    kill_btn:connect_signal("mouse::enter", function() kill_btn.bg = "#6b3030" end)
+    kill_btn:connect_signal("mouse::leave", function() kill_btn.bg = "#4a3030" end)
+
+    local captured_pid  = pid
+    local captured_name = name
+    kill_btn:connect_signal("button::press", function()
+        show_confirm(captured_pid, captured_name, kill_btn)
+    end)
+
+    local row = wibox.container.background(
+        wibox.container.margin(
+            wibox.widget {
+                name_label,
+                { layout = wibox.layout.flex.horizontal },  -- spacer
+                kill_btn,
+                layout = wibox.layout.align.horizontal,
+            },
+            4, 4, 1, 1
+        ),
+        bg_row
+    )
+    row:connect_signal("mouse::enter", function() row.bg = "#4a5e53" end)
+    row:connect_signal("mouse::leave", function() row.bg = bg_row end)
+
+    return row
+end
+
+local function fill_list()
+    list_layout:reset()
+    local total = #unique_clients
+    if total == 0 then
+        list_layout:add(wibox.widget {
+            {
+                markup = '<span font="Meslo LGS Regular 10" color="' .. fg_grey .. '"> No windows </span>',
+                widget = wibox.widget.textbox,
+            },
+            top = 4, bottom = 4, left = 6, right = 6,
+            widget = wibox.container.margin,
+        })
+        return
+    end
+
+    local last = math.min(scroll_offset + VISIBLE_ROWS, total)
+    for i = scroll_offset + 1, last do
+        list_layout:add(make_row(unique_clients[i]))
+    end
+    if total > VISIBLE_ROWS then
+        list_layout:add(wibox.widget {
+            {
+                markup = string.format(
+                    '<span font="Meslo LGS Regular 10" color="%s"> ↕ %d–%d of %d </span>',
+                    fg_grey, scroll_offset + 1, last, total
+                ),
+                widget = wibox.widget.textbox,
+            },
+            top = 2, bottom = 2, left = 6, right = 6,
+            widget = wibox.container.margin,
+        })
+    end
+end
+
 -- ── Main popup ─────────────────────────────────────────────────────
 function show_popup()
     close_popup()
+    scroll_offset = 0
 
-    -- Fetch running graphical processes: name + pid, sorted by name
-    -- We list windows tracked by the window manager (clients)
-    local clients = client.get()
+    -- Deduplicate by pid so we don't show multiple windows for same app
+    local seen_pids = {}
+    unique_clients = {}
+    for _, c in ipairs(client.get()) do
+        local pid = c.pid
+        if pid and not seen_pids[pid] then
+            seen_pids[pid] = true
+            table.insert(unique_clients, c)
+        elseif not pid then
+            -- No pid info, still show the window
+            table.insert(unique_clients, c)
+        end
+    end
 
     local rows = wibox.layout.fixed.vertical()
 
@@ -153,83 +257,9 @@ function show_popup()
         widget = wibox.widget.separator,
     })
 
-    if #clients == 0 then
-        rows:add(wibox.widget {
-            {
-                markup = '<span font="Meslo LGS Regular 10" color="' .. fg_grey .. '"> No windows </span>',
-                widget = wibox.widget.textbox,
-            },
-            top = 4, bottom = 4, left = 6, right = 6,
-            widget = wibox.container.margin,
-        })
-    else
-        -- Deduplicate by pid so we don't show multiple windows for same app
-        local seen_pids = {}
-        local unique_clients = {}
-        for _, c in ipairs(clients) do
-            local pid = c.pid
-            if pid and not seen_pids[pid] then
-                seen_pids[pid] = true
-                table.insert(unique_clients, c)
-            elseif not pid then
-                -- No pid info, still show the window
-                table.insert(unique_clients, c)
-            end
-        end
-
-        for _, c in ipairs(unique_clients) do
-            local name = c.class or c.name or "Unknown"
-            -- Truncate long names
-            if #name > 40 then name = name:sub(1, 37) .. "..." end
-            local pid  = c.pid
-
-            -- App name label
-            local name_label = wibox.widget {
-                markup = '<span font="Meslo LGS Regular 10" color="' .. fg_color .. '"> '
-                    .. gears.string.xml_escape(name) .. ' </span>',
-                wrap   = "char",
-                widget = wibox.widget.textbox,
-            }
-
-            -- Kill button
-            local kill_btn = wibox.container.background(
-                wibox.container.margin(
-                    wibox.widget {
-                        markup = '<span font="Meslo LGS Regular 10" color="' .. fg_red .. '"> ✕ </span>',
-                        widget = wibox.widget.textbox,
-                    },
-                    4, 4, 1, 1
-                ),
-                "#4a3030",
-                gears.shape.octogon
-            )
-            kill_btn:connect_signal("mouse::enter", function() kill_btn.bg = "#6b3030" end)
-            kill_btn:connect_signal("mouse::leave", function() kill_btn.bg = "#4a3030" end)
-
-            local captured_pid  = pid
-            local captured_name = name
-            kill_btn:connect_signal("button::press", function()
-                show_confirm(captured_pid, captured_name, kill_btn)
-            end)
-
-            local row = wibox.container.background(
-                wibox.container.margin(
-                    wibox.widget {
-                        name_label,
-                        { layout = wibox.layout.flex.horizontal },  -- spacer
-                        kill_btn,
-                        layout = wibox.layout.align.horizontal,
-                    },
-                    4, 4, 2, 2
-                ),
-                bg_row
-            )
-            row:connect_signal("mouse::enter", function() row.bg = "#4a5e53" end)
-            row:connect_signal("mouse::leave", function() row.bg = bg_row end)
-
-            rows:add(row)
-        end
-    end
+    list_layout = wibox.layout.fixed.vertical()
+    fill_list()
+    rows:add(list_layout)
 
     -- Refresh button at the bottom
     rows:add(wibox.widget {
@@ -267,9 +297,24 @@ function show_popup()
         border_width  = 0,
         ontop         = true,
         visible       = true,
-        minimum_width = 280,
-        maximum_width = 460,
+        minimum_width = 220,
+        maximum_width = 320,
     }
+
+    popup:buttons(gears.table.join(
+        awful.button({}, 4, function()
+            if scroll_offset > 0 then
+                scroll_offset = math.max(0, scroll_offset - 3)
+                fill_list()
+            end
+        end),
+        awful.button({}, 5, function()
+            if scroll_offset + VISIBLE_ROWS < #unique_clients then
+                scroll_offset = scroll_offset + 3
+                fill_list()
+            end
+        end)
+    ))
 
     popup:connect_signal("mouse::leave", function()
         -- Only close if confirm is also not open
