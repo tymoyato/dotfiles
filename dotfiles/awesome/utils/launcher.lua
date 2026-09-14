@@ -203,6 +203,13 @@ local function open_grabber()
 		if not state or event ~= "press" then return end
 
 		if key == "Escape" then
+			if #state.query > 0 then
+				state.query = ""
+				filter_items()
+				render()
+				render_input()
+				return
+			end
 			local on_cancel = state.opts.on_cancel
 			close()
 			if on_cancel then on_cancel() end
