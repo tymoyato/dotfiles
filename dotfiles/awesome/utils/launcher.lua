@@ -548,6 +548,174 @@ function M.show_message(text)
 	end)
 end
 
+-- ── live translate (used by rofi/scripts/translate) ────────────────
+-- Translates as you type instead of needing Enter first: input is
+-- debounced (350ms of no typing) then run through `trans`, result shown
+-- live under the input and copied to clipboard as it updates. Enter is
+-- only needed to close and hand the result back to the calling script.
+local translate_popup = nil
+local translate_grabber = nil
+local translate_debounce = nil
+
+local function close_translate()
+	if translate_grabber then
+		awful.keygrabber.stop(translate_grabber)
+		translate_grabber = nil
+	end
+	if translate_debounce then
+		translate_debounce:stop()
+		translate_debounce = nil
+	end
+	if translate_popup then
+		translate_popup.visible = false
+		translate_popup = nil
+	end
+end
+M.close_translate = close_translate
+
+local function copy_to_clipboard(text)
+	local p = io.popen("xclip -selection clipboard", "w")
+	if p then
+		p:write(text or "")
+		p:close()
+	end
+end
+
+function M.show_translate(target, response_path)
+	close_translate()
+	close()
+
+	local query = ""
+	local result_text = ""
+
+	local input_widget = wibox.widget.textbox()
+	local result_widget = wibox.widget.textbox()
+	result_widget.wrap = "word_char"
+
+	local function write_response(text)
+		local out = io.open(response_path, "w")
+		if out then
+			out:write(text or "")
+			out:close()
+		end
+		local marker = io.open(response_path .. ".done", "w")
+		if marker then marker:close() end
+	end
+
+	local function render_input()
+		local prompt_span = string.format('<span font="%s" color="%s">translate to %s: </span>',
+			font, fg_green, gears.string.xml_escape(target))
+		local query_span = string.format('<span font="%s" color="%s">%s</span>',
+			font, fg_color, gears.string.xml_escape(query))
+		local cursor_span = string.format('<span font="%s" color="%s">▏</span>', font, fg_green)
+		input_widget:set_markup(prompt_span .. query_span .. cursor_span)
+	end
+
+	local function render_result()
+		if query == "" then
+			result_widget:set_markup(string.format('<span font="%s" color="%s"> type to translate live </span>',
+				font, fg_grey))
+			return
+		end
+		local shown = result_text ~= "" and result_text or "…"
+		result_widget:set_markup(string.format('<span font="%s" color="%s">%s</span>',
+			font, fg_green, gears.string.xml_escape(shown)))
+	end
+
+	local function do_translate()
+		local my_query = query
+		if my_query == "" then
+			result_text = ""
+			render_result()
+			return
+		end
+		awful.spawn.easy_async({ "trans", "-b", ":" .. target, my_query }, function(stdout)
+			if my_query ~= query then return end -- stale, a newer request is in flight
+			result_text = stdout:gsub("%s+$", "")
+			render_result()
+			if result_text ~= "" then copy_to_clipboard(result_text) end
+		end)
+	end
+
+	translate_popup = awful.popup {
+		widget = wibox.container.background(
+			wibox.widget {
+				wibox.container.margin(input_widget, 10, 10, 8, 4),
+				wibox.widget { color = fg_grey, forced_height = 1, widget = wibox.widget.separator },
+				wibox.container.margin(result_widget, 10, 10, 8, 8),
+				layout = wibox.layout.fixed.vertical,
+			},
+			bg_popup
+		),
+		placement = function(w)
+			awful.placement.centered(w, { honor_workarea = true })
+		end,
+		shape         = gears.shape.octogon,
+		border_width  = 0,
+		ontop         = true,
+		visible       = true,
+		minimum_width = POPUP_WIDTH,
+		maximum_width = POPUP_WIDTH,
+	}
+
+	render_input()
+	render_result()
+
+	translate_grabber = awful.keygrabber.run(function(_, key, event)
+		if event ~= "press" then return end
+
+		if key == "Escape" then
+			if #query > 0 then
+				query = ""
+				result_text = ""
+				render_input()
+				render_result()
+				return
+			end
+			close_translate()
+			write_response("")
+			return
+		end
+
+		if key == "Return" or key == "KP_Enter" then
+			close_translate()
+			write_response(result_text)
+			return
+		end
+
+		local literal = nil
+		if key == "space" then
+			literal = " "
+		elseif #key == 1 then
+			literal = key
+		elseif shifted_symbols[key] then
+			literal = shifted_symbols[key]
+		end
+
+		local changed = false
+		if key == "BackSpace" then
+			if #query > 0 then
+				query = query:sub(1, -2)
+				changed = true
+			end
+		elseif literal then
+			query = query .. literal
+			changed = true
+		end
+
+		if changed then
+			render_input()
+			if query == "" then result_text = "" end
+			render_result()
+			if translate_debounce then translate_debounce:stop() end
+			translate_debounce = gears.timer.start_new(0.35, function()
+				do_translate()
+				return false
+			end)
+		end
+	end)
+end
+
 -- ── warm caches at startup, refresh periodically in the background ─
 build_app_cache()
 build_run_cache()

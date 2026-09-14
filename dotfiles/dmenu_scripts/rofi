@@ -11,6 +11,7 @@ mode="dmenu"
 prompt=""
 filter=""
 message=""
+translate_target=""
 
 args=("$@")
 i=0
@@ -33,6 +34,11 @@ while [ "$i" -lt "${#args[@]}" ]; do
 			i=$((i + 1))
 			message="${args[$i]}"
 			mode="message"
+			;;
+		--translate)
+			i=$((i + 1))
+			translate_target="${args[$i]}"
+			mode="translate"
 			;;
 		-modes | -combi-modes | -config)
 			i=$((i + 1)) # consume value, ignore
@@ -74,5 +80,18 @@ dmenu)
 	done
 	cat "$resp" 2>/dev/null
 	rm -f "$req" "$resp" "$resp.done"
+	;;
+translate)
+	resp=$(mktemp /tmp/rofi-shim-resp.XXXXXX)
+
+	awesome-client "require('utils.launcher').show_translate('$(lua_str "$translate_target")', '$(lua_str "$resp")')" >/dev/null 2>&1
+
+	waited=0
+	while [ ! -e "$resp.done" ] && [ "$waited" -lt 72000 ]; do
+		sleep 0.05
+		waited=$((waited + 1))
+	done
+	cat "$resp" 2>/dev/null
+	rm -f "$resp" "$resp.done"
 	;;
 esac

@@ -12,13 +12,6 @@ target=$(printf '%b' "$langs" \
     | rofi -dmenu -p "translate to" -config ~/.config/rofi/config.rasi)
 [ -z "$target" ] && exec rofi -show combi -config ~/.config/rofi/config.rasi -filter "${ROFI_PARENT_ITEM:-}"
 
-text=$(rofi -dmenu -p "text" -config ~/.config/rofi/config.rasi < /dev/null)
-[ -z "$text" ] && exit 0
-
-result=$(trans -b ":${target}" "$text" 2>/dev/null)
-[ -z "$result" ] && rofi -e "translate: no result" && exit 1
-
-echo "$result" | xclip -selection clipboard 2>/dev/null || true
-
-rofi -e "$(printf '%s → %s\n\n(copied to clipboard)' "$text" "$result")" \
-    -config ~/.config/rofi/config.rasi
+# Translates live as you type; result is already shown and copied to
+# clipboard by the time you close it, no separate confirm step needed.
+rofi --translate "$target" -config ~/.config/rofi/config.rasi >/dev/null
