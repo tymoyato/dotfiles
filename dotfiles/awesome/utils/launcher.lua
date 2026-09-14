@@ -9,7 +9,6 @@ local awful    = require("awful")
 local gears    = require("gears")
 local beautiful = require("beautiful")
 local menubar  = require("menubar")
-local naughty  = require("naughty")
 
 local M = {}
 
@@ -486,8 +485,67 @@ function M.show_dmenu(items_path, response_path, prompt)
 	})
 end
 
+-- ── result message (rofi -e replacement) ───────────────────────────
+-- Shown as a launcher popup, not a corner notification, so it reads as
+-- part of the same UI instead of a disconnected toast easy to miss.
+local result_popup = nil
+local result_grabber = nil
+local result_timer = nil
+
+local function close_result()
+	if result_grabber then
+		awful.keygrabber.stop(result_grabber)
+		result_grabber = nil
+	end
+	if result_timer then
+		result_timer:stop()
+		result_timer = nil
+	end
+	if result_popup then
+		result_popup.visible = false
+		result_popup = nil
+	end
+end
+M.close_result = close_result
+
 function M.show_message(text)
-	naughty.notify({ title = "rofi", text = text or "" })
+	close_result()
+	close()
+
+	local body = wibox.widget {
+		markup = string.format('<span font="%s" color="%s">%s</span>',
+			font, fg_color, gears.string.xml_escape(text or "")),
+		align  = "center",
+		wrap   = "word_char",
+		widget = wibox.widget.textbox,
+	}
+
+	result_popup = awful.popup {
+		widget = wibox.container.background(
+			wibox.container.margin(body, 16, 16, 14, 14),
+			bg_popup
+		),
+		placement = function(w)
+			awful.placement.centered(w, { honor_workarea = true })
+		end,
+		shape         = gears.shape.octogon,
+		border_width  = 0,
+		ontop         = true,
+		visible       = true,
+		minimum_width = POPUP_WIDTH,
+		maximum_width = POPUP_WIDTH,
+	}
+	result_popup:connect_signal("button::press", close_result)
+
+	result_grabber = awful.keygrabber.run(function(_, _, event)
+		if event ~= "press" then return end
+		close_result()
+	end)
+
+	result_timer = gears.timer.start_new(6, function()
+		close_result()
+		return false
+	end)
 end
 
 -- ── warm caches at startup, refresh periodically in the background ─
