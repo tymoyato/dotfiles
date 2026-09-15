@@ -319,9 +319,7 @@ end
 -- Hotkeys popup (Mod+S) -- bigger, high-contrast key labels
 theme.hotkeys_bg = "#2D353B"                     -- bg0
 theme.hotkeys_fg = "#D3C6AA"                     -- fg
-theme.hotkeys_border_width = 2
-theme.hotkeys_border_color = "#A7C080"           -- green
-theme.hotkeys_shape = gears.shape.rounded_rect
+theme.hotkeys_border_width = 0
 theme.hotkeys_modifiers_fg = "#E69875"           -- orange (fallback for any other modifier)
 theme.hotkeys_mod_colors = {
 	Super = "#E69875",                       -- orange
