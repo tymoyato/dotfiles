@@ -24,7 +24,10 @@ function M.new(opts)
 	music_text.forced_width = 24
 	local album_art = wibox.widget.imagebox()
 
-	local text_scroll = wibox.container.scroll.horizontal(music_text, 40)
+	-- scroll.horizontal(widget, fps, speed, extra_space, ...) — the `40` here
+	-- used to land in the fps slot (double the 20fps default), redrawing the
+	-- wibar nonstop at 40Hz for any track with a long title.
+	local text_scroll = wibox.container.scroll.horizontal(music_text, 6, 20, 40)
 	local text_area = wibox.container.constraint(text_scroll, "exact", 24, nil)
 
 	local prev_button = wibox.widget.textbox()
