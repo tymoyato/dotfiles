@@ -294,4 +294,22 @@ function theme.connect(s)
 	})
 end
 
+-- Hotkeys popup (Mod+S) -- bigger, high-contrast key labels
+theme.hotkeys_bg = "#000000"
+theme.hotkeys_fg = "#ffffff"
+theme.hotkeys_border_width = 2
+theme.hotkeys_border_color = "#6c5ce7"           -- purple accent
+theme.hotkeys_shape = gears.shape.rounded_rect
+theme.hotkeys_modifiers_fg = "#b2bec3"           -- light grey (fallback for any other modifier)
+theme.hotkeys_mod_colors = {
+	Super = "#6c5ce7",                       -- purple
+	Shift = "#B85C8A",                       -- pink
+}
+theme.hotkeys_plus_fg = "#b2bec3"                -- light grey
+theme.hotkeys_label_bg = "#6c5ce7"               -- purple chip behind each key
+theme.hotkeys_label_fg = "#ffffff"
+theme.hotkeys_font = "Monospace Bold 9"
+theme.hotkeys_description_font = "Monospace 8"
+theme.hotkeys_group_margin = 6
+
 return theme

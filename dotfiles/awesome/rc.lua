@@ -88,10 +88,17 @@ local beautiful = require("beautiful")
 -- Notification library
 local naughty = require("naughty")
 local menubar = require("menubar")
-local hotkeys_popup = require("awful.hotkeys_popup")
--- Enable hotkeys help widget for VIM and other apps
--- when client with a matching name is opened:
+-- Fork with per-modifier colored labels (Super/Shift/"+" each their own color)
+local hotkeys_widget = require("utils.hotkeys_popup_widget")
+
+-- Enable hotkeys help widget for VIM and other apps when a client with a
+-- matching name is focused. keys/*.lua hardcode require("awful.hotkeys_popup.widget"),
+-- so point that module name at our fork while loading them, so tmux/vim/firefox/etc.
+-- shortcuts register (and render with the same colored modifiers) on our widget.
+local stock_widget_path = "awful.hotkeys_popup.widget"
+package.loaded[stock_widget_path] = hotkeys_widget
 require("awful.hotkeys_popup.keys")
+package.loaded[stock_widget_path] = nil
 
 -- Load Debian menu entries
 -- local debian = require("debian.menu")
@@ -334,15 +341,6 @@ awful.spawn.with_shell("pgrep -x brave > /dev/null || brave --remote-debugging-p
 if not is_any_restart then
 	awful.spawn.with_shell("~/.config/awesome/utils/apps.sh")
 	awful.spawn.with_shell("~/.config/awesome/display-setup.sh")
-
-	-- Pre-warm AI chat scratchpads: spawn hidden now so first toggle is instant
-	for _, q in ipairs({ quake_gemini, quake_chatgpt, quake_mistral }) do
-		q:toggle() -- spawns + shows
-		gears.timer.start_new(2, function()
-			q:toggle() -- hides once mapped
-			return false
-		end)
-	end
 end
 -- awful.spawn.with_shell("sudo -u ervin DISPLAY=:0 /home/ervin/.utils/home_reset_display.sh")
 -- awful.spawn.with_shell("~/.utils/apps.sh")
@@ -370,7 +368,7 @@ local myawesomemenu = {
 	{
 		"hotkeys",
 		function()
-			hotkeys_popup.show_help(nil, awful.screen.focused())
+			hotkeys_widget.show_help(nil, awful.screen.focused())
 		end,
 	},
 	{ "manual", TERMINAL .. " -e man awesome" },
@@ -487,7 +485,7 @@ GLOBALKEYS = gears.table.join(
 	awful.key({ MODKEY, "Control" }, "x", function()
 		awful.util.spawn(betterlockscreen_cmd)
 	end, { description = "lock screen", group = "awesome" }),
-	awful.key({ MODKEY }, "s", hotkeys_popup.show_help, { description = "show help", group = "awesome" }),
+	awful.key({ MODKEY }, "s", hotkeys_widget.show_help, { description = "show help", group = "awesome" }),
 	awful.key({ MODKEY }, "Left", awful.tag.viewprev, { description = "view previous", group = "tag" }),
 	awful.key({ MODKEY }, "Right", awful.tag.viewnext, { description = "view next", group = "tag" }),
 	awful.key({ MODKEY }, "Escape", awful.tag.history.restore, { description = "go back", group = "tag" }),

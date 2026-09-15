@@ -309,4 +309,22 @@ function theme.connect(s)
 	})
 end
 
+-- Hotkeys popup (Mod+S) -- bigger, high-contrast key labels
+theme.hotkeys_bg = "#1a1a1a"
+theme.hotkeys_fg = "#ffffff"
+theme.hotkeys_border_width = 2
+theme.hotkeys_border_color = "#FFD700"           -- gold
+theme.hotkeys_shape = gears.shape.rounded_rect
+theme.hotkeys_modifiers_fg = "#FF4500"           -- orange red (fallback for any other modifier)
+theme.hotkeys_mod_colors = {
+	Super = "#4169E1",                       -- royal blue
+	Shift = "#228B22",                       -- forest green
+}
+theme.hotkeys_plus_fg = "#D3D3D3"                -- light grey
+theme.hotkeys_label_bg = "#FFD700"               -- gold chip behind each key
+theme.hotkeys_label_fg = "#1a1a1a"               -- dark text on chip
+theme.hotkeys_font = "Monospace Bold 9"
+theme.hotkeys_description_font = "Monospace 8"
+theme.hotkeys_group_margin = 6
+
 return theme
