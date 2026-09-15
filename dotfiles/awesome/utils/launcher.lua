@@ -15,6 +15,7 @@ local M = {}
 -- ── palette (matches procman/volume everforest popups) ───────────────
 local bg_popup  = "#000000"
 local bg_row    = "#000000"
+local POPUP_OPACITY = 0.9
 local bg_sel    = "#425047"
 local fg_color  = beautiful.fg_normal or "#D3C6AA"
 local fg_green  = beautiful.fg_focus  or "#A7C080"
@@ -199,6 +200,7 @@ local function build_ui()
 		border_width  = 0,
 		ontop         = true,
 		visible       = true,
+		opacity       = POPUP_OPACITY,
 		minimum_width = POPUP_WIDTH,
 		maximum_width = POPUP_WIDTH,
 	}
@@ -550,6 +552,7 @@ function M.show_message(text)
 		border_width  = 0,
 		ontop         = true,
 		visible       = true,
+		opacity       = POPUP_OPACITY,
 		minimum_width = POPUP_WIDTH,
 		maximum_width = POPUP_WIDTH,
 	}
@@ -680,6 +683,7 @@ function M.show_translate(target, response_path)
 		border_width  = 0,
 		ontop         = true,
 		visible       = true,
+		opacity       = POPUP_OPACITY,
 		minimum_width = POPUP_WIDTH,
 		maximum_width = POPUP_WIDTH,
 	}
