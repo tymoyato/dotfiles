@@ -8,10 +8,33 @@ local markup = lain.util.markup
 
 local claude_text = wibox.widget.textbox()
 local status_file = os.getenv("HOME") .. "/.cache/claude_status.json"
+local usage_cache_file = os.getenv("HOME") .. "/.cache/claude_usage_widget_cache"
 
 local model = "-"
 local session_pct = nil
 local week_pct = nil
+
+-- Survive awesome restarts: seed from last known-good values so the widget
+-- doesn't drop to "-" and sit there for up to 5min until the next slow poll.
+local function load_cache()
+	local f = io.open(usage_cache_file, "r")
+	if not f then return end
+	local line = f:read("*l")
+	f:close()
+	if not line then return end
+	local s, w = line:match("(%S+)%s+(%S+)")
+	session_pct = tonumber(s)
+	week_pct = tonumber(w)
+end
+
+local function save_cache()
+	local f = io.open(usage_cache_file, "w")
+	if not f then return end
+	f:write(string.format("%d %d\n", session_pct, week_pct or 0))
+	f:close()
+end
+
+load_cache()
 
 local function color_for(pct)
 	if not pct then
@@ -55,11 +78,18 @@ watch(string.format("bash -c 'cat %s 2>/dev/null'", status_file), 5, function(_,
 	render()
 end)
 
--- Slow: real rate-limit usage, spawns a claude process so don't poll often
+-- Slow: real rate-limit usage, spawns a claude process so don't poll often.
+-- On a bad/failed poll (script prints "?"), keep the last known-good value
+-- instead of clobbering it with nil -- avoids flashing back to "-".
 watch("bash -c '~/.local/bin/claude-usage-poll.sh'", 300, function(_, stdout)
 	local s, w = stdout:match("(%S+)%s+(%S+)")
-	session_pct = tonumber(s)
-	week_pct = tonumber(w)
+	local new_session = tonumber(s)
+	local new_week = tonumber(w)
+	if new_session then
+		session_pct = new_session
+		week_pct = new_week
+		save_cache()
+	end
 	render()
 end)
 
