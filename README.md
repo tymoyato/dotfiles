@@ -29,7 +29,7 @@ dotfiles/
 │   ├── nvim/          # Neovim config (Lua, lazy.nvim)
 │   ├── picom/         # Compositor config
 │   └── rofi/          # Launcher config & scripts
-├── packages/          # Install scripts (e.g. JetBrains Toolbox)
+├── packages/          # Install scripts (CLI tools via pacman/AUR, JetBrains Toolbox)
 ├── utils/             # Helper scripts (version checks, OS detection)
 ├── .devtools/         # Git identity setup
 ├── symlink.sh         # Creates ~/.config symlinks
@@ -63,6 +63,7 @@ fish ~/.dotfiles/setup.fish
 ```
 
 This installs:
+- CLI tools via pacman (`tmux`, `fzf`, `fd`, `bat`, `ripgrep`, `lazygit`, `neovim`, `kitty`, `picom`, `rofi`, `btop`, `awesome`) and AUR (`sesh-bin`, requires `paru`/`yay`) — see `packages/cli-tools.sh`
 - Fisher plugins
 - Ruby 3.3.0 via rbenv + bundler
 - Latest Node via NVM + yarn

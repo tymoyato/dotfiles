@@ -1,5 +1,7 @@
 #!/usr/bin/env fish
 
+bash ~/.dotfiles/packages/cli-tools.sh
+
 fisher list | fisher install
 fisher list | fisher update
 rbenv install 3.3.0
