@@ -1,0 +1,7 @@
+# One repo per line, relative to project root (parent dir of this script's dir)
+# Optional ":prefix" adds logs+menu windows running "<prefix>-logs" / "<prefix>-menu"
+# (fish aliases you define per project). Omit prefix to skip those windows.
+#
+# auth-api:auth
+# core-api:core
+# frontend

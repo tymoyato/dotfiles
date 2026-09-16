@@ -1,0 +1,4 @@
+# Non-git scratch sessions: name|path|startup-command (cmd optional)
+#
+# general|~/work
+# claude agents|~/work|claude agents
