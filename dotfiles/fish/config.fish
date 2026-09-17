@@ -29,6 +29,7 @@ abbr -a gst 'git status'
 # tools
 abbr -a k kubectl
 abbr -a tf terraform
+abbr -a tmux-repos '~/.dotfiles/dotfiles/tmux/scripts/tmux-repos.sh -w ~'
 
 # gh - PR/issue flow (available when gh installed)
 abbr -a ghpr 'gh pr create'
