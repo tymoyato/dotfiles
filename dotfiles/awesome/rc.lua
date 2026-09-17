@@ -99,6 +99,7 @@ local stock_widget_path = "awful.hotkeys_popup.widget"
 package.loaded[stock_widget_path] = hotkeys_widget
 require("awful.hotkeys_popup.keys")
 package.loaded[stock_widget_path] = nil
+require("utils.hotkeys_kitty")
 
 -- Load Debian menu entries
 -- local debian = require("debian.menu")
