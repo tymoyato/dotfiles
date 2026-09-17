@@ -298,6 +298,37 @@ local is_theme_switch   = file_exists("/tmp/awesome_theme_switch")
 local is_normal_restart = file_exists("/tmp/awesome_normal_restart")
 local is_any_restart    = is_theme_switch or is_normal_restart
 
+local function save_tag_layout()
+	local lines = {}
+	for sidx, s in ipairs(screen) do
+		for _, t in ipairs(s.tags) do
+			table.insert(lines, string.format("%d %d %.6f %d %d", sidx, t.index, t.master_width_factor, t.master_count, t.column_count))
+		end
+	end
+	local f = io.open("/tmp/awesome_tag_layout", "w")
+	if f then
+		f:write(table.concat(lines, "\n"))
+		f:close()
+	end
+end
+
+local function do_restart()
+	local current_tag = awful.screen.focused().selected_tag
+	local current_tag_index = current_tag and current_tag.index or 1
+	local tag_file = io.open("/tmp/awesome_current_tag", "w")
+	if tag_file then
+		tag_file:write(current_tag_index)
+		tag_file:close()
+	end
+	local flag_file = io.open("/tmp/awesome_normal_restart", "w")
+	if flag_file then
+		flag_file:write("1")
+		flag_file:close()
+	end
+	save_tag_layout()
+	awesome.restart()
+end
+
 TERMINAL = "kitty"
 local launcher = require("utils.launcher")
 local editor = os.getenv("EDITOR") or "editor"
@@ -374,7 +405,7 @@ local myawesomemenu = {
 	},
 	{ "manual", TERMINAL .. " -e man awesome" },
 	{ "edit config", editor_cmd .. " " .. awesome.conffile },
-	{ "restart", awesome.restart },
+	{ "restart", do_restart },
 	{
 		"quit",
 		function()
@@ -425,6 +456,26 @@ end
 awful.screen.connect_for_each_screen(function(s)
 	beautiful.connect(s)
 end)
+
+-- Restore per-tag layout ratios (master_width_factor, nmaster, ncol) after restart
+do
+	local layout_file = io.open("/tmp/awesome_tag_layout", "r")
+	if layout_file then
+		for line in layout_file:lines() do
+			local sidx, tidx, mwfact, nmaster, ncol = line:match("^(%d+) (%d+) (%S+) (%d+) (%d+)$")
+			sidx, tidx = tonumber(sidx), tonumber(tidx)
+			local s = sidx and screen[sidx]
+			local t = s and s.tags[tidx]
+			if t then
+				t.master_width_factor = tonumber(mwfact)
+				t.master_count = tonumber(nmaster)
+				t.column_count = tonumber(ncol)
+			end
+		end
+		layout_file:close()
+		os.remove("/tmp/awesome_tag_layout")
+	end
+end
 
 -- Restore tag state after restart
 local _restoring_tag = false
@@ -542,28 +593,7 @@ GLOBALKEYS = gears.table.join(
 	awful.key({ MODKEY }, "Return", function()
 		awful.spawn(TERMINAL)
 	end, { description = "open a terminal", group = "launcher" }),
-	awful.key({ MODKEY, "Control" }, "r", function()
-		-- Save current tag state
-		local current_tag = awful.screen.focused().selected_tag
-		local current_tag_index = current_tag and current_tag.index or 1
-
-		-- Save current tag to temporary file
-		local tag_file = io.open("/tmp/awesome_current_tag", "w")
-		if tag_file then
-			tag_file:write(current_tag_index)
-			tag_file:close()
-		end
-
-		-- Create a flag file to indicate this is a normal restart
-		local flag_file = io.open("/tmp/awesome_normal_restart", "w")
-		if flag_file then
-			flag_file:write("1")
-			flag_file:close()
-		end
-
-		-- Restart awesome
-		awesome.restart()
-	end, { description = "reload awesome", group = "awesome" }),
+	awful.key({ MODKEY, "Control" }, "r", do_restart, { description = "reload awesome", group = "awesome" }),
 	awful.key({ MODKEY, "Shift" }, "q", awesome.quit, { description = "quit awesome", group = "awesome" }),
 
 	awful.key({ MODKEY }, "l", function()
@@ -836,12 +866,18 @@ awful.rules.rules = {
 			keys = CLIENTKEYS,
 			buttons = clientbuttons,
 			screen = awful.screen.preferred,
-			placement = awful.placement.no_overlap + awful.placement.no_offscreen,
+			-- On restart, skip no_overlap so it doesn't reshuffle floating
+			-- clients that are only being re-managed, not freshly spawned.
+			placement = is_any_restart and awful.placement.no_offscreen
+				or (awful.placement.no_overlap + awful.placement.no_offscreen),
 		},
 	},
 
 	-- Add titlebars to normal clients and dialogs
 	{ rule_any = { type = { "normal", "dialog" } }, properties = { titlebars_enabled = false } },
+
+	-- Force popups/dialogs to float
+	{ rule_any = { type = { "dialog", "splash", "utility" } }, properties = { floating = true } },
 }
 -- }}}
 
