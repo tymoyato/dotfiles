@@ -488,14 +488,18 @@ if tag_file then
 	os.remove("/tmp/awesome_theme_switch")
 	os.remove("/tmp/awesome_normal_restart")
 	if saved_tag_index and saved_tag_index >= 1 and saved_tag_index <= 9 then
+		-- Select the saved tag immediately so tag 1's auto-selection
+		-- (set by awful.tag.new when tags were created above) never
+		-- gets painted.
+		local restore_screen = awful.screen.focused()
+		if restore_screen and restore_screen.tags[saved_tag_index] then
+			restore_screen.tags[saved_tag_index]:view_only()
+		end
+		-- Still guard against focus-stealing while restart-remanaged
+		-- clients fire client.connect_signal("manage", ...).
 		_restoring_tag = true
-		-- Use a timer with longer timeout to ensure everything is initialized
 		local restore_timer = gears.timer({ timeout = 1 })
 		restore_timer:connect_signal("timeout", function()
-			local screen = awful.screen.focused()
-			if screen and screen.tags[saved_tag_index] then
-				screen.tags[saved_tag_index]:view_only()
-			end
 			_restoring_tag = false
 			restore_timer:stop()
 		end)
