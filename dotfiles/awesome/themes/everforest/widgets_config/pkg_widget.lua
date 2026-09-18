@@ -21,17 +21,22 @@ local updates = {}  -- list of { name, current, latest }
 local popup   = nil
 
 -- Widget label
+theme.widget_pkg = theme.dir .. "/icons/widgets/pkg.png"
+local pkg_icon = wibox.widget.imagebox(theme.widget_pkg)
 local pkg_label = wibox.widget.textbox()
 local function refresh_label()
     local count = #updates
     pkg_label:set_markup(
-        string.format('<span font="Meslo LGS Regular 10" color="%s"> 📦 %d </span>', fg_color, count)
+        string.format('<span font="Meslo LGS Regular 10" color="%s"> %d </span>', fg_color, count)
     )
 end
 refresh_label()
 
 local pkg_widget = wibox.container.background(
-    wibox.container.margin(pkg_label, 2, 2),
+    wibox.container.margin(
+        wibox.widget({ pkg_icon, pkg_label, layout = wibox.layout.align.horizontal }),
+        2, 2
+    ),
     bg_widget,
     gears.shape.octogon
 )

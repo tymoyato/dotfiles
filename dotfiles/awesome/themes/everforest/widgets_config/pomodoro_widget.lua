@@ -23,6 +23,8 @@ local remaining     = WORK_TIME
 local sessions_done = 0
 local running       = false
 
+theme.widget_pomodoro = theme.dir .. "/icons/widgets/pomodoro.png"
+local pomodoro_icon = wibox.widget.imagebox(theme.widget_pomodoro)
 local label = wibox.widget.textbox()
 
 local function fmt_time(secs)
@@ -30,12 +32,11 @@ local function fmt_time(secs)
 end
 
 local function refresh_label()
-    local icons = { [STATE.IDLE]="🍅", [STATE.WORK]="🍅", [STATE.SHORT]="☕", [STATE.LONG]="🛋" }
     local color = (state == STATE.IDLE) and fg_color or (running and fg_active or fg_paused)
     local t = (state == STATE.IDLE) and WORK_TIME or remaining
     label:set_markup(string.format(
-        '<span font="Meslo LGS Regular 10" color="%s"> %s %s </span>',
-        color, icons[state], fmt_time(t)
+        '<span font="Meslo LGS Regular 10" color="%s"> %s </span>',
+        color, fmt_time(t)
     ))
 end
 refresh_label()
@@ -101,7 +102,10 @@ local function skip()
     refresh_label()
 end
 
-local margin = wibox.container.margin(label, 2, 2)
+local margin = wibox.container.margin(
+    wibox.widget({ pomodoro_icon, label, layout = wibox.layout.align.horizontal }),
+    2, 2
+)
 local pomodoro_widget = wibox.container.background(
     margin,
     bg_widget,

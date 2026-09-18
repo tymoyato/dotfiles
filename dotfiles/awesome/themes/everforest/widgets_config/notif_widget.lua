@@ -19,17 +19,22 @@ local history = {}
 local popup = nil
 
 -- Widget label: only shows count
+theme.widget_notification = theme.dir .. "/icons/widgets/notification.png"
+local notif_icon = wibox.widget.imagebox(theme.widget_notification)
 local notif_label = wibox.widget.textbox()
 local function refresh_label()
     local count = #history
     notif_label:set_markup(
-        string.format('<span font="Meslo LGS Regular 10" color="%s"> 🔔 %d </span>', fg_color, count)
+        string.format('<span font="Meslo LGS Regular 10" color="%s"> %d </span>', fg_color, count)
     )
 end
 refresh_label()
 
 local notif_widget = wibox.container.background(
-    wibox.container.margin(notif_label, 2, 2),
+    wibox.container.margin(
+        wibox.widget({ notif_icon, notif_label, layout = wibox.layout.align.horizontal }),
+        2, 2
+    ),
     bg_widget,
     gears.shape.octogon
 )

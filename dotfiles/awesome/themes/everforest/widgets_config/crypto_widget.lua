@@ -5,7 +5,12 @@ local gears = require("gears")
 local lain = require("lain")
 local markup = lain.util.markup
 
-local crypto_text = wibox.widget.textbox()
+theme.widget_crypto = theme.dir .. "/icons/widgets/crypto.png"
+theme.widget_eth    = theme.dir .. "/icons/widgets/eth.png"
+local crypto_icon = wibox.widget.imagebox(theme.widget_crypto)
+local eth_icon    = wibox.widget.imagebox(theme.widget_eth)
+local btc_text    = wibox.widget.textbox()
+local eth_text    = wibox.widget.textbox()
 
 local function format_price(price)
     local n = tonumber(price)
@@ -19,23 +24,21 @@ end
 watch(
     "curl -s --max-time 10 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=eur'",
     300,
-    function(widget, stdout)
+    function(_, stdout)
         local btc = stdout:match('"bitcoin"%s*:%s*{%s*"eur"%s*:%s*([%d%.]+)')
         local eth = stdout:match('"ethereum"%s*:%s*{%s*"eur"%s*:%s*([%d%.]+)')
-        local text
-        if btc and eth then
-            text = markup.fg.color(theme.fg_normal,
-                " ₿" .. format_price(btc) .. "  Ξ" .. format_price(eth) .. " ")
-        else
-            text = markup.fg.color(theme.fg_normal, " ₿?  Ξ? ")
-        end
-        widget:set_markup(markup.font(theme.font, text))
-    end,
-    crypto_text
+        btc_text:set_markup(markup.font(theme.font,
+            markup.fg.color(theme.fg_normal, " " .. (btc and format_price(btc) or "?") .. " ")))
+        eth_text:set_markup(markup.font(theme.font,
+            markup.fg.color(theme.fg_normal, " " .. (eth and format_price(eth) or "?") .. " ")))
+    end
 )
 
 local crypto_widget = wibox.container.background(
-    wibox.container.margin(crypto_text, 2, 2),
+    wibox.container.margin(
+        wibox.widget({ crypto_icon, btc_text, eth_icon, eth_text, layout = wibox.layout.fixed.horizontal }),
+        2, 2
+    ),
     "#000000",
     gears.shape.octogon
 )

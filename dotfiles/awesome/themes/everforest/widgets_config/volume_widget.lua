@@ -11,6 +11,9 @@ local bg_row   = "#374247"
 local fg_color = "#D3C6AA"
 local fg_green = "#A7C080"
 
+theme.widget_vol = theme.dir .. "/icons/widgets/vol.png"
+local vol_icon = wibox.widget.imagebox(theme.widget_vol)
+
 local vol_popup   = nil
 local close_timer = nil
 
@@ -32,8 +35,8 @@ local function refresh_vol_popup()
 	local muted = volume_now and volume_now.status == "off"
 	vol_bar.value = muted and 0 or level
 	vol_label:set_markup(string.format(
-		'<span font="Meslo LGS Regular 10" color="%s">%s %d%%</span>',
-		fg_color, muted and "🔇" or "🔊", muted and 0 or level
+		'<span font="Meslo LGS Regular 10" color="%s">%s%%</span>',
+		fg_color, muted and 0 or level
 	))
 end
 refresh_vol_popup()
@@ -43,11 +46,11 @@ theme.volume = lain.widget.alsa({
 	settings = function()
 		local level = tonumber(volume_now.level) or 0
 		if volume_now.status == "off" then
-			widget:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " 🔇 mute ")))
+			widget:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " mute ")))
 		elseif level == 0 then
-			widget:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " 🔇 0% ")))
+			widget:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " 0% ")))
 		else
-			widget:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " 🔊 " .. level .. "% ")))
+			widget:set_markup(markup.font(theme.font, markup.fg.color("#D3C6AA", " " .. level .. "% ")))
 		end
 		refresh_vol_popup()
 	end,
@@ -161,7 +164,16 @@ local function show_vol_popup()
 	vol_popup:connect_signal("mouse::leave", schedule_close)
 end
 
-theme.volume.widget:buttons(awful.util.table.join(
+local volume_widget = wibox.container.background(
+	wibox.container.margin(
+		wibox.widget({ vol_icon, theme.volume.widget, layout = wibox.layout.align.horizontal }),
+		2, 4
+	),
+	"#000000",
+	gears.shape.octogon
+)
+
+volume_widget:buttons(awful.util.table.join(
 	scroll_buttons,
 	awful.button({}, 1, function()
 		if vol_popup then close_vol_popup() else show_vol_popup() end
@@ -175,11 +187,5 @@ theme.volume.widget:buttons(awful.util.table.join(
 		theme.volume.update()
 	end)
 ))
-
-local volume_widget = wibox.container.background(
-	wibox.container.margin(theme.volume.widget, 2, 4),
-	"#000000",
-	gears.shape.octogon
-)
 
 return volume_widget

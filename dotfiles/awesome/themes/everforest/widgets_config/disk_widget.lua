@@ -10,6 +10,8 @@ local fg_red    = "#E67E80"
 local fg_yellow = "#DBBC7F"
 local fg_green  = "#A7C080"
 
+theme.widget_disk = theme.dir .. "/icons/widgets/disk.png"
+local disk_icon = wibox.widget.imagebox(theme.widget_disk)
 local disk_label = wibox.widget.textbox()
 
 local function update_disk()
@@ -20,7 +22,7 @@ local function update_disk()
             local used, total, pct_str = stdout:match("^(.+)|(.+)|(.+)$")
             local pct = tonumber((pct_str or "0"):match("%d+")) or 0
             disk_label:set_markup(markup.font(theme.font,
-                markup.fg.color(fg_color, " 💾 " .. (used or "?") .. "/" .. (total or "?") .. " ")
+                markup.fg.color(fg_color, " " .. (used or "?") .. "/" .. (total or "?") .. " ")
             ))
         end
     )
@@ -34,7 +36,10 @@ gears.timer {
 }
 
 local disk_widget = wibox.container.background(
-    wibox.container.margin(disk_label, 2, 2),
+    wibox.container.margin(
+        wibox.widget({ disk_icon, disk_label, layout = wibox.layout.align.horizontal }),
+        2, 2
+    ),
     "#000000",
     gears.shape.octogon
 )

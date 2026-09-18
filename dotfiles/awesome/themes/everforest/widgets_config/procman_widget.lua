@@ -25,13 +25,11 @@ local unique_clients = nil
 local scroll_offset  = 0
 
 -- ── Label ──────────────────────────────────────────────────────────
-local procman_label = wibox.widget.textbox()
-procman_label:set_markup(
-    '<span font="Meslo LGS Regular 10" color="' .. fg_color .. '"> ⚡ </span>'
-)
+theme.widget_apps = theme.dir .. "/icons/widgets/apps.png"
+local procman_icon = wibox.widget.imagebox(theme.widget_apps)
 
 local procman_widget = wibox.container.background(
-    wibox.container.margin(procman_label, 2, 2),
+    wibox.container.margin(procman_icon, 4, 4),
     bg_widget,
     gears.shape.octogon
 )

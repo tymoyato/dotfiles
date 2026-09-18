@@ -48,6 +48,8 @@ end
 load_todos()
 
 -- ── Label ──────────────────────────────────────────────────────────
+theme.widget_todo = theme.dir .. "/icons/widgets/todo.png"
+local todo_icon = wibox.widget.imagebox(theme.widget_todo)
 local todo_label = wibox.widget.textbox()
 
 local function pending_count()
@@ -61,14 +63,17 @@ end
 local function refresh_label()
     local count = pending_count()
     todo_label:set_markup(string.format(
-        '<span font="Meslo LGS Regular 10" color="%s"> ✅ %d </span>',
+        '<span font="Meslo LGS Regular 10" color="%s"> %d </span>',
         fg_color, count
     ))
 end
 refresh_label()
 
 local todo_widget = wibox.container.background(
-    wibox.container.margin(todo_label, 2, 2),
+    wibox.container.margin(
+        wibox.widget({ todo_icon, todo_label, layout = wibox.layout.align.horizontal }),
+        2, 2
+    ),
     bg_widget,
     gears.shape.octogon
 )
