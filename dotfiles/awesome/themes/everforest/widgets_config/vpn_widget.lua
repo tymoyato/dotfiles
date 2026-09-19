@@ -1,5 +1,9 @@
 -- VPN / Public IP widget
--- Shows VPN status + public IP. Polls every 30s.
+-- Shows VPN status + public IP. Event-driven: `ip monitor` streams
+-- interface/address changes, and only then do we re-hit ipinfo.io — instead
+-- of curling an external API every 30s regardless of whether anything
+-- changed. A slow safety poll remains as a backstop (e.g. plain DHCP lease
+-- renewal changing the public IP without any local interface event).
 -- Left-click: force refresh
 -- Right-click: show popup with full IP + location info
 local wibox  = require("wibox")
@@ -149,10 +153,46 @@ local function show_popup()
     popup:connect_signal("mouse::leave", close_popup)
 end
 
--- Poll every 30s
+-- Debounce: an interface flapping up briefly fires several address/link
+-- lines in quick succession — wait for it to settle before re-querying.
+local debounce_timer = nil
+local function debounced_refresh()
+    if debounce_timer then debounce_timer:stop() end
+    debounce_timer = gears.timer.start_new(1, function()
+        debounce_timer = nil
+        refresh()
+        return false
+    end)
+end
+
+local function start_monitor()
+    awful.spawn.with_line_callback(
+        { "ip", "monitor", "address", "link" },
+        {
+            stdout = function(_) debounced_refresh() end,
+            exit = function()
+                -- ip/netlink hiccup — reconnect rather than going silent forever.
+                gears.timer.start_new(2, function()
+                    start_monitor()
+                    return false
+                end)
+            end,
+        }
+    )
+end
+
+-- Kill any monitor process left over from a previous awesome session
+-- (awesome.restart() re-execs in place and never reaps old children),
+-- then do the initial fetch and start watching for changes.
+awful.spawn.easy_async({ "pkill", "-f", "ip monitor address link" }, function()
+    refresh()
+    start_monitor()
+end)
+
+-- Slow safety poll: catches public-IP changes with no local interface event
+-- (e.g. an ISP DHCP lease renewal). Everything else is event-driven above.
 gears.timer {
-    timeout   = 30,
-    call_now  = true,
+    timeout   = 900,
     autostart = true,
     callback  = refresh,
 }

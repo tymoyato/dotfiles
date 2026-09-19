@@ -111,8 +111,47 @@ local function poll()
     )
 end
 
--- Poll every 20 seconds
+-- Poll every 20 seconds. `docker stats` is a continuously-varying live
+-- metric (like CPU%) with no discrete "changed" event, so this stays on a
+-- timer regardless. Container start/stop/health, however, are discrete
+-- events — `docker events` below reflects those immediately instead of
+-- waiting up to 20s for the next tick.
 gears.timer { timeout = 20, autostart = true, callback = poll }
+
+-- Debounce: `docker compose up` starting several containers at once would
+-- otherwise trigger a burst of redundant polls.
+local events_debounce = nil
+local function debounced_poll()
+    if events_debounce then events_debounce:stop() end
+    events_debounce = gears.timer.start_new(1, function()
+        events_debounce = nil
+        poll()
+        return false
+    end)
+end
+
+local function start_events()
+    awful.spawn.with_line_callback(
+        { "docker", "events", "--filter", "type=container", "--format", "{{.Action}}" },
+        {
+            stdout = function(_) debounced_poll() end,
+            exit = function()
+                -- docker daemon restart, socket hiccup, etc — reconnect.
+                gears.timer.start_new(2, function()
+                    start_events()
+                    return false
+                end)
+            end,
+        }
+    )
+end
+
+-- Kill any events listener left over from a previous awesome session
+-- (awesome.restart() re-execs in place and never reaps old children).
+awful.spawn.easy_async(
+    { "pkill", "-f", "docker events --filter type=container" },
+    start_events
+)
 
 -- Initial poll
 poll()
