@@ -24,12 +24,16 @@ local function close_popup()
     if popup then popup.visible = false; popup = nil end
 end
 
+local disp_icon = wibox.widget.imagebox(os.getenv("HOME") .. "/icons/display.png")
 local disp_label = wibox.widget {
-    markup = markup.font(theme.font, markup.fg.color(fg_color, " ⎚ ")),
+    markup = markup.font(theme.font, markup.fg.color(fg_color, " ")),
     widget = wibox.widget.textbox,
 }
 local disp_widget = wibox.container.background(
-    wibox.container.margin(disp_label, 2, 2),
+    wibox.container.margin(
+        wibox.widget({ disp_icon, disp_label, layout = wibox.layout.align.horizontal }),
+        2, 2
+    ),
     bg_widget,
     gears.shape.octogon
 )
@@ -57,7 +61,7 @@ local function update_label()
         end
         local col = active > 1 and fg_green or fg_color
         disp_label:set_markup(markup.font(theme.font,
-            markup.fg.color(col, " ⎚ " .. active .. " ")))
+            markup.fg.color(col, " " .. active .. " ")))
     end)
 end
 

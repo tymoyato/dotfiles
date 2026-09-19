@@ -6,9 +6,13 @@ local gears = require("gears")
 -- For graphical calendar
 local calendar_popup = require("awful.widget.calendar_popup").month
 
-local clock = awful.widget.textclock('<span font="Meslo LGS Regular 10" color="#D3C6AA"> 📅 %a %d %b  %H:%M </span>')
+local date_icon = wibox.widget.imagebox(os.getenv("HOME") .. "/icons/date.png")
+local clock = awful.widget.textclock('<span font="Meslo LGS Regular 10" color="#D3C6AA"> %a %d %b  %H:%M </span>')
 local clock_widget = wibox.container.background(
-	wibox.container.margin(clock, 2, 2),
+	wibox.container.margin(
+		wibox.widget({ date_icon, clock, layout = wibox.layout.align.horizontal }),
+		2, 2
+	),
 	"#000000",
 	gears.shape.octogon
 )

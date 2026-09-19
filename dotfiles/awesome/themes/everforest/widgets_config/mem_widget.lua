@@ -4,7 +4,7 @@ local lain = require("lain")
 local markup = lain.util.markup
 local gears = require("gears")
 
-theme.widget_mem = theme.dir .. "/icons/widgets/mem.png"
+theme.widget_mem = os.getenv("HOME") .. "/icons/ram.png"
 local mem_icon = wibox.widget.imagebox(theme.widget_mem)
 local mem = lain.widget.mem({
 	timeout = 5,
