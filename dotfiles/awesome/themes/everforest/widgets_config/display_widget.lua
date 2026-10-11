@@ -38,15 +38,29 @@ local disp_widget = wibox.container.background(
     gears.shape.octogon
 )
 
--- Parse connected outputs from xrandr
+-- Parse connected outputs from xrandr, including per-resolution mode list
 local function get_outputs(callback)
     awful.spawn.easy_async("xrandr --query", function(stdout)
         local outputs = {}
+        local current = nil
         for line in stdout:gmatch("[^\n]+") do
             local name, status = line:match("^(%S+) (connected)")
             if name and status then
                 local mode = line:match("%d+x%d+%+%d+%+%d+")
-                table.insert(outputs, { name = name, active = mode ~= nil, mode = mode or "" })
+                current = { name = name, active = mode ~= nil, mode = mode or "", hz = "", modes = {} }
+                table.insert(outputs, current)
+            elseif line:match("^%S+ disconnected") then
+                current = nil
+            elseif current then
+                local res, rest = line:match("^%s+(%d+x%d+)%s+(.*)$")
+                if res then
+                    for hz, flags in rest:gmatch("(%d+%.%d+)([%*%+]*)") do
+                        table.insert(current.modes, { res = res, hz = hz })
+                        if flags:find("%*") then
+                            current.hz = math.floor(tonumber(hz) + 0.5) .. "Hz"
+                        end
+                    end
+                end
             end
         end
         callback(outputs)
@@ -110,13 +124,22 @@ local function show_popup()
         else
             for _, o in ipairs(outputs) do
                 local state_col = o.active and fg_green or fg_grey
-                local state_str = o.active and ("● " .. o.mode) or "○ off"
+                local state_str = o.active and ("● " .. o.mode .. (o.hz ~= "" and (" " .. o.hz) or "")) or "○ off"
                 rows:add(wibox.container.margin(wibox.widget {
                     markup = markup.font(theme.font,
                         markup.fg.color(fg_color, o.name .. "  ") ..
                         markup.fg.color(state_col, state_str)),
                     widget = wibox.widget.textbox,
                 }, 6, 6, 2, 2))
+
+                if o.active and #o.modes > 1 then
+                    for _, m in ipairs(o.modes) do
+                        rows:add(make_layout_btn(
+                            m.res .. " @" .. math.floor(tonumber(m.hz) + 0.5) .. "Hz",
+                            "xrandr --output " .. o.name .. " --mode " .. m.res .. " --rate " .. m.hz
+                        ))
+                    end
+                end
             end
         end
 
@@ -178,7 +201,7 @@ local function show_popup()
             ontop         = true,
             visible       = true,
             minimum_width = 160,
-            maximum_width = 220,
+            maximum_width = 260,
         }
         popup:connect_signal("mouse::leave", close_popup)
     end)

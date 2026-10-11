@@ -144,6 +144,12 @@ for i in "${!repo_names[@]}"; do
       tmux new-window -t "$repo:" -c "$repo_path" -n "git"
       tmux send-keys -t "$repo:git" "lazygit" C-m
 
+      # claude + hunk windows for all repos
+      tmux new-window -t "$repo:" -c "$repo_path" -n "claude"
+      tmux send-keys -t "$repo:claude" "claude" C-m
+      tmux new-window -t "$repo:" -c "$repo_path" -n "hunk"
+      tmux send-keys -t "$repo:hunk" "hunk diff" C-m
+
       # general scratch window for all repos
       tmux new-window -t "$repo:" -c "$repo_path" -n "general"
 
