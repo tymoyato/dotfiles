@@ -1,7 +1,6 @@
 set fish_greeting ""
 set -gx NO_AT_BRIDGE 1
 
-set -gx TERM xterm-256color
 set -gx EDITOR nvim
 set -gx GVM_ROOT $HOME/.gvm
 test -d $GVM_ROOT/bin && set -gxp PATH $GVM_ROOT/bin
@@ -16,7 +15,7 @@ command -q direnv && direnv hook fish | source
 # abbreviations (expand inline, faster than alias)
 abbr -a g git
 abbr -a v nvim
-abbr -a updates 'checkupdates; yay -Qu'
+abbr -a updates 'checkupdates; paru -Qua'
 abbr -a coverage_rspec 'COVERAGE=true bundle exec rspec spec/'
 abbr -a idl_rswag 'RAILS_ENV=test rails rswag'
 abbr -a lazydocker 'sudo (which lazydocker)'
@@ -114,6 +113,3 @@ if status is-login; and test (tty) = /dev/tty1; and not set -q DISPLAY
     exec startx
 end
 
-
-# Added by Antigravity CLI installer
-set -gx PATH "/home/tymoyato/.local/bin" $PATH

@@ -233,9 +233,10 @@ local themes = {
 	"cccp",
 }
 local betterlockscreen_cmd = "betterlockscreen -l dim --off 30"
--- Try to read saved theme index from file
+-- Try to read saved theme index from file (~/.cache survives reboots, /tmp did not)
+local THEME_FILE = os.getenv("HOME") .. "/.cache/awesome_current_theme"
 local current_theme_index = 1
-local theme_file = io.open("/tmp/awesome_current_theme", "r")
+local theme_file = io.open(THEME_FILE, "r")
 if theme_file then
 	local saved_index = tonumber(theme_file:read("*line"))
 	if saved_index and saved_index >= 1 and saved_index <= #themes then
@@ -262,7 +263,7 @@ local function switch_theme()
 	})
 
 	-- Save current theme index and tag to temporary files
-	local theme_file = io.open("/tmp/awesome_current_theme", "w")
+	local theme_file = io.open(THEME_FILE, "w")
 	if theme_file then
 		theme_file:write(current_theme_index)
 		theme_file:close()
@@ -372,7 +373,6 @@ awful.spawn.with_shell("pgrep -x picom > /dev/null || picom --config ~/.config/p
 awful.spawn.with_shell("pgrep -x brave > /dev/null || brave --remote-debugging-port=9222")
 if not is_any_restart then
 	awful.spawn.with_shell("~/.config/awesome/utils/apps.sh")
-	awful.spawn.with_shell("~/.config/awesome/display-setup.sh")
 end
 -- awful.spawn.with_shell("sudo -u ervin DISPLAY=:0 /home/ervin/.utils/home_reset_display.sh")
 -- awful.spawn.with_shell("~/.utils/apps.sh")

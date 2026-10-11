@@ -1,33 +1,41 @@
 #!/bin/bash
 
+# Repo root = wherever this script lives, so the repo can be cloned anywhere
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/dotfiles"
+
+# Link $1 -> $2. A real file/dir already at $2 is moved to $2.bak, never deleted.
+link() {
+	local src="$1" dest="$2"
+	if [ -L "$dest" ]; then
+		rm "$dest"
+	elif [ -e "$dest" ]; then
+		mv "$dest" "$dest.bak.$(date +%s)"
+		echo "Backed up existing $dest"
+	fi
+	ln -s "$src" "$dest"
+}
+
 setup_configs() {
 	local config_dir="$HOME/.config"
-	local repo_dir="$HOME/.dotfiles/dotfiles"
+	mkdir -p "$config_dir"
 
 	# List of configuration directories and files
 	local configs=(
 		"fish"
 		"kitty"
 		"nvim"
-    "awesome"
-    "picom"
-    "rofi"
-    "lazygit"
-    "btop"
-    "zellij"
-    "zed"
-    "yazi"
-    "tmux"
+		"awesome"
+		"picom"
+		"rofi"
+		"lazygit"
+		"btop"
+		"zed"
+		"tmux"
+		"betterlockscreen"
 	)
 
-	# Remove existing configurations
 	for config in "${configs[@]}"; do
-		rm -rf "${config_dir:?}/${config:?}"
-	done
-
-	# Create symbolic links
-	for config in "${configs[@]}"; do
-		ln -sf "$repo_dir/$config" "$config_dir/$config"
+		link "$repo_dir/$config" "$config_dir/$config"
 	done
 
 	echo "Configurations have been set up."
@@ -39,26 +47,22 @@ setup_home_configs() {
 	)
 
 	for entry in "${home_configs[@]}"; do
-		src="${entry%%:*}"
-		dest="${entry##*:}"
-		rm -f "$HOME/$dest"
-		ln -sf "$HOME/.dotfiles/dotfiles/$src" "$HOME/$dest"
+		link "$repo_dir/${entry%%:*}" "$HOME/${entry##*:}"
 	done
 
 	echo "Home configurations have been set up."
 }
 
 setup_dmenu_scripts() {
-	local scripts_dir="$HOME/.dotfiles/dotfiles/dmenu_scripts"
+	local scripts_dir="$repo_dir/dmenu_scripts"
 	local bin_dir="$HOME/.local/bin"
 
 	mkdir -p "$bin_dir"
 
 	for script in "$scripts_dir"/*; do
 		[ -e "$script" ] || continue
-		name=$(basename "$script")
-		ln -sf "$script" "$bin_dir/$name"
 		chmod +x "$script"
+		link "$script" "$bin_dir/$(basename "$script")"
 	done
 
 	echo "Dmenu scripts have been set up."

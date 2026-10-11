@@ -7,7 +7,8 @@ local markup = lain.util.markup
 -- Find hwmon temp file once at startup. io.popen here is ~5ms on sysfs —
 -- acceptable tradeoff vs async complexity with lain's named timer.
 local function find_temp_file()
-    local h = io.popen("ls /sys/class/hwmon/hwmon*/temp1_input 2>/dev/null | head -1")
+    -- Prefer the CPU sensor (hwmon order is random: hwmon0 may be nvme/acpitz), else first temp1_input
+    local h = io.popen([[for h in /sys/class/hwmon/hwmon*; do case $(cat "$h/name") in coretemp|k10temp|zenpower|cpu_thermal) echo "$h/temp1_input"; exit;; esac; done; ls /sys/class/hwmon/hwmon*/temp1_input 2>/dev/null | head -1]])
     if not h then return "/dev/null" end
     local result = h:read("*l") or ""
     h:close()

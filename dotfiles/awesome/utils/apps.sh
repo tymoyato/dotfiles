@@ -37,5 +37,5 @@ done
     command=${late_processes[$process_name]}
     check_and_start "$process_name" "$command" &
   done
-  pgrep -fi "bruno" > /dev/null || /home/tymoyato/Downloads/bruno_3.3.0_x86_64_linux.AppImage &
+  pgrep -fi "bruno" > /dev/null || { command -v bruno >/dev/null && bruno; } &
 ) &

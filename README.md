@@ -21,40 +21,46 @@ Personal configuration files for an Arch Linux setup with Awesome WM.
 dotfiles/
 ├── dotfiles/          # Config files (symlinked to ~/.config/)
 │   ├── awesome/       # Awesome WM config (rc.lua, themes, widgets)
+│   ├── betterlockscreen/
 │   ├── btop/          # btop config & themes
-│   ├── bruno/         # Bruno API client preferences
 │   ├── fish/          # Fish shell config, functions, completions
 │   ├── kitty/         # Kitty terminal config & theme
 │   ├── lazygit/       # Lazygit config
 │   ├── nvim/          # Neovim config (Lua, lazy.nvim)
 │   ├── picom/         # Compositor config
-│   └── rofi/          # Launcher config & scripts
-├── packages/          # Install scripts (CLI tools via pacman/AUR, JetBrains Toolbox)
-├── utils/             # Helper scripts (version checks, OS detection)
-├── .devtools/         # Git identity setup
+│   ├── rofi/          # Launcher config & scripts
+│   ├── tmux/          # tmux config & scripts (plugins auto-installed)
+│   └── zed/           # Zed editor config
 ├── symlink.sh         # Creates ~/.config symlinks
 └── setup.fish         # Installs language runtimes & tools
 ```
 
 ## Setup
 
-### 1. Clone
+### 1. Install packages
+
+Every package these configs call is installed by [tymoyato/arch](https://github.com/tymoyato/arch):
+
+```bash
+git clone https://github.com/tymoyato/arch.git ~/arch
+bash ~/arch/packages.sh
+```
+
+### 2. Clone
 
 ```bash
 git clone git@github.com:tymoyato/dotfiles.git ~/.dotfiles
 ```
 
-### 2. Symlink configs
+### 3. Symlink configs
 
-Links everything in `dotfiles/` into `~/.config/`:
+Links everything in `dotfiles/` into `~/.config/` (plus `~/.xinitrc` and `~/.local/bin/rofi`). Existing real configs are moved to `<name>.bak.<timestamp>`, never deleted. Works from any clone location.
 
 ```bash
 bash ~/.dotfiles/symlink.sh
 ```
 
-> **Note:** The script expects the repo at `~/.dotfiles`. If you cloned elsewhere, edit `repo_dir` in `symlink.sh` accordingly.
-
-### 3. Install language runtimes & tools
+### 4. Install language runtimes & tools
 
 Run inside Fish shell:
 
@@ -63,39 +69,15 @@ fish ~/.dotfiles/setup.fish
 ```
 
 This installs:
-- CLI tools via pacman (`tmux`, `fzf`, `fd`, `bat`, `ripgrep`, `lazygit`, `neovim`, `kitty`, `picom`, `rofi`, `btop`, `awesome`) and AUR (`sesh-bin`, requires `paru`/`yay`) — see `packages/cli-tools.sh`
-- Fisher plugins
+- Fisher plugins listed in `dotfiles/fish/fish_plugins`
 - Ruby 3.3.0 via rbenv + bundler
 - Latest Node via NVM + yarn
-- Go 1.23.2 via GVM
 
-### 4. Configure git identity
+tmux plugins (TPM) install themselves on the first tmux start.
 
-Edit `.devtools/git.yml`:
+## Per-machine behavior
 
-```yaml
-git:
-  user:
-    name: Your Name
-    email: your@email.com
-```
-
-Then run:
-
-```bash
-bash ~/.dotfiles/.devtools/git.sh
-```
-
-## Version Checks
-
-Check installed vs available package versions:
-
-```bash
-# No dependencies required
-./utils/check_versions_simple.sh
-
-# Requires yq
-./utils/check_versions.sh
-```
-
-See [`utils/README_versions.md`](utils/README_versions.md) for details.
+- **Display:** `awesome/display-setup.sh` sets each connected output to its preferred resolution at its highest refresh rate. The NVIDIA `ForceCompositionPipeline` line in `xinitrc` only runs when `DP-2` is connected.
+- **Battery / CPU temp widgets:** auto-detect `BAT*` and the CPU hwmon sensor (`coretemp`, `k10temp`, `zenpower`).
+- **Brightness widget:** uses `ddcutil` (external monitors over DDC/CI); does nothing on laptop panels.
+- **PipeWire 96 kHz config** (`dotfiles/pipewire/`) is not linked by default. Link it manually on machines with a hi-res DAC.

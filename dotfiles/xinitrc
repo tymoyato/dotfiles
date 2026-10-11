@@ -2,11 +2,14 @@ export PATH="$HOME/.local/bin:$PATH"
 export XDG_CURRENT_DESKTOP=awesome
 export GTK_USE_PORTAL=1
 
-xrandr --output DP-2 --mode 1920x1080 --rate 239.76 --primary
+# Preferred resolution at max refresh rate on every connected output
+"$HOME/.config/awesome/display-setup.sh"
 
 systemctl --user import-environment DISPLAY XAUTHORITY DBUS_SESSION_BUS_ADDRESS
 dbus-update-activation-environment DISPLAY XAUTHORITY DBUS_SESSION_BUS_ADDRESS
 
-nvidia-settings -a "CurrentMetaMode=DPY-3: 1920x1080_240 @1920x1080 +0+0 {ViewPortIn=1920x1080, ViewPortOut=1920x1080+0+0, ForceCompositionPipeline=On}"
+# Tear-free on this NVIDIA box (DPY-3 = DP-2); no-op on other machines
+command -v nvidia-settings >/dev/null && xrandr | grep -q "^DP-2 connected" &&
+	nvidia-settings -a "CurrentMetaMode=DPY-3: 1920x1080_240 @1920x1080 +0+0 {ViewPortIn=1920x1080, ViewPortOut=1920x1080+0+0, ForceCompositionPipeline=On}"
 
 exec dbus-run-session awesome

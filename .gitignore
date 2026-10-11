@@ -1,3 +1,6 @@
 dotfiles/fish/fish_variables*
 dotfiles/claude/
 dotfiles/awesome/rss_read.txt
+dotfiles/plugins/
+dotfiles/tmux/plugins/
+__pycache__/

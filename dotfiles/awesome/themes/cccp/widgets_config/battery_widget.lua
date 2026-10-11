@@ -13,8 +13,15 @@ theme.widget_battery_no = theme.dir .. "/icons/widgets/battery_no.png"
 
 local bat_icon = wibox.widget.imagebox(theme.widget_battery)
 local battery_widget
+-- Detect BAT0/BAT1/... (laptops differ); lain falls back to BAT0 when none found
+local batteries = {}
+local ps = io.popen("ls -d /sys/class/power_supply/BAT* 2>/dev/null")
+if ps then
+	for path in ps:lines() do table.insert(batteries, path:match("[^/]+$")) end
+	ps:close()
+end
 local bat = lain.widget.bat({
-	battery = "BAT0",
+	batteries = #batteries > 0 and batteries or nil,
 	timeout = 30,
 	notify = "on",
 	n_perc = { 5, 15 },

@@ -9,6 +9,11 @@ local markup = lain.util.markup
 local function find_temp_file()
     local command = [[
         for hwmon in /sys/class/hwmon/hwmon*; do
+            case $(cat "$hwmon/name") in
+                coretemp|k10temp|zenpower|cpu_thermal) echo "$hwmon/temp1_input"; exit 0 ;;
+            esac
+        done
+        for hwmon in /sys/class/hwmon/hwmon*; do
             for temp in "$hwmon"/temp*_input; do
                 if [ -f "$temp" ]; then
                     echo "$temp"

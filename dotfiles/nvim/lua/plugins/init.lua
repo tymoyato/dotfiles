@@ -541,7 +541,7 @@ return {
       workspaces = {
         {
           name = "personal",
-          path = "/home/tymoyato/Obsidian-Vault",
+          path = vim.fn.expand("~/Obsidian-Vault"),
         },
       },
       notes_subdir = "notes",
